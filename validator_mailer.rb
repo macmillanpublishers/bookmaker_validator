@@ -6,9 +6,7 @@ require 'logger'
 require 'find'
 
 #for testing on staging:
-#remember to update testing_value_file (line 32 / 33)
-#remember to update mail to & from back to workflows@macmillan.com (line 120/121)
-
+#remember to update testing_value_file (line 31 / 32)
 
 # ---------------------- VARIABLES
 #old vars
@@ -44,36 +42,8 @@ logger.formatter = proc do |severity, datetime, progname, msg|
   "#{datetime}: #{progname} -- #{msg}\n"
 end
 
+
 #--------------------- RUN
-completed_message = <<MESSAGE_END
-From: Workflows <workflows@macmillan.com>
-To: Workflows <workflows@macmillan.com>
-Subject: #{project_name} has completed for #{filename_normalized}
-
-#{project_name} has finished running on file #{filename_normalized}.
-Both your original file and the updated 'DONE' file are now located in the #{project_name}/OUT Dropbox folder.
-MESSAGE_END
-
-error_messageIN = <<MESSAGE_END
-From: Workflows <workflows@macmillan.com>
-To: Workflows <workflows@macmillan.com>
-Subject: ERROR running #{project_name} on #{filename_split}
-
-An error occurred while attempting to run #{project_name} on your file #{filename_split}.
-Your file was not a .doc or .docx and could not be processed.  
-#{filename_split} and the error notification can be found in the #{project_name}/IN Dropbox folder
-MESSAGE_END
-
-error_messageOUT = <<MESSAGE_END
-From: Workflows <workflows@macmillan.com>
-To: Workflows <workflows@macmillan.com>
-Subject: ERROR running #{project_name} on #{filename_split}
-
-An error occurred while attempting to run #{project_name} on your file #{filename_split}.
-Both your original file and the error notice are now located in the #{project_name}/OUT Dropbox folder.
-MESSAGE_END
-
-
 if filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_mailer') {"this is a validator marker file, skipping (e.g. IN_PROGRESS or ERROR_RUNNING_)"}	
 else
@@ -103,32 +73,49 @@ else
 		end
 	}
 
+	#Getting ready to send email
 	#set appropriate email text based on presence of /IN/errfile or /tmpdir/errlog
 	if errlog
-		message = error_messageOUT
 		logger.info('validator_mailer') {"error log found in tmpdir, setting email text accordingly"}	
+		subject="#{project_name} has completed for #{filename_normalized}"
+		body_a="#{project_name} has finished running on file #{filename_normalized}."
+		body_b="Both your original file and the updated 'DONE' file are now located in the \'#{project_name}/OUT\' Dropbox folder."
 	elsif File.file?(errFile)	
-		message = error_messageIN
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
+		subject="ERROR running #{project_name} on #{filename_split}"
+		body_a="Unable to run #{project_name} on file #{filename_split}: this file is not a .doc or .docx and could not be processed."
+		body_b="#{filename_split} and the error notification can be found in the \'#{project_name}/IN\' Dropbox folder"		
 	else	
-		message = completed_message
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
+		subject="ERROR running #{project_name} on #{filename_split}"
+		body_a="An error occurred while attempting to run #{project_name} on your file #{filename_split}."
+		body_b="Both your original file and the error notice are now located in the \'#{project_name}/OUT\' Dropbox folder."		
 	end
-	#could add a check for done file and a case where only we get alerts if something looks weird.
 
-	#sending mail:
+	#setting up handling for additional cc's:
+	cc_email=''
+	cc_name=''
+	cc_address="Cc: Workflows <workflows@macmillan.com>"
+	if cc_email != '' then cc_address="#{cc_address}, #{cc_name} <#{cc_email}>" end	
+
+message = <<MESSAGE_END
+From: Workflows <workflows@macmillan.com>
+To: #{user_name} <#{user_email}>
+#{cc_address}
+Subject: #{subject}
+
+#{body_a}
+
+#{body_b}
+MESSAGE_END
+
+	#now sending
 	unless File.file?(testing_value_file)
 	  Net::SMTP.start('10.249.0.12') do |smtp|
-	  #  smtp.send_message message, 'workflows@macmillan.com', 
-	  #                             'workflows@macmillan.com'
-  	  smtp.send_message message, 'matthew.retzer@macmillan.com', 
-	                              'matthew.retzer@macmillan.com'
+  	  smtp.send_message message, 'workflows@macmillan.com', 
+	                              user_email, 'workflows@macmillan.com'#, cc_email
 	  end
 	end
-	###multiple recipients example
-	 #  smtp.send_message msgstr,
-	 #                    'from@example.com',
-	 #                    ['dest@example.com', 'dest2@example.com']
 	logger.info('validator_mailer') {"sent email, exiting mailer"}	 
 end	
 
