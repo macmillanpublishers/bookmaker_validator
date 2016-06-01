@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'logger'
+require 'find'
 
 # ---------------------- VARIABLES
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -20,10 +21,9 @@ working_dir = File.join('S:', 'validator_tmp')
 # ---------------------- LOGGING
 logfolder = File.join(working_dir, 'logs')
 #clean up dummy logs from previous run:
-inprogress_log = Dir.glob("#{logfolder}/*_IN_PROGRESS_log.txt")
-if inprogress_log.any?
-	FileUtils.rm_f inprogress_log
-end
+Find.find(logfolder) { |file|
+	if file =~ /^.*_IN_PROGRESS_log.txt/ then FileUtils.rm_f file end
+}
 logfile = File.join(logfolder, "#{basename_normalized}_log.txt")  #should we add a timestamp or let them append?)
 logger = Logger.new(logfile)
 logger.formatter = proc do |severity, datetime, progname, msg|

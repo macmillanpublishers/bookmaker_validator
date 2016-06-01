@@ -13,8 +13,9 @@ rem write scriptnames to file for ProcessLogger to rm on success:
 (
   echo validator_tmparchive
   echo run_Bookmaker_Validator
+  echo validator_mailer   
   echo validator_cleanup
-	echo mail-alert
+  echo mail-alert
 	
 ) >%p_log%
 :comment
@@ -25,6 +26,7 @@ rem write scriptnames to file for ProcessLogger to rm on success:
 rem /b PowerShell -NoProfile -ExecutionPolicy Bypass -Command "S:\resources\bookmaker_scripts\utilities\processwatch.ps1 %p_log% '%1'"
 C:\Ruby200\bin\ruby.exe S:\resources\bookmaker_scripts\bookmaker_validator\validator_tmparchive.rb '%1' >> %logfile% 2>&1 && call :ProcessLogger validator_tmparchive
 PowerShell -NoProfile -ExecutionPolicy Bypass -Command "S:\resources\bookmaker_scripts\bookmaker_validator\run_Bookmaker_Validator.ps1 '%1'" && call :ProcessLogger run_Bookmaker_Validator
+C:\Ruby200\bin\ruby.exe S:\resources\bookmaker_scripts\bookmaker_validator\validator_mailer.rb '%1' >> %logfile% 2>&1 && call :ProcessLogger validator_mailer
 C:\Ruby200\bin\ruby.exe S:\resources\bookmaker_scripts\bookmaker_validator\validator_cleanup.rb '%1' >> %logfile% 2>&1 && call :ProcessLogger validator_cleanup
 rem PowerShell -NoProfile -ExecutionPolicy Bypass -Command "S:\resources\bookmaker_scripts\utilities\mail-alert.ps1 '%1'" && call :ProcessLogger mail-alert
 
