@@ -1,12 +1,10 @@
 require 'dropbox_sdk'
-# Install this the SDK with "gem install dropbox-sdk"
+# Install this SDK with "gem install dropbox-sdk"
 require 'json'
 require 'net/smtp'
 require 'logger'
 require 'find'
 
-#for testing on staging:
-#remember to update testing_value_file (line 31 / 32)
 
 # ---------------------- VARIABLES
 #old vars
@@ -28,8 +26,8 @@ dropbox_filepath = File.join('/', project_name, 'IN', filename_split)
 bookmaker_authkeys_dir = File.join(File.dirname(__FILE__), '../bookmaker_authkeys')
 generated_access_token = File.read("#{bookmaker_authkeys_dir}/access_token.txt")
 tmp_dir=File.join(working_dir, basename_normalized)
-#testing_value_file = File.join("C:", "staging.txt")
-testing_value_file = File.join("C:", "nothing.txt")
+testing_value_file = File.join("C:", "staging.txt")
+#testing_value_file = File.join("C:", "nothing.txt")  #for testing
 errlog = false
 errFile = File.join(inbox, "ERROR_RUNNING_#{filename_normalized}.txt")
 
