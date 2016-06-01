@@ -75,19 +75,19 @@ else
 	#set appropriate email text based on presence of /IN/errfile or /tmpdir/errlog
 	if errlog
 		logger.info('validator_mailer') {"error log found in tmpdir, setting email text accordingly"}	
-		subject="#{project_name} has completed for #{filename_normalized}"
-		body_a="#{project_name} has finished running on file #{filename_normalized}."
-		body_b="Both your original file and the updated 'DONE' file are now located in the \'#{project_name}/OUT\' Dropbox folder."
+		subject="ERROR running #{project_name} on #{filename_split}"
+		body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."
+		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 	elsif File.file?(errFile)	
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		subject="ERROR running #{project_name} on #{filename_split}"
-		body_a="Unable to run #{project_name} on file #{filename_split}: this file is not a .doc or .docx and could not be processed."
-		body_b="#{filename_split} and the error notification can be found in the \'#{project_name}/IN\' Dropbox folder"		
+		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
+		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/IN\' Dropbox folder"		
 	else	
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
-		subject="ERROR running #{project_name} on #{filename_split}"
-		body_a="An error occurred while attempting to run #{project_name} on your file #{filename_split}."
-		body_b="Both your original file and the error notice are now located in the \'#{project_name}/OUT\' Dropbox folder."		
+		subject="#{project_name} has completed for #{filename_normalized}"
+		body_a="#{project_name} has finished running on file \'#{filename_normalized}\'."
+		body_b="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 	end
 
 	#setting up handling for additional cc's:
