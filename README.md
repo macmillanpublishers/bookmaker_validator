@@ -1,5 +1,5 @@
 # bookmaker_validator
-bookmaker_validator accepts .doc(x) files via Dropbox, and then runs checks and auto-repairs on them via Word Macro(s).
+bookmaker_validator accepts .doc(x) files via Dropbox, and then runs checks and auto-repairs them via Word Macro(s).
 
 # Dependencies
 #### Dropbox sdk gem:
