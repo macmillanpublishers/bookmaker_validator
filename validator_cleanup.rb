@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'logger'
+require 'find'
 
 # ---------------------- VARIABLES
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -19,7 +20,8 @@ tmp_dir=File.join(working_dir, basename_normalized)
 working_file = File.join(tmp_dir, filename_normalized)
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
 inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
-errfile = Dir.glob("#{tmp_dir}/*.{json,log,txt}")
+errlog = false
+errfile = ''
 err_notice = File.join(outbox,"ERROR--#{filename_normalized}--Validator_Failed.txt")
 
 
@@ -33,7 +35,16 @@ end
 
 
 #--------------------- RUN
-if errfile.any?
+#check for errlog in tmp_dir:
+Find.find(tmp_dir) { |file|
+	if file =~ /^.*\.(txt|json|log)/ && file !~ /^.*userinfo.json/
+		logger.info('validator_mailer') {"error log found in tmpdir: #{file}, setting email text accordingly"}
+		errlog = true
+		errfile = file
+	end
+}
+
+if errlog
 	logger.info('validator_cleanup') {"a major error was detected while running macros on \"#{filename_normalized}\""}
 	FileUtils.cp(errfile, logfolder)   #copy error logfile to logdir
 	FileUtils.rm_rf tmp_dir     #optionally still delete tmp_dir for file:
