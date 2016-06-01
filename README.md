@@ -27,7 +27,7 @@ And a working dir should reside here:
 Informational logs from all scripts and the macro are piped into the existing logfile for a given file, in *S:\validator_tmp\logs*
 
 #### Stderr
-* Error output from *macros* is expected dropped in the same dir as the target file (the one macros are being run upon).
+* Error output from *macros* is expected in the same dir as the target file (the file the macros are running on).
 Any extraneous files in the tmpdir ending in .json, .txt or .log will be handled as errors by the mailer and cleanup scripts, and moved to *S:\validator_tmp\logs* for review.
 
 * Caught errors are piped to the same logfile as stdout.  Fatal & uncaught errors from the .rb & .ps1 scripts are logged to *S:\resources\logs* via the .bat.
