@@ -19,11 +19,13 @@ Attribute VB_Name = "Validator"
 '   macro to continue.
 
 
+' ===== Global Declarations ===================================================
 Option Explicit
-
 ' For error checking
 Private Const strValidator As String = "Bookmaker.Validator."
-Private strActiveDoc As String
+' Create path for alert file in same dir as ACTIVE doc (NOT ThisDocument)
+Private strAlertPath As String
+
 
 ' ===== Launch ================================================================
 ' Set up error checking, suppress alerts, check references before calling that
@@ -34,17 +36,20 @@ Private strActiveDoc As String
 
 Public Sub Launch(FilePath As String, Optional LogPath As String)
 
-  ' Note, none of these will trap for compile errors
+  ' Note, none of these will trap for compile errors!!
   On Error GoTo LaunchError   ' Suppresses run-time errors, passes to label
   Application.DisplayAlerts = wdAlertsNone  ' Only suppresses MsgBox function
-  
+
+  ' set global variable for path to write alert messages to, returns False if
+  ' FilePath doesn't exist or point to a real file.
+  If SetAlertPath(FilePath) = False Then
+    Err.Raise 30001
+  End If
+  Debug.Print strAlertPath
   ' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
   ' IN THIS PROCEDURE! If ref is missing, will throw compile error.
   If IsRefMissing = True Then
     Err.Raise 30000
-  Else
-    ' Everything is good, go about your business
-    
   End If
 
   
@@ -60,18 +65,24 @@ Cleanup:
 
 LaunchError:
   Err.Source = strValidator & "Launch"
-  If Err.Number = 30000 Then
-    Err.Description = "Reference missing"
-  End If
+  ' Have to assume here error may occur before we can access general error
+  ' checker, so do everything in this module.
+  Select Case Err.Number
+    Case 30000
+      Err.Description = "Reference missing"
+    Case 30001
+      Err.Description = "The string passed for the `FilePath` argument, " & _
+        Chr(34) & FilePath & Chr(34) & ", does not point to a valid file."
+  End Select
   ' Can't call primary error checker -- it's in the ref!
+  ' Err object persists when new procedure is called, don't need to pass as arg
   Call WriteAlert
 End Sub
 
 
 ' ===== CheckRef ==============================================================
 ' Checks if required projects are referenced and sets them, if possible. File
-' must be in same dir as this one. ProjName is the string the project is ref'd
-' by in code, but in this case it must also match the file name w/o the ext.
+' must be in same dir as this project.
 
 Private Function IsRefMissing() As Boolean
   On Error GoTo IsRefMissingError
@@ -121,25 +132,68 @@ IsRefMissingError:
   Call WriteAlert
 End Function
 
+
+' ===== SetAlertPath ==========================================================
+' Set local path to write Alerts (i.e., unhandled errors). Must declare private
+' global variable up top! On server, tries to write to same path as the file
+' passed to Launch, if fails defaults to `validator_tmp`
+
+Private Function SetAlertPath(origPath As String) As Boolean
+  Dim strDir As String
+  Dim strFile As String
+  Dim lngSep As Long
+  
+  ' Validate file path. `Dir("")` returns first file in default Templates path
+  ' so we have to check for null string AND file exists...
+  If origPath <> vbNullString And Dir(origPath) <> vbNullString Then
+    SetAlertPath = True
+    ' Separate directory from file name
+    lngSep = InStrRev(origPath, Application.PathSeparator)
+    strDir = VBA.Left(origPath, lngSep)  ' includes trailing separator
+    strFile = VBA.Right(origPath, Len(origPath) - lngSep)
+    Debug.Print strDir & " | " & strFile
+  
+  ' If file DOESN'T exist, set defaults
+  Else
+    SetAlertPath = False
+    Dim strLocalUser As String
+    ' If we're on server, use validator default location
+    strLocalUser = Environ("USERNAME")
+    If strLocalUser = "padwoadmin" Then ' we're on the server
+      strDir = "S:/validator_tmp/"
+    ' If not, just use desktop
+    Else
+      strDir = Environ("USERPROFILE") & Application.PathSeparator & "Desktop" _
+        & Application.PathSeparator
+    End If
+  End If
+  
+  ' build full alert file name
+  strFile = "ALERT_" & strFile & "_" & Format(Date, "yyyy-mm-dd") & ".txt"
+  
+  ' combine path & file name!
+  ' this is a global var that WriteAlert function can access directly.
+  strAlertPath = strDir & strFile
+
+End Function
+
+
 ' ===== WriteAlert ============================================================
 ' First intended as last resort if refs are missing, but maybe Err is always
 ' returned by ErrorChecker (or it's passed ByRef, so it's just updated), and
 ' we always write the Alert from the primary project. Then different projects
 ' can handle where to write alerts differently.
 
+' Note `strAlertPath` is a private global variable that needs to be created
+' before this is run.
+
 Private Sub WriteAlert()
-  ' Create path for alert file in same dir as ACTIVE doc (NOT ThisDocument)
-  Dim strAlertPath As String
-  With ActiveDocument
-    strAlertPath = .Path & Application.PathSeparator & "ALERT_" & VBA.Left(.Name, _
-      InStr(.Name, ".")) & "txt"
-  End With
-'  Debug.Print strAlertPath
   ' Create log message
   Dim strAlert As String
-  strAlert = Now & " | " & Err.Source & vbNewLine & _
-    Err.Number & ": " & Err.Description & vbNewLine & _
-      "========================================="
+  strAlert = "=========================================" & vbNewLine & _
+    Now & " | " & Err.Source & vbNewLine & _
+    Err.Number & ": " & Err.Description & vbNewLine
+
   ' Append message to log file
   Dim FileNum As Long
   FileNum = FreeFile()
@@ -150,6 +204,7 @@ Private Sub WriteAlert()
   ' And now stop ALL code.
   End
 End Sub
+
 
 ' ===== Main ==================================================================
 ' Once we know we've got the correct references set up, we can build our macro.
@@ -186,10 +241,9 @@ Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validatortest.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
   Exit Sub
 
 TestError:
   Debug.Print Err.Number & ": " & Err.Description
 End Sub
-
