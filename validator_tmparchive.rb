@@ -14,7 +14,7 @@ input_file = File.expand_path(unescapeargv)
 input_file = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 input_file_normalized = input_file.gsub(/ /, "")
-filename_normalized = filename_split.scan( /[^[:alnum:]\._-]/ ) { |badchar| filename_split=filename_split.tr(badchar,'') } #strip any chars but alphanumeric, plus these 3 .-_
+filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
 basename_normalized = File.basename(filename_normalized, ".*")
 extension = File.extname(filename_normalized)
 project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
@@ -51,7 +51,7 @@ logger.info "###################################################################
 logger.info('validator_tmparchive') {"file \"#{filename_normalized}\" was dropped into the #{project_name} folder"}
 
 #test filename for isbn and fyle type for =~ .doc
-if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9,-]{10,14}/
+if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/
 
     #move file into tmparchive
     logger.info('validator_tmparchive') {"\"#{basename_normalized}\" is a .doc or .docx with isbn in title, moving to tmpdir"}
@@ -71,7 +71,7 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9,-]{
         logger.info('validator_tmparchive') {"data warehouse lookup on isbn \"#{isbn}\"failed, skipping write to json"}
 
     else  #lookup was good, continue: 
-        logger.info('validator_tmparchive') {"data warehouse lookup PM for isbn \"#{isbn}\"succeeded, looking up PE, writing to json"}
+        logger.info('validator_tmparchive') {"data warehouse lookup PM for isbn \"#{isbn}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
         thissql_B = personSearchSingleKey(isbn, "EDITION_EAN", "Production Editor")
         myhash_B = runPeopleQuery(thissql_B)
         datahash = {}
@@ -91,9 +91,9 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9,-]{
 elsif filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_tmparchive') {"ignoring our own .txt outfile"}
 else
-    logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no isbn, posting error.txt to the inbox for user."}
+    logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no isbn, posting error.txt to the inbox for user; exiting tmparchive.rb."}
     File.open(errFile, 'w') { |f|
-        f.puts "Unable to process \"#{filename_normalized}\". Either it is not a .doc or .docx file, or no ISBN was included in the filename."
+        f.puts "Unable to process \"#{filename_normalized}\". Either it is not a .doc or .docx file, or no ISBN was included in the filename; exiting tmparchive.rb."
     }
 end
 

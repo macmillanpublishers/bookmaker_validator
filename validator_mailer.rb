@@ -10,7 +10,7 @@ input_file = File.expand_path(unescapeargv)
 input_file = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 input_file_normalized = input_file.gsub(/ /, "")
-filename_normalized = filename_split.scan( /[^[:alnum:]\._-]/ ) { |badchar| filename_split=filename_split.tr(badchar,'') } #strip any chars but alphanumeric, plus these 3 .-_
+filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
 basename_normalized = File.basename(filename_normalized, ".*")
 extension = File.extname(filename_normalized)
 project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
@@ -24,6 +24,7 @@ bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json')
 submitter_file = File.join(tmp_dir,'submitter.json')
 testing_value_file = File.join("C:", "staging.txt")
+#testing_value_file = File.join("C:", "stagasdsading.txt")
 inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
 errFile = File.join(inbox, "ERROR_RUNNING_#{filename_normalized}.txt")
 
@@ -130,8 +131,9 @@ else
 
 	#check for errlog in tmp_dir:
 	Find.find(tmp_dir) { |file|
-		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file
+		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file && file != tmp_dir
 			logger.info('validator_mailer') {"error log found in tmpdir: #{file}"}
+			logger.info('validator_mailer') {"file: #{file}"}
 			errlog = true
 		end
 	}
@@ -182,12 +184,12 @@ MESSAGE_END
 	                              user_email, cc_emails
 	  end
 	end
-	logger.info('validator_mailer') {"sent primary notification email, exiting email unless lookup failed"}	 
+	logger.info('validator_mailer') {"sent primary notification email, exiting mailer"}	 
 end	
 
 #emailing workflows if one of our lookups failed
 if no_pm || no_pe || api_error
-	logger.info('validator_mailer') {"one of our lookups failed"}	 
+	logger.info('validator_mailer') {"one (or more) of our lookups failed"}	 
 	message_b = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>

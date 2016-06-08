@@ -1,7 +1,7 @@
 ﻿#------------------------VARIABLES
 param([string]$inputFile)
 $filename=split-path $inputFile -Leaf			#file name without path
-$filename_normalized=$filename.replace(' ','')
+$filename_normalized=$filename -replace '[^a-zA-Z0-9-_.]',''
 $filebasename=([io.fileinfo]$filename_normalized).basename
 $fileext=([io.fileinfo]$filename_normalized).extension
 $WorkingDir='S:\validator_tmp'
@@ -30,7 +30,7 @@ if ((test-path $bookmaker_file) -And ($fileext -eq ".doc" -Or $fileext -eq ".doc
 	$word = new-object -comobject word.application # create a com object interface (word application)
 	$word.visible = $false
 	$doc = $word.documents.open($working_file)
-	$word.run($macroName, [ref]$working_file, [ref]$Logfile)
+	$word.run($macroName, $working_file, $Logfile)   #alt: $word.run($macroName, [ref]$working_file, [ref]$Logfile)
 	$doc.save()
 	#if ($PSVersionTable.PSVersion.Major -gt 2) {
 	#    $doc.saveas($working_file)
@@ -45,8 +45,7 @@ if ((test-path $bookmaker_file) -And ($fileext -eq ".doc" -Or $fileext -eq ".doc
 if ($fileext -ne ".doc" -And $fileext -ne ".docx") {
 	LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- file is a ""$($fileext)"", needs to be .doc or .docx , skipping Macro"
 }
-if !(test-path $bookmaker_file)
- {
+if (!(test-path $bookmaker_file)) {
 	LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- book_info.json is missing, skipping executing Macro" 
 }
 
