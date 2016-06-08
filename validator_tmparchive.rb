@@ -25,6 +25,8 @@ working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
+stylecheck_file = File.join(tmp_dir,'style_check.json')
+submitter_file = File.join(tmp_dir,'submitter.json')
 testing_value_file = File.join("C:", "staging.txt")
 inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
 errFile = File.join(inbox, "ERROR_RUNNING_#{filename_normalized}.txt")
@@ -48,7 +50,6 @@ Find.find(logfolder) { |file|
 logger.info "############################################################################"
 logger.info('validator_tmparchive') {"file \"#{filename_normalized}\" was dropped into the #{project_name} folder"}
 
-puts filename_normalized
 #test filename for isbn and fyle type for =~ .doc
 if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9,-]{10,14}/
 
