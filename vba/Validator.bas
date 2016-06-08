@@ -21,10 +21,12 @@ Attribute VB_Name = "Validator"
 
 ' ===== Global Declarations ===================================================
 Option Explicit
-' For error checking
+' For error checking:
 Private Const strValidator As String = "Bookmaker.Validator."
 ' Create path for alert file in same dir as ACTIVE doc (NOT ThisDocument)
 Private strAlertPath As String
+' Store style check pass/fail values in this json
+Private strJsonPath As String
 
 
 ' ===== Launch ================================================================
@@ -45,17 +47,20 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   If SetAlertPath(FilePath) = False Then
     Err.Raise 30001
   End If
-  Debug.Print strAlertPath
+  
+  ' ditto all that for LogPath
+
   ' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
   ' IN THIS PROCEDURE! If ref is missing, will throw compile error.
   If IsRefMissing = True Then
     Err.Raise 30000
   End If
-
   
-  
-  
-  
+' ===================================================
+' Once we're certain genUtils is available, pass to Main validator procedure
+' and use that function for handling errors.
+' ===================================================
+  Call Main(FilePath)
   
 Cleanup:
   Application.DisplayAlerts = wdAlertsAll
@@ -73,6 +78,8 @@ LaunchError:
     Case 30001
       Err.Description = "The string passed for the `FilePath` argument, " & _
         Chr(34) & FilePath & Chr(34) & ", does not point to a valid file."
+    Case 30002
+      Err.Description = "Something about `style_check.json` failed?"
   End Select
   ' Can't call primary error checker -- it's in the ref!
   ' Err object persists when new procedure is called, don't need to pass as arg
@@ -136,22 +143,24 @@ End Function
 ' ===== SetAlertPath ==========================================================
 ' Set local path to write Alerts (i.e., unhandled errors). Must declare private
 ' global variable up top! On server, tries to write to same path as the file
-' passed to Launch, if fails defaults to `validator_tmp`
+' passed to Launch, if fails defaults to `validator_tmp`.
+
+' Also setting path to `style_check.json here, since in same dir.
 
 Private Function SetAlertPath(origPath As String) As Boolean
   Dim strDir As String
   Dim strFile As String
   Dim lngSep As Long
   
-  ' Validate file path. `Dir("")` returns first file in default Templates path
-  ' so we have to check for null string AND file exists...
+  ' Validate file path. `Dir("")` returns first file or dir in default Templates
+  ' dir so we have to check for null string AND if file exists...
   If origPath <> vbNullString And Dir(origPath) <> vbNullString Then
     SetAlertPath = True
     ' Separate directory from file name
     lngSep = InStrRev(origPath, Application.PathSeparator)
     strDir = VBA.Left(origPath, lngSep)  ' includes trailing separator
     strFile = VBA.Right(origPath, Len(origPath) - lngSep)
-    Debug.Print strDir & " | " & strFile
+'    Debug.Print strDir & " | " & strFile
   
   ' If file DOESN'T exist, set defaults
   Else
@@ -174,6 +183,8 @@ Private Function SetAlertPath(origPath As String) As Boolean
   ' combine path & file name!
   ' this is a global var that WriteAlert function can access directly.
   strAlertPath = strDir & strFile
+  ' ditto global var for style check file
+  strJsonPath = strDir & "style_check.json"
 
 End Function
 
@@ -205,31 +216,51 @@ Private Sub WriteAlert()
   End
 End Sub
 
+' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'     PROCEDURES BELOW CAN REFERENCE `genUtils`
+' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 ' ===== Main ==================================================================
 ' Once we know we've got the correct references set up, we can build our macro.
+' DocPath exists and is a Word file already validated.
 
-Private Function Main(bkmkrDoc As Document)
-  ' The .ps1 that calls this macro also opens the file, so should already be
-  ' part of the Documents collection, but we'll check anyway.
-  If genUtils.GeneralHelpers.IsOpen(FilePath) = False Then
-    Documents.Open (FilePath)
-  End If
+Private Function Main(DocPath As String) As Boolean
+  ' Set up dictionary to store test results (later write to log)
+  Dim strKey As String
+  Dim strValue As String
+  Dim blnValue As Boolean
+  Dim dictValue As genUtils.Dictionary
+  
+  strKey = "styled"
+  blnValue = True
+  Set dictValue = genUtils.ClassHelpers.NewDictionary
+  dictValue.Add "testing sub-key", "test sub-value"
+  dictValue.Add "testing sub-key2", True
+  
+  Call genUtils.AddToJson(strJsonPath, strKey, blnValue)
 
-  ' create reference to our document
-  Dim docActive As Document
-  Set docActive = Documents(FilePath)
-  
-  ' create dictionary of style information
-  Dim dictStyles As genUtils.Dictionary
-  Set dictStyles = genUtils.Reports.StyleDictionary(docActive)
-  
-  Debug.Print dictStyles.Count
-  Debug.Print dictStyles("styled").Count
-  Debug.Print dictStyles("unstyled").Count
-  
+
+'  ' The .ps1 that calls this macro also opens the file, so should already be
+'  ' part of the Documents collection, but we'll check anyway.
+'  If genUtils.GeneralHelpers.IsOpen(DocPath) = False Then
+'    Documents.Open (DocPath)
+'  End If
+'
+'  ' create reference to our document
+'  Dim docActive As Document
+'  Set docActive = Documents(DocPath)
+'
+'  ' create dictionary of style information
+'  Dim dictStyles As genUtils.Dictionary
+'  Set dictStyles = genUtils.Reports.StyleDictionary(docActive)
+'
+'  Debug.Print dictStyles.Count
+'  Debug.Print dictStyles("styled").Count
+'  Debug.Print dictStyles("unstyled").Count
+  Main = True
+  Exit Function
 MainError:
-  Err.Source = strValidator & "Launch"
+  Err.Source = strValidator & "Main"
   If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
     Resume
   Else
@@ -237,11 +268,17 @@ MainError:
   End If
 End Function
 
+
+
+
+
+
+
 Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validatortest.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
   Exit Sub
 
 TestError:
