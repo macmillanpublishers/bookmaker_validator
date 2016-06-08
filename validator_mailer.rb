@@ -128,7 +128,13 @@ else
 		logger.info('validator_mailer') {"no book_info.json found, unable to retrieve pe/pm emails"}	
 		no_pm = true
 	end	
-
+	
+	#get info from style_check.json
+	file_c = File.open(stylecheck_file, "r:utf-8")
+	content_c = file_c.read
+	file_c.close
+	stylecheck_hash = JSON.parse(content_c)
+	
 	#check for errlog in tmp_dir:
 	Find.find(tmp_dir) { |file|
 		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file && file != tmp_dir
@@ -139,27 +145,30 @@ else
 	}
 
 	#set appropriate email text based on presence of /IN/errfile /tmpdir/errlog, or missing book_info.json
+	subject="ERROR running #{project_name} on #{filename_split}"
+	body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."	
 	body_c=''
 	case 
 	when File.file?(errFile)
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
-		subject="ERROR running #{project_name} on #{filename_split}"
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
 		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
 	when errlog
 		logger.info('validator_mailer') {"error log found in tmpdir, setting email text accordingly"}	
-		subject="ERROR running #{project_name} on #{filename_split}"
-		body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 	when !File.file?(bookinfo_file)
 		logger.info('validator_mailer') {"no book_info.json exists, data_warehouse lookup failed-- setting email text accordingly"}	
-		subject="ERROR running #{project_name} on #{filename_split}"
-		body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."
 		body_b="Book-info lookup failed: no book matching this ISBN was found during data-warehouse lookup."	
 		body_c="Your original file and accompanying error notice are now in the \'#{project_name}/OUT\' Dropbox folder."
+	when !stylecheck_hash['isbn']
+		logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
+		subject="#{project_name} completed for #{filename_normalized}"
+		body_a="#{project_name} has finished running on file \'#{filename_normalized}\'."
+		body_b="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."
+		body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."		
 	else 
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
-		subject="#{project_name} has completed for #{filename_normalized}"
+		subject="#{project_name} completed for #{filename_normalized}"
 		body_a="#{project_name} has finished running on file \'#{filename_normalized}\'."
 		body_b="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."	
 	end		

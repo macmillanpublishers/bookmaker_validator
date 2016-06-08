@@ -50,33 +50,34 @@ Find.find(logfolder) { |file|
 logger.info "############################################################################"
 logger.info('validator_tmparchive') {"file \"#{filename_normalized}\" was dropped into the #{project_name} folder"}
 
-#test filename for isbn and fyle type for =~ .doc
+#test filename for isbn_num and fyle type for =~ .doc
 if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/
 
     #move file into tmparchive
-    logger.info('validator_tmparchive') {"\"#{basename_normalized}\" is a .doc or .docx with isbn in title, moving to tmpdir"}
+    logger.info('validator_tmparchive') {"\"#{basename_normalized}\" is a .doc or .docx with isbn_num in title, moving to tmpdir"}
     FileUtils.mkdir_p tmp_dir
     File.open(inprogress_file, 'w') { |f|
         f.puts "Processing in progress for file #{filename_normalized}."
     }
     FileUtils.cp input_file, working_file
 
-    #check isbn against data-warehouse
-    isbn = filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-    thissql = personSearchSingleKey(isbn, "EDITION_EAN", "Production Manager")
+    #check isbn_num against data-warehouse
+    isbn_num = filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+    thissql = personSearchSingleKey(isbn_num, "EDITION_EAN", "Production Manager")
     myhash = runPeopleQuery(thissql)
 
     #verify that data warehouse returned something
     if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book'] 
-        logger.info('validator_tmparchive') {"data warehouse lookup on isbn \"#{isbn}\"failed, skipping write to json"}
+        logger.info('validator_tmparchive') {"data warehouse lookup on isbn_num \"#{isbn_num}\"failed, skipping write to json"}
 
     else  #lookup was good, continue: 
-        logger.info('validator_tmparchive') {"data warehouse lookup PM for isbn \"#{isbn}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
-        thissql_B = personSearchSingleKey(isbn, "EDITION_EAN", "Production Editor")
+        logger.info('validator_tmparchive') {"data warehouse lookup PM for isbn_num \"#{isbn_num}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
+        thissql_B = personSearchSingleKey(isbn_num, "EDITION_EAN", "Production Editor")
         myhash_B = runPeopleQuery(thissql_B)
         datahash = {}
         datahash.merge!(production_editor: myhash_B['book']['PERSON_REALNAME'][0])
         datahash.merge!(production_manager: myhash['book']['PERSON_REALNAME'][0])
+		datahash.merge!(isbn: "#{isbn_num}")
         datahash.merge!(title: myhash['book']['WORK_COVERTITLE'][0])
         datahash.merge!(author: myhash['book']['WORK_COVERAUTHOR'][0])
         datahash.merge!(product_type: myhash['book']['PRODUCTTYPE_DESC'][0])
@@ -91,9 +92,9 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
 elsif filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_tmparchive') {"ignoring our own .txt outfile"}
 else
-    logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no isbn, posting error.txt to the inbox for user; exiting tmparchive.rb."}
+    logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no isbn_num, posting error.txt to the inbox for user; exiting tmparchive.rb."}
     File.open(errFile, 'w') { |f|
-        f.puts "Unable to process \"#{filename_normalized}\". Either it is not a .doc or .docx file, or no ISBN was included in the filename; exiting tmparchive.rb."
+        f.puts "Unable to process \"#{filename_normalized}\". Either it is not a .doc or .docx file, or no isbn_num was included in the filename; exiting tmparchive.rb."
     }
 end
 
