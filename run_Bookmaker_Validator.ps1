@@ -7,6 +7,7 @@ $fileext=([io.fileinfo]$filename_normalized).extension
 $WorkingDir='S:\validator_tmp'
 $tmpDir="$($WorkingDir)\$($filebasename)"
 $working_file="$($tmpDir)\$($filename_normalized)"
+$bookmaker_file="$($tmpDir)\book_info.json"
 #the Template with the Macro needs to be in the Word Start folder
 #the macro project name should not be specified, but include module name: 'module.macro'
 $macroName="Validator.Launch"
@@ -23,7 +24,7 @@ Function LogWrite
 LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- received file ""$($working_file)"", checking filetype."
 
 #--------------------- RUN THE MACRO
-if ($fileext -eq ".doc" -Or $fileext -eq ".docx") {
+if ((test-path $bookmaker_file) -And ($fileext -eq ".doc" -Or $fileext -eq ".docx")) {
 	LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- file is a ""$($fileext)"", commencing run Macro ""$($macroName)""..."
 	cd $tmpDir
 	$word = new-object -comobject word.application # create a com object interface (word application)
@@ -41,8 +42,12 @@ if ($fileext -eq ".doc" -Or $fileext -eq ".docx") {
 	$TimestampB=(Get-Date).tostring("yyyy-MM-dd hh:mm:ss")   
 	LogWrite "$($TimestampB)      : run_Bookmaker_Validator -- Macro ""$($macroName)"" completed, exiting .ps1"  
 }
-Else {
+if ($fileext -ne ".doc" -And $fileext -ne ".docx") {
 	LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- file is a ""$($fileext)"", needs to be .doc or .docx , skipping Macro"
+}
+if !(test-path $bookmaker_file)
+ {
+	LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- book_info.json is missing, skipping executing Macro" 
 }
 
 

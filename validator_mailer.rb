@@ -143,7 +143,7 @@ else
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		subject="ERROR running #{project_name} on #{filename_split}"
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
-		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/IN\' Dropbox folder"	
+		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
 	when errlog
 		logger.info('validator_mailer') {"error log found in tmpdir, setting email text accordingly"}	
 		subject="ERROR running #{project_name} on #{filename_split}"
