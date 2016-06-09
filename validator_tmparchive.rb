@@ -77,11 +77,13 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
         datahash = {}
         datahash.merge!(production_editor: myhash_B['book']['PERSON_REALNAME'][0])
         datahash.merge!(production_manager: myhash['book']['PERSON_REALNAME'][0])
+        datahash.merge!(work_id: myhash['book']['WORK_ID'][0])		
 		datahash.merge!(isbn: "#{isbn_num}")
         datahash.merge!(title: myhash['book']['WORK_COVERTITLE'][0])
         datahash.merge!(author: myhash['book']['WORK_COVERAUTHOR'][0])
         datahash.merge!(product_type: myhash['book']['PRODUCTTYPE_DESC'][0])
         datahash.merge!(imprint: myhash['book']['IMPRINT_DISPLAY'][0])
+        datahash.merge!(isbn_mismatch: false)		
         finaljson = JSON.generate(datahash)
 
         # Printing final JSON object

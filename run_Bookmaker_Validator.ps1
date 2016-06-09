@@ -28,9 +28,10 @@ if ((test-path $bookmaker_file) -And ($fileext -eq ".doc" -Or $fileext -eq ".doc
 	LogWrite "$($TimestampA)      : run_Bookmaker_Validator -- file is a ""$($fileext)"", commencing run Macro ""$($macroName)""..."
 	cd $tmpDir
 	$word = new-object -comobject word.application # create a com object interface (word application)
-	$word.visible = $false
+	$word.visible = $true
 	$doc = $word.documents.open($working_file)
-	$word.run($macroName, $working_file, $Logfile)   #alt: $word.run($macroName, [ref]$working_file, [ref]$Logfile)
+	$word.run($macroName, [ref]$working_file, [ref]$Logfile)
+	#$word.run($macroName, $working_file, $Logfile)
 	$doc.save()
 	#if ($PSVersionTable.PSVersion.Major -gt 2) {
 	#    $doc.saveas($working_file)

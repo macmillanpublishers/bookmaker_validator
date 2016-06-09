@@ -45,7 +45,10 @@ errlog = false
 api_error = false
 no_pm = false
 no_pe = false
-no_stylecheck = false
+stylecheck_complete = false 
+stylecheck_styled = false
+stylecheck_isbns = []
+isbn_mismatch = false
 
 
 #--------------------- RUN
@@ -74,13 +77,44 @@ else
 		end
 	end
 
+	#get info from style_check.json
+	if File.file?(stylecheck_file)
+		file_c = File.open(stylecheck_file, "r:utf-8")
+		content_c = file_c.read
+		file_c.close
+		stylecheck_hash = JSON.parse(content_c)
+		stylecheck_complete = stylecheck_hash['completed']
+		stylecheck_styled = stylecheck_hash['styled']['pass']
+		stylecheck_isbns = stylecheck_hash['isbn']['list']
+	end	
+	
 	if File.file?(bookinfo_file)
-		#get pm & pe emails:
+		#crosscheck isbns via work_id
 		file_a = File.open(bookinfo_file, "r:utf-8")
 		content_a = file_a.read
 		file_a.close
 		bookinfo_hash = JSON.parse(content_a)
-
+		
+		stylecheck_isbns.each { |sc_isbn| 
+			if sc_isbn != bookinfo_hash['isbn']
+				thissql_C = exactSearchSingleKey(sc_isbn, "EDITION_EAN")
+				sc_work_id = runPeopleQuery(thissql_C)['book']['WORK_ID'][0]
+				if sc_work_id != bookinfo_hash['work_id']
+					bookinfo_hash['isbn_mismatch'] = true
+					isbn_mismatch = true
+				end			
+			end	
+		}
+		
+		if isbn_mismatch = true
+			finaljson = JSON.generate(bookinfo_hash)
+			# Printing final JSON object
+			File.open(bookinfo_file, 'w+:UTF-8') do |f|
+				f.puts finaljson
+			end
+		end
+		
+		#get pm & pe emails:
 		file_b = File.open(pe_pm_file, "r:utf-8")
 		content_b = file_b.read
 		file_b.close
@@ -130,16 +164,6 @@ else
 		no_pm = true
 	end	
 	
-	#get info from style_check.json
-	if File.file?(stylecheck_file)
-		file_c = File.open(stylecheck_file, "r:utf-8")
-		content_c = file_c.read
-		file_c.close
-		stylecheck_hash = JSON.parse(content_c)
-	else
-		no_stylecheck = true	
-	end	
-	
 	#check for errlog in tmp_dir:
 	Find.find(tmp_dir) { |file|
 		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file && file != tmp_dir
@@ -160,27 +184,27 @@ else
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
 		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
-	when errlog || !stylecheck_hash['completed'] || no_stylecheck
+	when errlog || !stylecheck_complete
 		logger.info('validator_mailer') {"error log found in tmpdir, or style_check.json completed value not true., setting email text accordingly"}	
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 	when !File.file?(bookinfo_file)
 		logger.info('validator_mailer') {"no book_info.json exists, data_warehouse lookup failed-- setting email text accordingly"}	
 		body_b="Book-info lookup failed: no book matching this ISBN was found during data-warehouse lookup."	
 		body_c="Your original file and accompanying error notice are now in the \'#{project_name}/OUT\' Dropbox folder."
-	when !stylecheck_hash['styled']['pass']
+	when !stylecheck_styled
 		logger.info('validator_mailer') {"document appears to be unstyled-- setting email text accordingly"}
 		subject="#{project_name} determined #{filename_normalized} to be UNSTYLED"
 		body_a="Unable to run #{project_name} on file \"#{filename_split}\": this document is not styled."
 		body_b="Your original file has been moved to the \'#{project_name}/OUT\' Dropbox folder."
-		# if !stylecheck_hash['isbn']['pass']
-		# 	body_c="Additional WARNING: the ISBN in your document's filename does not match the one found in the manuscript."
-		# end		
-	# when !stylecheck_hash['isbn']['pass']
-	# 	logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
-	# 	subject="#{project_name} completed for #{filename_normalized}, with warning"
-	# 	body_a=body_a_complete
-	# 	body_b=body_b_complete
-	# 	body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."
+		if isbn_mismatch
+			body_c="Additional WARNING: the ISBN in your document's filename does not match one found in the manuscript."
+		end		
+	when isbn_mismatch
+		logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
+	 	subject="#{project_name} completed for #{filename_normalized}, with warning"
+	 	body_a=body_a_complete
+	 	body_b=body_b_complete
+	 	body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."
 	else 
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
 		subject="#{project_name} completed for #{filename_normalized}"

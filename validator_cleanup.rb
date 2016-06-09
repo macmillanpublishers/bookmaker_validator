@@ -39,7 +39,9 @@ warn_notice = File.join(outbox,"WARNING--#{filename_normalized}--validator_compl
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
 errlog = false
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-no_stylecheck = false
+stylecheck_complete = false 
+stylecheck_styled = false
+isbn_mismatch = false
 
 
 #--------------------- RUN
@@ -49,8 +51,17 @@ if File.file?(stylecheck_file)
 	content_c = file_c.read
 	file_c.close
 	stylecheck_hash = JSON.parse(content_c)
-else	
-	no_stylecheck = true		
+	stylecheck_complete = stylecheck_hash['completed']
+	stylecheck_styled = stylecheck_hash['styled']['pass']	
+end
+
+#check for isbn_mismatch
+if File.file?(stylecheck_file)
+	file_a = File.open(bookinfo_file, "r:utf-8")
+	content_a = file_a.read
+	file_a.close
+	bookinfo_hash = JSON.parse(content_a)
+	isbn_mismatch = bookinfo_hash["isbn_mismatch"]
 end
 
 #check for errlog in tmp_dir:
@@ -64,14 +75,16 @@ if Dir.exist?(tmp_dir)
 end
 
 case
+when filename_normalized =~ /^.*_IN_PROGRESS.txt/
+	logger.info('validator_mailer') {"this is a validator marker file, skipping (e.g. IN_PROGRESS)"}	
 when File.file?(errFile)
 	logger.info('validator_cleanup') {"errFile found, indicating file failed basic validation, moving orig & errNotice from IN to OUT folder"}
 	FileUtils.mv input_file, outbox
 	FileUtils.mv errFile, outbox
-when !File.file?(bookinfo_file) || !stylecheck_hash['styled']['pass']
+when !File.file?(bookinfo_file) || !stylecheck_styled
 	FileUtils.mv input_file, outbox	  #return the original file to user
 	FileUtils.rm_rf tmp_dir   #alt:  could keep the tmpdir for review like following case
-	if !stylecheck_hash['styled']['pass']
+	if !stylecheck_styled
 		logger.info('validator_cleanup') {"adding warn notice to outbox for unstyled doc"}
 		File.open(warn_notice, 'w') { |f|
         	f.puts "WARNING: Your document is NOT STYLED. Bookmaker_validator cannot run on an unstyled document."
@@ -82,7 +95,7 @@ when !File.file?(bookinfo_file) || !stylecheck_hash['styled']['pass']
     		f.puts "isbn lookup failed for file #{filename_normalized}, bookmaker_validator could not run! Please double-check the isbn in your filename!"
     	}
 	end 
-when errlog || !stylecheck_hash['completed'] || no_stylecheck
+when errlog || !stylecheck_complete
 	logger.info('validator_cleanup') {"a major error(ALERT) was detected while running macros on \"#{filename_normalized}\", moving tmpdir to logfolder for further study"}
 	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
 	FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 
@@ -97,12 +110,12 @@ else
 	FileUtils.mv done_file, outbox
 	FileUtils.mv input_file, outbox
 	FileUtils.rm_rf tmp_dir
-	# if !stylecheck_hash['isbn']['pass']
-	# 	logger.info('validator_cleanup') {"adding warn notice to outbox for isbn mismatch"}
-	# 	File.open(warn_notice, 'w') { |f|
- #        	f.puts "WARNING: ISBN mismatch: the ISBN in your document's filename does not match the one found in the manuscript."
- #    	}
-	# end 
+	if isbn_mismatch
+	 	logger.info('validator_cleanup') {"adding warn notice to outbox for isbn mismatch"}
+	 	File.open(warn_notice, 'w') { |f|
+         	f.puts "WARNING: ISBN mismatch: the ISBN in your document's filename does not match one found in the manuscript."
+     	}
+	end 
 	logger.info('validator_cleanup') {"processing of \"#{filename_normalized}\" completed"}
 end
 
