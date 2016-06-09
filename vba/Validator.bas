@@ -37,6 +37,7 @@ Public Enum ValidatorError
   err_TestsFailed = 30001
   err_RefMissing = 30002
   err_PathInvalid = 30003
+  err_NoPassKey = 30004
 End Enum
 
 
@@ -55,7 +56,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
-  If SetOutputPaths(FilePath) = False Then
+  If SetOutputPaths(FilePath, LogPath) = False Then
     Err.Raise err_PathInvalid
   End If
   
@@ -72,7 +73,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 ' and use that function for handling errors.
 ' ===================================================
   Call Main(FilePath)
-  Call ValidatorCleanup(LogPath)
+  Call ValidatorCleanup
   
 Cleanup:
   Application.DisplayAlerts = wdAlertsAll
@@ -163,10 +164,12 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   Dim strFile As String
   Dim lngSep As Long
   
+  ' Don't use genUtils.IsItThere because we haven't checked refs yet.
   ' Validate file path. `Dir("")` returns first file or dir in default Templates
   ' dir so we have to check for null string AND if file exists...
   If origPath <> vbNullString And Dir(origPath) <> vbNullString Then
-    SetAlertPath = True
+    ' File exists (thus, directory exists too)
+    SetOutputPaths = True
     ' Separate directory from file name
     lngSep = InStrRev(origPath, Application.PathSeparator)
     strDir = VBA.Left(origPath, lngSep)  ' includes trailing separator
@@ -175,7 +178,7 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   
   ' If file DOESN'T exist, set defaults
   Else
-    SetAlertPath = False
+    SetOutputPaths = False
     Dim strLocalUser As String
     ' If we're on server, use validator default location
     strLocalUser = Environ("USERNAME")
@@ -190,12 +193,18 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   
   ' build full alert file name
   strFile = "ALERT_" & strFile & "_" & Format(Date, "yyyy-mm-dd") & ".txt"
+'  Debug.Print strFile
   
   ' combine path & file name!
   ' this is a global var that WriteAlert function can access directly.
   strAlertPath = strDir & strFile
+'  Debug.Print strAlertPath
+
   ' ditto global var for style check file
   strJsonPath = strDir & "style_check.json"
+  ' Also verify log file. Could add more error handling later but for now
+  ' just trusting that will be created by calling .ps1 script
+  strLogPath = origLogPath
 
 End Function
 
@@ -271,16 +280,7 @@ Private Function Main(DocPath As String) As Boolean
     End If
   End If
 
-  
 
-'
-'  ' create dictionary of style information
-'  Dim dictStyles As genUtils.Dictionary
-'  Set dictStyles = genUtils.Reports.StyleDictionary(docActive)
-'
-'  Debug.Print dictStyles.Count
-'  Debug.Print dictStyles("styled").Count
-'  Debug.Print dictStyles("unstyled").Count
   Main = True
   Exit Function
 MainError:
@@ -322,13 +322,17 @@ Public Sub ValidatorCleanup()
   Else
     blnResult = False
     saveValue = wdDoNotSaveChanges
-    Call WriteAlert(blnEnd = False)
+    Call WriteAlert(False)
   End If
   
   ' Close all open documents
   Dim objDoc As Document
+  Dim strExt As String
   For Each objDoc In Documents
-    objDoc.Close saveValue
+    ' don't close any macro templates, might be running code.
+    If VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), ".")) = ".dotm" Then
+      objDoc.Close saveValue
+    End If
   Next objDoc
   
   ' Write our final element to `style_check.json` file
@@ -350,8 +354,75 @@ End Sub
 ' Converts `style_check.json` to human-readable log entry, and writes to log.
 
 Public Sub JsonToLog()
+  On Error GoTo JsonToLogError
   Dim jsonDict As genUtils.Dictionary
   Set jsonDict = genUtils.ReadJson(strJsonPath)
+  
+  Dim strLog As String  ' string to write to log
+' Following Matt's formatting for other scripts
+  strLog = Format(Now, "yyyy-mm-dd hh:mm:ss AMPM") & "   : " & strValidator _
+    & "Launch -- results:" & vbNewLine
+    
+  Dim str27spaces As String
+' To get logs to line up nicely, haha
+  strSpaces = VBA.Space(27)
+  
+' Loop through `style_check.json` and write to log. Can add more detailed info
+' in the future.
+
+' Also don't stress now, but in future could write more generic dict-to-json
+' function by breaking into multiple functions that call each other:
+' Value is an array (return all items in comma-delineated string - REDUCE!)
+' Value is an object (call this function again!)
+' Value is neither (thus, number, string, boolean) - just write to string.
+  Dim strKey1 As String
+  Dim strKey2 As String
+  Dim arrValues() As Variant
+  Dim A As Long
+  
+' Anyway, loop through json data and build string to write to log
+  With jsonDict
+    For Each strKey1 In .Keys
+    ' Value may be another dictionary/object
+      If VBA.IsObject(.Item(strKey1)) = True Then
+      ' loop through THIS dictionary
+        For Each strKey2 In .Item(strKey1).Keys
+          strLog = strLog & strSpaces & strKey1 & ": " & strKey2 & ": "
+        ' Value here might be an array
+          If VBA.IsArray(.Item(strKey1).Item(strKey2)) = True Then
+            arrValues = .Item(strKey1).Item(strKey2)
+            ' Loop through array, write values
+              For A = LBound(arrValues) To UBound(arrValues)
+                If A <> LBound(arrValues) Then
+                  ' add comma and space between values
+                  strLog = strLog & ", "
+                End If
+                strLog = strLog & arrValues(A)
+              Next A
+
+          Else
+          ' Pretty sure it's something we can convert to string directly
+            strLog = strLog & .Item(strKey2)
+          End If
+          strLog = strLog & vbNewLine
+        Next strKey2
+      Else
+        strLog = strLog & strSpaces & strKey1 & ": " & .Item(strKey1) & vbNewLine
+      End If
+    Next strKey1
+  End With
+  
+  Debug.Print strLog
+  
+' Write string to log file, which should have been set earlier!
+  Call genUtils.AppendTextFile(strLogPath, strLog)
+  
+  Exit Sub
+
+JsonToLogError:
+  Err.Source = strValidator & "JsonToLog"
+  Call WriteAlert(blnEnd:=True)
+  
 End Sub
 
 
