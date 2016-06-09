@@ -86,6 +86,9 @@ else
 		stylecheck_complete = stylecheck_hash['completed']
 		stylecheck_styled = stylecheck_hash['styled']['pass']
 		stylecheck_isbns = stylecheck_hash['isbn']['list']
+		logger.info('validator_mailer') {"retrieved from style_check.json- styled:\"#{stylecheck_styled}\", complete:\"#{stylecheck_complete}\", isbns:\"#{stylecheck_isbns}\""}
+	else	
+		logger.info('validator_mailer') {"style_check.json not present or unavailable"}
 	end	
 	
 	if File.file?(bookinfo_file)
@@ -102,6 +105,7 @@ else
 				if sc_work_id != bookinfo_hash['work_id']
 					bookinfo_hash['isbn_mismatch'] = true
 					isbn_mismatch = true
+					logger.info('validator_mailer') {"isbn mismatch found with manuscript isbn: #{sc_isbn}."}
 				end			
 			end	
 		}
