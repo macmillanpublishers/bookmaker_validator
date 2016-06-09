@@ -265,6 +265,7 @@ Private Function Main(DocPath As String) As Boolean
   
   ' ----- OVERALL STYLE CHECKS ------------------------------------------------
   strKey = "styled"
+'
   Set dictTests = genUtils.Reports.StyleCheck(Doc:=docActive)
   If dictTests Is Nothing Then
     Err.Raise ValidatorError.err_TestsFailed
@@ -312,8 +313,9 @@ Public Sub ValidatorCleanup()
   ' at least we'll be sure the macro ends and doesn't get sent in a loop.
   
   ' What if one of the procedures we are calling fails?
+' Actually CAN'T set On Error here: it clears the Err object!
+' And we need WriteAlert to read that, if there is one.
 
-  On Error GoTo ValidatorCleanupError
   Dim blnResult As Boolean
   Dim saveValue As WdSaveOptions
   If Err.Number = 0 Then
@@ -325,12 +327,13 @@ Public Sub ValidatorCleanup()
     Call WriteAlert(False)
   End If
   
+  On Error GoTo ValidatorCleanupError
   ' Close all open documents
   Dim objDoc As Document
   Dim strExt As String
   For Each objDoc In Documents
     ' don't close any macro templates, might be running code.
-    If VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), ".")) = ".dotm" Then
+    If VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), ".")) <> ".dotm" Then
       objDoc.Close saveValue
     End If
   Next objDoc
@@ -363,7 +366,7 @@ Public Sub JsonToLog()
   strLog = Format(Now, "yyyy-mm-dd hh:mm:ss AMPM") & "   : " & strValidator _
     & "Launch -- results:" & vbNewLine
     
-  Dim str27spaces As String
+  Dim strSpaces As String
 ' To get logs to line up nicely, haha
   strSpaces = VBA.Space(27)
   
@@ -375,8 +378,8 @@ Public Sub JsonToLog()
 ' Value is an array (return all items in comma-delineated string - REDUCE!)
 ' Value is an object (call this function again!)
 ' Value is neither (thus, number, string, boolean) - just write to string.
-  Dim strKey1 As String
-  Dim strKey2 As String
+  Dim strKey1 As Variant
+  Dim strKey2 As Variant
   Dim arrValues() As Variant
   Dim A As Long
   
@@ -430,7 +433,25 @@ Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
 
+' =================================================
+' Timer Start
+  Dim StartTime As Double
+  Dim SecondsElapsed As Double
+                                                  
+' Remember time when macro starts
+  StartTime = Timer
+' =================================================
+
   Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
+' ============================================================================
+' ----------------------Timer End-------------------------------------------
+' Determine how many seconds code took to run
+  SecondsElapsed = Round(Timer - StartTime, 2)
+    
+' Notify user in seconds
+  Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
+' ============================================================================
+  
   Exit Sub
 
 TestError:
