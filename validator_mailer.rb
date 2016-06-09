@@ -147,14 +147,18 @@ else
 	#set appropriate email text based on presence of /IN/errfile /tmpdir/errlog, or missing book_info.json
 	subject="ERROR running #{project_name} on #{filename_split}"
 	body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."	
-	body_c=''
+	body_c, body_d='',''
+	subject_complete="#{project_name} completed for #{filename_normalized}"
+	subject_warning="#{subject_complete}, with warning(s)"
+	body_a_complete="#{project_name} has finished running on file \'#{filename_normalized}\'."
+	body_b_complete="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."
 	case 
 	when File.file?(errFile)
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
 		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
-	when errlog
-		logger.info('validator_mailer') {"error log found in tmpdir, setting email text accordingly"}	
+	when errlog || !stylecheck_hash['completed']
+		logger.info('validator_mailer') {"error log found in tmpdir, or style_check.json completed value not true., setting email text accordingly"}	
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 	when !File.file?(bookinfo_file)
 		logger.info('validator_mailer') {"no book_info.json exists, data_warehouse lookup failed-- setting email text accordingly"}	
@@ -162,15 +166,24 @@ else
 		body_c="Your original file and accompanying error notice are now in the \'#{project_name}/OUT\' Dropbox folder."
 	when !stylecheck_hash['isbn']
 		logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
-		subject="#{project_name} completed for #{filename_normalized}"
-		body_a="#{project_name} has finished running on file \'#{filename_normalized}\'."
-		body_b="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."
-		body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."		
+		subject=subject_warning
+		body_a=body_a_complete
+		body_b=body_b_complete
+		body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."	
+		if !stylecheck_hash['styled']
+			body_d="WARNING: Document \"#{filename_normalized}\" is unstyled."
+		end
+	when !stylecheck_hash['styled']
+		logger.info('validator_mailer') {"document appears to be unstyled-- setting email text accordingly"}
+		subject=subject_warning
+		body_a=body_a_complete
+		body_b=body_b_complete
+		body_c="WARNING: Document \"#{filename_normalized}\" is unstyled!"
 	else 
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
-		subject="#{project_name} completed for #{filename_normalized}"
-		body_a="#{project_name} has finished running on file \'#{filename_normalized}\'."
-		body_b="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."	
+		subject=subject_complete
+		body_a=body_a_complete
+		body_b=body_b_complete
 	end		
 
 message = <<MESSAGE_END
@@ -184,6 +197,7 @@ Subject: #{subject}
 #{body_b}
 
 #{body_c}
+#{body_d}
 MESSAGE_END
 
 	#now sending
