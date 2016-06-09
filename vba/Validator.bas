@@ -27,6 +27,17 @@ Private Const strValidator As String = "Bookmaker.Validator."
 Private strAlertPath As String
 ' Store style check pass/fail values in this json
 Private strJsonPath As String
+' Ditto but for log file
+Private strLogPath As String
+
+
+' ===== Enumerations ==========================================================
+Public Enum ValidatorError
+  err_ValErrGeneral = 30000
+  err_TestsFailed = 30001
+  err_RefMissing = 30002
+  err_PathInvalid = 30003
+End Enum
 
 
 ' ===== Launch ================================================================
@@ -44,8 +55,8 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
-  If SetAlertPath(FilePath) = False Then
-    Err.Raise 30001
+  If SetOutputPaths(FilePath) = False Then
+    Err.Raise err_PathInvalid
   End If
   
   ' ditto all that for LogPath
@@ -53,7 +64,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   ' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
   ' IN THIS PROCEDURE! If ref is missing, will throw compile error.
   If IsRefMissing = True Then
-    Err.Raise 30000
+    Err.Raise err_RefMissing
   End If
   
 ' ===================================================
@@ -61,6 +72,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 ' and use that function for handling errors.
 ' ===================================================
   Call Main(FilePath)
+  Call ValidatorCleanup(LogPath)
   
 Cleanup:
   Application.DisplayAlerts = wdAlertsAll
@@ -73,13 +85,11 @@ LaunchError:
   ' Have to assume here error may occur before we can access general error
   ' checker, so do everything in this module.
   Select Case Err.Number
-    Case 30000
-      Err.Description = "Reference missing"
-    Case 30001
+    Case err_RefMissing
+      Err.Description = "VBA reference missing."
+    Case err_PathInvalid
       Err.Description = "The string passed for the `FilePath` argument, " & _
         Chr(34) & FilePath & Chr(34) & ", does not point to a valid file."
-    Case 30002
-      Err.Description = "Something about `style_check.json` failed?"
   End Select
   ' Can't call primary error checker -- it's in the ref!
   ' Err object persists when new procedure is called, don't need to pass as arg
@@ -147,7 +157,8 @@ End Function
 
 ' Also setting path to `style_check.json here, since in same dir.
 
-Private Function SetAlertPath(origPath As String) As Boolean
+Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
+  Boolean
   Dim strDir As String
   Dim strFile As String
   Dim lngSep As Long
@@ -198,7 +209,7 @@ End Function
 ' Note `strAlertPath` is a private global variable that needs to be created
 ' before this is run.
 
-Private Sub WriteAlert()
+Private Sub WriteAlert(Optional blnEnd As Boolean = True)
   ' Create log message
   Dim strAlert As String
   strAlert = "=========================================" & vbNewLine & _
@@ -212,8 +223,10 @@ Private Sub WriteAlert()
   Print #FileNum, strAlert
   Close #FileNum
   
-  ' And now stop ALL code.
-  End
+  ' Optional: stops ALL code.
+  If blnEnd = True Then
+    End
+  End If
 End Sub
 
 ' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -225,30 +238,41 @@ End Sub
 ' DocPath exists and is a Word file already validated.
 
 Private Function Main(DocPath As String) As Boolean
-  ' Set up dictionary to store test results (later write to log)
+  On Error GoTo MainError
+  ' The .ps1 that calls this macro also opens the file, so should already be
+  ' part of the Documents collection, but we'll check anyway.
+  If genUtils.GeneralHelpers.IsOpen(DocPath) = False Then
+    Documents.Open (DocPath)
+  End If
+
+  ' create reference to our doc in separate step, in case it's already open
+  Dim docActive As Document
+  Set docActive = Documents(DocPath)
+  
+  ' Set up variables to store test results
   Dim strKey As String
-  Dim strValue As String
-  Dim blnValue As Boolean
-  Dim dictValue As genUtils.Dictionary
+  Dim blnPass As Boolean
+  Dim dictTests As genUtils.Dictionary
   
+  ' ----- OVERALL STYLE CHECKS ------------------------------------------------
   strKey = "styled"
-  blnValue = True
-  Set dictValue = genUtils.ClassHelpers.NewDictionary
-  dictValue.Add "testing sub-key", "test sub-value"
-  dictValue.Add "testing sub-key2", True
+  Set dictTests = genUtils.Reports.StyleCheck(Doc:=docActive)
+  If dictTests Is Nothing Then
+    Err.Raise ValidatorError.err_TestsFailed
+  Else
+    If dictTests.Exists("pass") = True Then
+      ' write tests to JSON file
+      Call genUtils.AddToJson(strJsonPath, strKey, dictTests)
+      If dictTests("pass") = False Then
+        Call ValidatorCleanup
+      End If
+    Else
+      Err.Raise ValidatorError.err_NoPassKey
+    End If
+  End If
+
   
-  Call genUtils.AddToJson(strJsonPath, strKey, blnValue)
 
-
-'  ' The .ps1 that calls this macro also opens the file, so should already be
-'  ' part of the Documents collection, but we'll check anyway.
-'  If genUtils.GeneralHelpers.IsOpen(DocPath) = False Then
-'    Documents.Open (DocPath)
-'  End If
-'
-'  ' create reference to our document
-'  Dim docActive As Document
-'  Set docActive = Documents(DocPath)
 '
 '  ' create dictionary of style information
 '  Dim dictStyles As genUtils.Dictionary
@@ -261,17 +285,74 @@ Private Function Main(DocPath As String) As Boolean
   Exit Function
 MainError:
   Err.Source = strValidator & "Main"
-  If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
-    Resume
-  Else
-    Call genUtils.GeneralHelpers.GlobalCleanup
-  End If
+  Select Case Err.Number
+    Case ValidatorError.err_TestsFailed
+      Err.Description = "The test dictionary for `" & strKey & "` returned empty."
+      Call ValidatorCleanup
+    Case ValidatorError.err_NoPassKey
+      Err.Description = strKey & " dictionary has no `pass` key."
+      Call ValidatorCleanup
+    Case Else
+      If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
+        Resume
+      Else
+        Call ValidatorCleanup
+      End If
+  End Select
 End Function
 
 
+' ===== ValidatorCleanup ======================================================
+' Always run last. In fact, it ends ALL macro execution so by definition it'll
+' be last! If Err object is not 0, will write an ALERT. Only call AFTER you
+' know we've set the `strAlertPath` and `strLogPath` variables.
+
+Public Sub ValidatorCleanup()
+  ' I don't love this, but adding `On Error` statement to cancel previous,
+  ' at least we'll be sure the macro ends and doesn't get sent in a loop.
+  
+  ' What if one of the procedures we are calling fails?
+
+  On Error GoTo ValidatorCleanupError
+  Dim blnResult As Boolean
+  Dim saveValue As WdSaveOptions
+  If Err.Number = 0 Then
+    blnResult = True
+    saveValue = wdSaveChanges
+  Else
+    blnResult = False
+    saveValue = wdDoNotSaveChanges
+    Call WriteAlert(blnEnd = False)
+  End If
+  
+  ' Close all open documents
+  Dim objDoc As Document
+  For Each objDoc In Documents
+    objDoc.Close saveValue
+  Next objDoc
+  
+  ' Write our final element to `style_check.json` file
+  Call genUtils.AddToJson(strJsonPath, "completed", blnResult)
+  
+  ' Write log entry from JSON values
+  ' Should always be there (see previous line)
+  If genUtils.IsItThere(strJsonPath) = True Then
+    Call JsonToLog
+  End If
+
+' DON'T `Exit Sub` before this - we want it to `End` no matter what.
+ValidatorCleanupError:
+  End   ' Stops ALL code execution.
+End Sub
 
 
+' ===== JsonToLog =============================================================
+' Converts `style_check.json` to human-readable log entry, and writes to log.
 
+Public Sub JsonToLog()
+  Dim jsonDict As genUtils.Dictionary
+  Set jsonDict = genUtils.ReadJson(strJsonPath)
+End Sub
 
 
 Sub ValidatorTest()
