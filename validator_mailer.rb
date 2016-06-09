@@ -45,6 +45,7 @@ errlog = false
 api_error = false
 no_pm = false
 no_pe = false
+no_stylecheck = false
 
 
 #--------------------- RUN
@@ -130,10 +131,14 @@ else
 	end	
 	
 	#get info from style_check.json
-	file_c = File.open(stylecheck_file, "r:utf-8")
-	content_c = file_c.read
-	file_c.close
-	stylecheck_hash = JSON.parse(content_c)
+	if File.file?(stylecheck_file)
+		file_c = File.open(stylecheck_file, "r:utf-8")
+		content_c = file_c.read
+		file_c.close
+		stylecheck_hash = JSON.parse(content_c)
+	else
+		no_stylecheck = true	
+	end	
 	
 	#check for errlog in tmp_dir:
 	Find.find(tmp_dir) { |file|
@@ -147,9 +152,7 @@ else
 	#set appropriate email text based on presence of /IN/errfile /tmpdir/errlog, or missing book_info.json
 	subject="ERROR running #{project_name} on #{filename_split}"
 	body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."	
-	body_c, body_d='',''
-	subject_complete="#{project_name} completed for #{filename_normalized}"
-	subject_warning="#{subject_complete}, with warning(s)"
+	body_c=''
 	body_a_complete="#{project_name} has finished running on file \'#{filename_normalized}\'."
 	body_b_complete="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."
 	case 
@@ -157,31 +160,30 @@ else
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
 		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
-	when errlog || !stylecheck_hash['completed']
+	when errlog || !stylecheck_hash['completed'] || no_stylecheck
 		logger.info('validator_mailer') {"error log found in tmpdir, or style_check.json completed value not true., setting email text accordingly"}	
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 	when !File.file?(bookinfo_file)
 		logger.info('validator_mailer') {"no book_info.json exists, data_warehouse lookup failed-- setting email text accordingly"}	
 		body_b="Book-info lookup failed: no book matching this ISBN was found during data-warehouse lookup."	
 		body_c="Your original file and accompanying error notice are now in the \'#{project_name}/OUT\' Dropbox folder."
-	when !stylecheck_hash['isbn']
-		logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
-		subject=subject_warning
-		body_a=body_a_complete
-		body_b=body_b_complete
-		body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."	
-		if !stylecheck_hash['styled']
-			body_d="WARNING: Document \"#{filename_normalized}\" is unstyled."
-		end
-	when !stylecheck_hash['styled']
+	when !stylecheck_hash['styled']['pass']
 		logger.info('validator_mailer') {"document appears to be unstyled-- setting email text accordingly"}
-		subject=subject_warning
-		body_a=body_a_complete
-		body_b=body_b_complete
-		body_c="WARNING: Document \"#{filename_normalized}\" is unstyled!"
+		subject="#{project_name} determined #{filename_normalized} to be UNSTYLED"
+		body_a="Unable to run #{project_name} on file \"#{filename_split}\": this document is not styled."
+		body_b="Your original file has been moved to the \'#{project_name}/OUT\' Dropbox folder."
+		# if !stylecheck_hash['isbn']['pass']
+		# 	body_c="Additional WARNING: the ISBN in your document's filename does not match the one found in the manuscript."
+		# end		
+	# when !stylecheck_hash['isbn']['pass']
+	# 	logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
+	# 	subject="#{project_name} completed for #{filename_normalized}, with warning"
+	# 	body_a=body_a_complete
+	# 	body_b=body_b_complete
+	# 	body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."
 	else 
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
-		subject=subject_complete
+		subject="#{project_name} completed for #{filename_normalized}"
 		body_a=body_a_complete
 		body_b=body_b_complete
 	end		
@@ -197,7 +199,6 @@ Subject: #{subject}
 #{body_b}
 
 #{body_c}
-#{body_d}
 MESSAGE_END
 
 	#now sending

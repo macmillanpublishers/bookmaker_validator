@@ -39,6 +39,7 @@ warn_notice = File.join(outbox,"WARNING--#{filename_normalized}--validator_compl
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
 errlog = false
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+no_stylecheck = false
 
 
 #--------------------- RUN
@@ -48,6 +49,8 @@ if File.file?(stylecheck_file)
 	content_c = file_c.read
 	file_c.close
 	stylecheck_hash = JSON.parse(content_c)
+else	
+	no_stylecheck = true		
 end
 
 #check for errlog in tmp_dir:
@@ -65,14 +68,21 @@ when File.file?(errFile)
 	logger.info('validator_cleanup') {"errFile found, indicating file failed basic validation, moving orig & errNotice from IN to OUT folder"}
 	FileUtils.mv input_file, outbox
 	FileUtils.mv errFile, outbox
-when !File.file?(bookinfo_file)
+when !File.file?(bookinfo_file) || !stylecheck_hash['styled']['pass']
 	FileUtils.mv input_file, outbox	  #return the original file to user
-    File.open(err_notice, 'w') { |f|
-    f.puts "isbn lookup failed for file #{filename_normalized}, bookmaker_validator could not run! Please double-check the isbn in your filename!"
-    }
 	FileUtils.rm_rf tmp_dir   #alt:  could keep the tmpdir for review like following case
-    logger.info('validator_cleanup') {"book_info.json missing, returned orig file and isbn lookup error notice to user, exiting cleanup"}
-when errlog || !stylecheck_hash['completed'] 
+	if !stylecheck_hash['styled']['pass']
+		logger.info('validator_cleanup') {"adding warn notice to outbox for unstyled doc"}
+		File.open(warn_notice, 'w') { |f|
+        	f.puts "WARNING: Your document is NOT STYLED. Bookmaker_validator cannot run on an unstyled document."
+    	}
+    else
+    	logger.info('validator_cleanup') {"book_info.json missing, returned orig file and isbn lookup error notice to user, exiting cleanup"}
+    	File.open(err_notice, 'w') { |f|
+    		f.puts "isbn lookup failed for file #{filename_normalized}, bookmaker_validator could not run! Please double-check the isbn in your filename!"
+    	}
+	end 
+when errlog || !stylecheck_hash['completed'] || no_stylecheck
 	logger.info('validator_cleanup') {"a major error(ALERT) was detected while running macros on \"#{filename_normalized}\", moving tmpdir to logfolder for further study"}
 	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
 	FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 
@@ -87,14 +97,12 @@ else
 	FileUtils.mv done_file, outbox
 	FileUtils.mv input_file, outbox
 	FileUtils.rm_rf tmp_dir
-	if !stylecheck_hash['isbn'] || !stylecheck_hash['styled']
-		text_a,text_b='',''
-		if !stylecheck_hash['styled'] then text_a="WARNING: Document is unstyled."
-		if !stylecheck_hash['isbn'] then text_b="WARNING: ISBN mismatch: the ISBN in your document's filename does not match the one found in the manuscript."
-		File.open(warn_notice, 'w') { |f|
-        	f.puts "#{text_a}\n#{text_b}"
-    	}
-	end 
+	# if !stylecheck_hash['isbn']['pass']
+	# 	logger.info('validator_cleanup') {"adding warn notice to outbox for isbn mismatch"}
+	# 	File.open(warn_notice, 'w') { |f|
+ #        	f.puts "WARNING: ISBN mismatch: the ISBN in your document's filename does not match the one found in the manuscript."
+ #    	}
+	# end 
 	logger.info('validator_cleanup') {"processing of \"#{filename_normalized}\" completed"}
 end
 
