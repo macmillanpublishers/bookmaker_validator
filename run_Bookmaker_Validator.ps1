@@ -31,7 +31,7 @@ if ((test-path $bookmaker_file) -And ($fileext -eq ".doc" -Or $fileext -eq ".doc
 	$word.visible = $true
 	$doc = $word.documents.open($working_file)
 	$word.run($macroName, [ref]$working_file, [ref]$Logfile)
-	#$word.run($macroName, $working_file, $Logfile)
+#	$word.run($macroName, $working_file, $Logfile)
 	$doc.save()
 	#if ($PSVersionTable.PSVersion.Major -gt 2) {
 	#    $doc.saveas($working_file)

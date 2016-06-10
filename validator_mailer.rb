@@ -1,8 +1,14 @@
+ENV["NLS_LANG"] = "AMERICAN_AMERICA.WE8MSWIN1252"
+
 require 'dropbox_sdk'
 require 'json'
 require 'net/smtp'
 require 'logger'
 require 'find'
+require 'oci8'
+require 'to_xml'
+require_relative '../utilities/oraclequery.rb'
+
 
 # ---------------------- VARIABLES (HEADER)
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -65,16 +71,29 @@ else
 	else
 		logger.info('validator_mailer') {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", writing to json"}
 
-		#writing user info from Dropbox API to json
-		datahash = {}	
-		datahash.merge!(submitter_name: user_name)
-		datahash.merge!(submitter_email: user_email)
-		finaljson = JSON.generate(datahash)
-
-		# Printing the final JSON object
-		File.open(submitter_file, 'w+:UTF-8') do |f|
-		  f.puts finaljson
-		end
+#       #Looking at document flow, this is not really necessary except in case of troubleshooting; commenting out
+#		#writing user info from Dropbox API to json
+#		datahash = {}	
+#		datahash.merge!(submitter_name: user_name)
+#		datahash.merge!(submitter_email: user_email)
+#		finaljson = JSON.generate(datahash)
+#
+#		# Printing the final JSON object
+#		File.open(submitter_file, 'w+:UTF-8') do |f|
+#		  f.puts finaljson
+#		end
+	end
+	
+	#setting up handling for cc's and is submitter email is missing
+	cc_emails = []
+	cc_address= ''
+	if user_email !~ /@/ 
+		api_error = true
+		user_email = 'workflows@macmillan.com'
+		user_name = 'Workflows' 
+	else
+		cc_emails << 'workflows@macmillan.com' 
+		cc_address = 'Cc: Workflows <workflows@macmillan.com>'		
 	end
 
 	#get info from style_check.json
@@ -110,7 +129,7 @@ else
 			end	
 		}
 		
-		if isbn_mismatch = true
+		if isbn_mismatch == true
 			finaljson = JSON.generate(bookinfo_hash)
 			# Printing final JSON object
 			File.open(bookinfo_file, 'w+:UTF-8') do |f|
@@ -118,7 +137,7 @@ else
 			end
 		end
 		
-		#get pm & pe emails:
+		#get pm & pe emails, other book info:
 		file_b = File.open(pe_pm_file, "r:utf-8")
 		content_b = file_b.read
 		file_b.close
@@ -127,7 +146,13 @@ else
 		pm_name = bookinfo_hash['production_manager'] 
 		pe_name = bookinfo_hash['production_editor']
 		logger.info('validator_mailer') {"retrieved from book_info.json- pe_name:\"#{pe_name}\", pm_name:\"#{pm_name}\""}	
-
+		work_id = bookinfo_hash['work_id']
+		author = bookinfo_hash['author']
+		title = bookinfo_hash['title']
+		imprint = bookinfo_hash['imprint']
+		product_type = bookinfo_hash['product_type']
+		logger.info('validator_mailer') {"more bookinfo: title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\", work_id: \"#{work_id}\""}
+		
 		pm_email = ''
 		pe_email = ''
 		for i in 0..pe_pm_hash.length - 1
@@ -140,17 +165,7 @@ else
 		end	
 		logger.info('validator_mailer') {"retrieved from staff_email.json- pe_email:\"#{pe_email}\", pm_email:\"#{pm_email}\""}	
 
-		#setting up handling for cc's &/or submitter email is missing
-		cc_emails = []
-		cc_address= ''
-		if user_email !~ /@/ 
-			api_error = true
-			user_email = 'workflows@macmillan.com'
-			user_name = 'Workflows' 
-		else
-			cc_emails << 'workflows@macmillan.com' 
-			cc_address = 'Cc: Workflows <workflows@macmillan.com>'		
-		end
+		#further handling for cc's for PE's & PM's
 		if pm_email =~ /@/ 
 			cc_emails << pm_email 
 			cc_address = "#{cc_address}, #{pm_name} <#{pm_email}>"
@@ -169,28 +184,33 @@ else
 	end	
 	
 	#check for errlog in tmp_dir:
-	Find.find(tmp_dir) { |file|
-		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file && file != tmp_dir
-			logger.info('validator_mailer') {"error log found in tmpdir: #{file}"}
-			logger.info('validator_mailer') {"file: #{file}"}
-			errlog = true
-		end
-	}
+	if Dir.exist?(tmp_dir)
+		Find.find(tmp_dir) { |file|
+			if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file && file != tmp_dir
+				logger.info('validator_mailer') {"error log found in tmpdir: #{file}"}
+				logger.info('validator_mailer') {"file: #{file}"}
+				errlog = true
+			end
+		}
+	end
 
 	#set appropriate email text based on presence of /IN/errfile /tmpdir/errlog, or missing book_info.json
 	subject="ERROR running #{project_name} on #{filename_split}"
 	body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."	
 	body_c=''
+	body_d=''
+	body_bookinfo="*According to the ISBN provided in the filename, this is a(n) \'#{product_type}\' with title \"#{title}\" by \'#{author}\' for imprint \'#{imprint}\'"
 	body_a_complete="#{project_name} has finished running on file \'#{filename_normalized}\'."
 	body_b_complete="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."
 	case 
 	when File.file?(errFile)
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
-		body_a="Unable to run #{project_name} on file \'#{filename_split}\': this file is not a .doc or .docx and could not be processed."
-		body_b="\'#{filename_split}\' and the error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
+		body_a="Unable to run #{project_name} on file \'#{filename_split}\': either this file is not a .doc or .docx or the file's name does not contain an ISBN."
+		body_b="\"#{filename_split}\" and accompanying error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
 	when errlog || !stylecheck_complete
 		logger.info('validator_mailer') {"error log found in tmpdir, or style_check.json completed value not true., setting email text accordingly"}	
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
+		body_c=body_bookinfo
 	when !File.file?(bookinfo_file)
 		logger.info('validator_mailer') {"no book_info.json exists, data_warehouse lookup failed-- setting email text accordingly"}	
 		body_b="Book-info lookup failed: no book matching this ISBN was found during data-warehouse lookup."	
@@ -200,20 +220,23 @@ else
 		subject="#{project_name} determined #{filename_normalized} to be UNSTYLED"
 		body_a="Unable to run #{project_name} on file \"#{filename_split}\": this document is not styled."
 		body_b="Your original file has been moved to the \'#{project_name}/OUT\' Dropbox folder."
+		body_c=body_bookinfo
 		if isbn_mismatch
-			body_c="Additional WARNING: the ISBN in your document's filename does not match one found in the manuscript."
+			body_d="Additional WARNING: the ISBN in your document's filename does not match one found in the manuscript."
 		end		
 	when isbn_mismatch
 		logger.info('validator_mailer') {"the isbn from the filename and the isbn in the book do not match-- setting email text accordingly"}
 	 	subject="#{project_name} completed for #{filename_normalized}, with warning"
 	 	body_a=body_a_complete
 	 	body_b=body_b_complete
-	 	body_c="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."
+		body_c=body_bookinfo
+	 	body_d="WARNING: ISBN mismatch! : the ISBN in your document's filename does not match the one found in the manuscript."
 	else 
 		logger.info('validator_mailer') {"No errors found, setting email text accordingly"}	
 		subject="#{project_name} completed for #{filename_normalized}"
 		body_a=body_a_complete
 		body_b=body_b_complete
+		body_c=body_bookinfo	
 	end		
 
 message = <<MESSAGE_END
@@ -227,6 +250,7 @@ Subject: #{subject}
 #{body_b}
 
 #{body_c}
+#{body_d}
 MESSAGE_END
 
 	#now sending
@@ -240,7 +264,7 @@ MESSAGE_END
 end	
 
 #emailing workflows if one of our lookups failed
-if no_pm || no_pe || api_error
+if api_error || (File.file?(bookinfo_file) && (no_pm || no_pe))
 	logger.info('validator_mailer') {"one (or more) of our lookups failed"}	 
 	message_b = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>

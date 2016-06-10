@@ -94,7 +94,7 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
 elsif filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_tmparchive') {"ignoring our own .txt outfile"}
 else
-    logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no isbn_num, posting error.txt to the inbox for user; exiting tmparchive.rb."}
+    logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no ISBN, posting error.txt to the inbox for user; exiting tmparchive.rb."}
     File.open(errFile, 'w') { |f|
         f.puts "Unable to process \"#{filename_normalized}\". Either it is not a .doc or .docx file, or no isbn_num was included in the filename; exiting tmparchive.rb."
     }
