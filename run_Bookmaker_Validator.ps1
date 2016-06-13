@@ -30,8 +30,8 @@ if ((test-path $bookmaker_file) -And ($fileext -eq ".doc" -Or $fileext -eq ".doc
 	$word = new-object -comobject word.application # create a com object interface (word application)
 	$word.visible = $true
 	$doc = $word.documents.open($working_file)
-	$word.run($macroName, [ref]$working_file, [ref]$Logfile)
-#	$word.run($macroName, $working_file, $Logfile)
+	$word.run($macroName, [ref]$working_file, [ref]$Logfile)	#this one for running via batch (deploy) script
+#	$word.run($macroName, $working_file, $Logfile) 				#this one for calling direct from cmd line
 	$doc.save()
 	#if ($PSVersionTable.PSVersion.Major -gt 2) {
 	#    $doc.saveas($working_file)

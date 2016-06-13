@@ -28,9 +28,9 @@ tmp_dir=File.join(working_dir, basename_normalized)
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json')
-submitter_file = File.join(tmp_dir,'submitter.json')
+submitter_file = File.join(tmp_dir,'contact_info.json')
 testing_value_file = File.join("C:", "staging.txt")
-#testing_value_file = File.join("C:", "stagasdsading.txt")
+#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
 errFile = File.join(inbox, "ERROR_RUNNING_#{filename_normalized}.txt")
 
@@ -49,12 +49,15 @@ generated_access_token = File.read("#{bookmaker_authkeys_dir}/access_token.txt")
 pe_pm_file = File.join('S:','resources','bookmaker_scripts','bookmaker_validator','staff_email.json')
 errlog = false
 api_error = false
+contacts_datahash = {}	
 no_pm = false
 no_pe = false
 stylecheck_complete = false 
 stylecheck_styled = false
 stylecheck_isbns = []
 isbn_mismatch = false
+to_email = 'workflows@macmillan.com'
+to_name = 'Workflows' 
 
 
 #--------------------- RUN
@@ -68,32 +71,30 @@ else
 	user_name = root_metadata["modifier"]["display_name"]
 	if root_metadata.nil? or root_metadata.empty? or !root_metadata or root_metadata['modifier'].nil? or root_metadata['modifier'].empty? or !root_metadata['modifier'] 
 		logger.info('validator_mailer') {"dropbox api may have failed, not finding file metadata"}
+		api_error = true
 	else
 		logger.info('validator_mailer') {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", writing to json"}
-
-#       #Looking at document flow, this is not really necessary except in case of troubleshooting; commenting out
-#		#writing user info from Dropbox API to json
-#		datahash = {}	
-#		datahash.merge!(submitter_name: user_name)
-#		datahash.merge!(submitter_email: user_email)
-#		finaljson = JSON.generate(datahash)
-#
-#		# Printing the final JSON object
-#		File.open(submitter_file, 'w+:UTF-8') do |f|
-#		  f.puts finaljson
-#		end
+		
+		#writing user info from Dropbox API to json
+		contacts_datahash.merge!(submitter_name: user_name)
+		contacts_datahash.merge!(submitter_email: user_email)
+		finaljson = JSON.generate(contacts_datahash)
+		# Printing the final JSON object
+		File.open(submitter_file, 'w+:UTF-8') do |f|
+		  f.puts finaljson
+		end
 	end
 	
 	#setting up handling for cc's and is submitter email is missing
 	cc_emails = []
 	cc_address= ''
-	if user_email !~ /@/ 
-		api_error = true
-		user_email = 'workflows@macmillan.com'
-		user_name = 'Workflows' 
-	else
+	if user_email =~ /@/ 
+		to_email = user_email
+		to_name = user_name
 		cc_emails << 'workflows@macmillan.com' 
-		cc_address = 'Cc: Workflows <workflows@macmillan.com>'		
+		cc_address = 'Cc: Workflows <workflows@macmillan.com>'	
+	else
+		api_error = true
 	end
 
 	#get info from style_check.json
@@ -120,11 +121,18 @@ else
 		stylecheck_isbns.each { |sc_isbn| 
 			if sc_isbn != bookinfo_hash['isbn']
 				thissql_C = exactSearchSingleKey(sc_isbn, "EDITION_EAN")
-				sc_work_id = runPeopleQuery(thissql_C)['book']['WORK_ID'][0]
-				if sc_work_id != bookinfo_hash['work_id']
-					bookinfo_hash['isbn_mismatch'] = true
+				myhash_C = runPeopleQuery(thissql_C)
+				if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book'] 
+					logger.info('validator_mailer') {"isbn data-warehouse-lookup for manuscript isbn: #{sc_isbn} failed."}
 					isbn_mismatch = true
-					logger.info('validator_mailer') {"isbn mismatch found with manuscript isbn: #{sc_isbn}."}
+					bookinfo_hash['isbn_mismatch'] = true
+				else
+					sc_work_id = myhash_C['book']['WORK_ID'][0]
+					if sc_work_id != bookinfo_hash['work_id']
+						bookinfo_hash['isbn_mismatch'] = true
+						isbn_mismatch = true
+						logger.info('validator_mailer') {"isbn mismatch found with manuscript isbn: #{sc_isbn}."}
+					end
 				end			
 			end	
 		}
@@ -151,7 +159,6 @@ else
 		title = bookinfo_hash['title']
 		imprint = bookinfo_hash['imprint']
 		product_type = bookinfo_hash['product_type']
-		logger.info('validator_mailer') {"more bookinfo: title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\", work_id: \"#{work_id}\""}
 		
 		pm_email = ''
 		pe_email = ''
@@ -165,19 +172,34 @@ else
 		end	
 		logger.info('validator_mailer') {"retrieved from staff_email.json- pe_email:\"#{pe_email}\", pm_email:\"#{pm_email}\""}	
 
-		#further handling for cc's for PE's & PM's
+		#further handling for cc's for PE's & PM's, also prep for adding to submitter_file json
 		if pm_email =~ /@/ 
 			cc_emails << pm_email 
 			cc_address = "#{cc_address}, #{pm_name} <#{pm_email}>"
+			contacts_datahash.merge!(production_manager_name: pm_name)
+			contacts_datahash.merge!(production_manager_email: pm_email)			
 		else 
 			no_pm = true	
 		end
 		if pe_email =~ /@/ && pm_email != pe_email
 			cc_emails << pe_email 
 			cc_address = "#{cc_address}, #{pe_name} <#{pe_email}>"
+			contacts_datahash.merge!(production_editor_name: pe_name)
+			contacts_datahash.merge!(production_editor_email: pe_email)				
 		elsif pe_email !~ /@/
 			no_pe = true	
 		end
+		
+		#add pe/pm emails (if found) to submitter_file
+		if !no_pe || !no_pm
+			#writing user info from Dropbox API to json		
+			finaljson_B = JSON.generate(contacts_datahash)
+			# Printing the final JSON object
+			File.open(submitter_file, 'w+:UTF-8') do |f|
+				f.puts finaljson_B
+			end
+		end
+		
 	else
 		logger.info('validator_mailer') {"no book_info.json found, unable to retrieve pe/pm emails"}	
 		no_pm = true
@@ -199,7 +221,7 @@ else
 	body_a="An error occurred while attempting to run #{project_name} on your file \'#{filename_split}\'."	
 	body_c=''
 	body_d=''
-	body_bookinfo="*According to the ISBN provided in the filename, this is a(n) \'#{product_type}\' with title \"#{title}\" by \'#{author}\' for imprint \'#{imprint}\'"
+	body_bookinfo="--ISBN lookup:  TITLE: \"#{title}\", AUTHOR: \'#{author}\', IMPRINT: \'#{imprint}\', PRODUCT-TYPE: \'#{product_type}\')"
 	body_a_complete="#{project_name} has finished running on file \'#{filename_normalized}\'."
 	body_b_complete="Your original document and the updated 'DONE' version may now be found in the \'#{project_name}/OUT\' Dropbox folder."
 	case 
@@ -207,7 +229,7 @@ else
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': either this file is not a .doc or .docx or the file's name does not contain an ISBN."
 		body_b="\"#{filename_split}\" and accompanying error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
-	when errlog || !stylecheck_complete
+	when errlog || (File.file?(stylecheck_file) && !stylecheck_complete)
 		logger.info('validator_mailer') {"error log found in tmpdir, or style_check.json completed value not true., setting email text accordingly"}	
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 		body_c=body_bookinfo
@@ -215,7 +237,7 @@ else
 		logger.info('validator_mailer') {"no book_info.json exists, data_warehouse lookup failed-- setting email text accordingly"}	
 		body_b="Book-info lookup failed: no book matching this ISBN was found during data-warehouse lookup."	
 		body_c="Your original file and accompanying error notice are now in the \'#{project_name}/OUT\' Dropbox folder."
-	when !stylecheck_styled
+	when (File.file?(stylecheck_file) && !stylecheck_styled)
 		logger.info('validator_mailer') {"document appears to be unstyled-- setting email text accordingly"}
 		subject="#{project_name} determined #{filename_normalized} to be UNSTYLED"
 		body_a="Unable to run #{project_name} on file \"#{filename_split}\": this document is not styled."
@@ -241,15 +263,15 @@ else
 
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
-To: #{user_name} <#{user_email}>
+To: #{to_name} <#{to_email}>
 #{cc_address}
 Subject: #{subject}
 
 #{body_a}
-
 #{body_b}
 
 #{body_c}
+
 #{body_d}
 MESSAGE_END
 
@@ -257,7 +279,7 @@ MESSAGE_END
 	unless File.file?(testing_value_file)
 	  Net::SMTP.start('10.249.0.12') do |smtp|
   	  smtp.send_message message, 'workflows@macmillan.com', 
-	                              user_email, cc_emails
+	                              to_email, cc_emails
 	  end
 	end
 	logger.info('validator_mailer') {"sent primary notification email, exiting mailer"}	 

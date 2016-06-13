@@ -26,7 +26,7 @@ tmp_dir=File.join(working_dir, basename_normalized)
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json')
-submitter_file = File.join(tmp_dir,'submitter.json')
+submitter_file = File.join(tmp_dir,'contact_info.json')
 testing_value_file = File.join("C:", "staging.txt")
 inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
 errFile = File.join(inbox, "ERROR_RUNNING_#{filename_normalized}.txt")
@@ -74,6 +74,14 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
         logger.info('validator_tmparchive') {"data warehouse lookup PM for isbn_num \"#{isbn_num}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
         thissql_B = personSearchSingleKey(isbn_num, "EDITION_EAN", "Production Editor")
         myhash_B = runPeopleQuery(thissql_B)
+		
+		#write to var for logs:
+		title = myhash['book']['WORK_COVERTITLE'][0]
+		author = myhash['book']['WORK_COVERAUTHOR'][0]
+		imprint = myhash['book']['IMPRINT_DISPLAY'][0]
+		product_type = myhash['book']['PRODUCTTYPE_DESC'][0]
+		
+		#write to hash for json:
         datahash = {}
         datahash.merge!(production_editor: myhash_B['book']['PERSON_REALNAME'][0])
         datahash.merge!(production_manager: myhash['book']['PERSON_REALNAME'][0])
@@ -88,8 +96,9 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
 
         # Printing final JSON object
         File.open(bookinfo_file, 'w+:UTF-8') do |f|
-          f.puts finaljson
+          f.puts finaljson		
         end
+		logger.info('validator_tmparchive') {"bookinfo- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""}		
     end    
 elsif filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_tmparchive') {"ignoring our own .txt outfile"}
