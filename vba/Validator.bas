@@ -30,6 +30,8 @@ Private strJsonPath As String
 ' Ditto but for log file
 Private strLogPath As String
 
+Private StartTime As Double
+
 
 ' ===== Enumerations ==========================================================
 Public Enum ValidatorError
@@ -349,6 +351,17 @@ Public Sub ValidatorCleanup()
 
 ' DON'T `Exit Sub` before this - we want it to `End` no matter what.
 ValidatorCleanupError:
+' ============================================================================
+' ----------------------Timer End-------------------------------------------
+
+  Dim SecondsElapsed As Double
+' Determine how many seconds code took to run
+  SecondsElapsed = Round(Timer - StartTime, 2)
+    
+' Notify user in seconds
+  Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
+' ============================================================================
+
   End   ' Stops ALL code execution.
 End Sub
 
@@ -390,7 +403,10 @@ Public Sub JsonToLog()
       If VBA.IsObject(.Item(strKey1)) = True Then
       ' loop through THIS dictionary
         For Each strKey2 In .Item(strKey1).Keys
-          strLog = strLog & strSpaces & strKey1 & ": " & strKey2 & ": "
+          Debug.Print .Item(strKey1).Item(strKey2)
+          strLog = strLog & strSpaces & strKey1 & ": " & strKey2 & ": " & _
+            .Item(strKey1).Item(strKey2)
+          Debug.Print strLog
         ' Value here might be an array
           If VBA.IsArray(.Item(strKey1).Item(strKey2)) = True Then
             arrValues = .Item(strKey1).Item(strKey2)
@@ -435,22 +451,12 @@ Sub ValidatorTest()
 
 ' =================================================
 ' Timer Start
-  Dim StartTime As Double
-  Dim SecondsElapsed As Double
-                                                  
+                                  
 ' Remember time when macro starts
   StartTime = Timer
 ' =================================================
 
   Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
-' ============================================================================
-' ----------------------Timer End-------------------------------------------
-' Determine how many seconds code took to run
-  SecondsElapsed = Round(Timer - StartTime, 2)
-    
-' Notify user in seconds
-  Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
-' ============================================================================
   
   Exit Sub
 
