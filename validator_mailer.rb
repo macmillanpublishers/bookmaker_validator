@@ -229,7 +229,7 @@ else
 		logger.info('validator_mailer') {"error log in project inbox, setting email text accordingly"}	
 		body_a="Unable to run #{project_name} on file \'#{filename_split}\': either this file is not a .doc or .docx or the file's name does not contain an ISBN."
 		body_b="\"#{filename_split}\" and accompanying error notification can be found in the \'#{project_name}/OUT\' Dropbox folder"	
-	when errlog || (File.file?(stylecheck_file) && !stylecheck_complete)
+	when errlog || !File.file?(stylecheck_file) || (File.file?(stylecheck_file) && !stylecheck_complete)
 		logger.info('validator_mailer') {"error log found in tmpdir, or style_check.json completed value not true., setting email text accordingly"}	
 		body_b="Your original file and accompanying error notice may now be found in the \'#{project_name}/OUT\' Dropbox folder."		
 		body_c=body_bookinfo

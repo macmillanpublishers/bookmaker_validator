@@ -2,10 +2,11 @@
 bookmaker_validator accepts .doc(x) files via Dropbox, and then runs checks and auto-repairs them via Word Macro(s).
 
 # Dependencies
-#### Dropbox sdk gem:
-The mailer requires the Dropbox sdk gem.  It can be installed like so:
+#### Dropbox sdk gem, Process gem:
+The mailer requires the Dropbox sdk gem, and the process watcher requires the process gem.  They can be installed like so:
 
 `gem install dropbox-sdk`
+`gem install process`
 
 #### Word .dotm file with Macro
 The Word .dotm file needs to be loaded in Word's Startup folder, and the 'run_Bookmaker_Validator.ps1' script is expecting it to have a module named 'Validator' and macro named 'Launch'

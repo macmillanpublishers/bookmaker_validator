@@ -96,7 +96,7 @@ when !File.file?(bookinfo_file) || (File.file?(stylecheck_file) && !stylecheck_s
     	}
 	end
 	FileUtils.rm_rf tmp_dir   #alt:  could keep the tmpdir for review like following case	
-when errlog || (File.file?(stylecheck_file) && !stylecheck_complete)
+when errlog || !File.file?(stylecheck_file) || (File.file?(stylecheck_file) && !stylecheck_complete)
 	logger.info('validator_cleanup') {"a major error(ALERT) was detected while running macros on \"#{filename_normalized}\", moving tmpdir to logfolder for further study"}
 	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
 	FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 
