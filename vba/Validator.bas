@@ -250,39 +250,43 @@ End Sub
 
 Private Function Main(DocPath As String) As Boolean
   On Error GoTo MainError
-  ' The .ps1 that calls this macro also opens the file, so should already be
-  ' part of the Documents collection, but we'll check anyway.
-  If genUtils.GeneralHelpers.IsOpen(DocPath) = False Then
-    Documents.Open (DocPath)
-  End If
-
-  ' create reference to our doc in separate step, in case it's already open
-  Dim docActive As Document
-  Set docActive = Documents(DocPath)
-  
   ' Set up variables to store test results
   Dim strKey As String
   Dim blnPass As Boolean
   Dim dictTests As genUtils.Dictionary
   
+  ' ----- INITIALIZE ----------------------------------------------------------
+  strKey = "initialize"
+  Set dictTests = genUtils.Reports.ReportsStartup(DocPath)
+  Call ReturnDict(strKey, dictTests)
+  
   ' ----- OVERALL STYLE CHECKS ------------------------------------------------
   strKey = "styled"
-'
-  Set dictTests = genUtils.Reports.StyleCheck(Doc:=docActive)
-  If dictTests Is Nothing Then
-    Err.Raise ValidatorError.err_TestsFailed
-  Else
-    If dictTests.Exists("pass") = True Then
-      ' write tests to JSON file
-      Call genUtils.AddToJson(strJsonPath, strKey, dictTests)
-      If dictTests("pass") = False Then
-        Call ValidatorCleanup
-      End If
-    Else
-      Err.Raise ValidatorError.err_NoPassKey
-    End If
-  End If
+  Set dictTests = genUtils.Reports.StyleCheck()
+  Call ReturnDict(strKey, dictTests)
+  
+  ' ----- ISBN VALIDATION -----------------------------------------------------
+  strKey = "isbn"
+  Set dictTests = genUtils.Reports.IsbnCheck
+  Call ReturnDict(strKey, dictTests)
 
+  ' ----- SECTION TAGGING -----------------------------------------------------
+  strKey = "section"
+  
+  ' ----- TITLEPAGE VALIDATION ------------------------------------------------
+  strKey = "titlepage"
+  
+  ' ----- HEADING VALIDATION --------------------------------------------------
+  strKey = "headings"
+  
+  ' ----- RUN CLEANUP MACRO ---------------------------------------------------
+  ' To do: convert to function that returns dictionary of test results
+  
+  
+  ' ----- RUN CHAR STYLES MACRO -----------------------------------------------
+  ' To do: convert to function that returns dictionary of test results
+  
+  
 
   Main = True
   Exit Function
@@ -444,6 +448,45 @@ JsonToLogError:
   
 End Sub
 
+
+' ===== ReturnDict ============================================================
+' Process dictionary returned from reports section
+
+Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary)
+  On Error GoTo ReturnDictError
+  If TestDict Is Nothing Then
+    Err.Raise ValidatorError.err_TestsFailed
+  Else
+    If TestDict.Exists("pass") = True Then
+      ' write tests to JSON file
+      Call genUtils.AddToJson(strJsonPath, SectionKey, TestDict)
+      If TestDict("pass") = False Then
+        Call ValidatorCleanup
+      End If
+    Else
+      Err.Raise ValidatorError.err_NoPassKey
+    End If
+  End If
+  Exit Sub
+  
+ReturnDictError:
+  Err.Source = strValidator & "ReturnDict"
+  Select Case Err.Number
+    Case ValidatorError.err_TestsFailed
+      Err.Description = "The test dictionary for `" & SectionKey & "` returned empty."
+      Call ValidatorCleanup
+    Case ValidatorError.err_NoPassKey
+      Err.Description = strKey & " dictionary has no `pass` key."
+      Call ValidatorCleanup
+    Case Else
+      If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
+        Resume
+      Else
+        Call ValidatorCleanup
+      End If
+  End Select
+
+End Sub
 
 Sub ValidatorTest()
 '' to simulate being called by ps1
