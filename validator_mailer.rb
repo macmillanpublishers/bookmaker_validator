@@ -80,9 +80,11 @@ else
 		contacts_datahash.merge!(submitter_email: user_email)
 		finaljson = JSON.generate(contacts_datahash)
 		# Printing the final JSON object
-		File.open(submitter_file, 'w+:UTF-8') do |f|
-		  f.puts finaljson
-		end
+		if Dir.exist?(tmp_dir)
+			File.open(submitter_file, 'w+:UTF-8') do |f|
+			  f.puts finaljson
+			end
+		end	
 	end
 	
 	#setting up handling for cc's and is submitter email is missing
