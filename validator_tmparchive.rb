@@ -102,6 +102,25 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
     end    
 elsif filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_tmparchive') {"ignoring our own .txt outfile"}
+elsif filename_normalized !~ /9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/
+    #check for isbns in manuscript!    
+    require 'open3'
+    validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
+    run_macro = File.join(validator_dir,'run_macro.ps1')
+    powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
+    macro_name="Test.IsbnSearch"
+    powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
+    command = "#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\""
+
+    isbnlist = ''
+    Open3.popen2e(command) do |stdin, stdouterr, wait_thr|
+    stdin.close
+    stdouterr.each { |line|
+      isbnlist << line
+      }
+    end
+    puts isbnlist
+    logger.info('validator_tmparchive') {"isbnlist: #{isbnlist}"}    
 else
     logger.info('validator_tmparchive') {"This is not a .doc or .docx file or filename contains no ISBN, posting error.txt to the inbox for user; exiting tmparchive.rb."}
     File.open(errFile, 'w') { |f|

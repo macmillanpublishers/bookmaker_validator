@@ -1,6 +1,5 @@
 ﻿#------------------------VARIABLES
-param([string]$inputFile, [string]$macroName, [string]$logfile, [string]$return)
-if (!$return) { $return = $logfile }
+param([string]$inputFile, [string]$macroName, [string]$logfile)
 $filename=split-path $inputFile -Leaf			#file name without path
 $filename_normalized=$filename -replace '[^a-zA-Z0-9-_.]',''
 $filebasename=([io.fileinfo]$filename_normalized).basename
@@ -30,8 +29,8 @@ if ($fileext -eq ".doc" -Or $fileext -eq ".docx") {
 	$word = new-object -comobject word.application # create a com object interface (word application)
 	$word.visible = $true
 	$doc = $word.documents.open($working_file)
-	$word.run($macroName, [ref]$working_file, [ref]$return)	#this one for running via batch (deploy) script
-#	$word.run($macroName, $working_file, $return) 				#this one for calling direct from cmd line
+	$word.run($macroName, [ref]$working_file, [ref]$logfile)	#this one for running via batch (deploy) script
+#	$word.run($macroName, $working_file, $logfile) 				#this one for calling direct from cmd line
 	$doc.save()
 	$doc.close()
 	$word.quit()
