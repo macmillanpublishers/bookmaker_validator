@@ -21,6 +21,7 @@ testing_value_file = File.join("C:", "staging.txt")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 
 # ---------------------- LOGGING VARIABLES
+timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 logfolder = File.join(working_dir, 'logs')
 logfile = File.join(logfolder, "#{basename_normalized}_log.txt") 
 deploy_logfolder = File.join('S:','resources','logs')
@@ -30,7 +31,6 @@ human_logfile = File.join(deploy_logfolder,"#{filename_normalized}_out-err_valid
 p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#{timestamp}.txt")
 
 # ---------------------- LOCAL VARIABLES
-timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
 powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
 validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
