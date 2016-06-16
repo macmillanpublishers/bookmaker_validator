@@ -9,20 +9,35 @@ input_file = File.expand_path(unescapeargv)
 input_file = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
-timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-logfolder = File.join('S:','resources','logs')
-process_logfolder = File.join(logfolder,'processLogs')
-json_logfile = File.join(logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.json")
-human_logfile = File.join(logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.txt")
-p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#{timestamp}.txt")
-validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
+basename_normalized = File.basename(filename_normalized, ".*")
+extension = File.extname(filename_normalized)
+project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
+project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
+inbox = File.join(project_dir, 'IN')
+outbox = File.join(project_dir, 'OUT')
+working_dir = File.join('S:', 'validator_tmp')
+tmp_dir=File.join(working_dir, basename_normalized)
+testing_value_file = File.join("C:", "staging.txt")
+bookinfo_file = File.join(tmp_dir,'book_info.json')
 
-#------ local var names
+# ---------------------- LOGGING VARIABLES
+logfolder = File.join(working_dir, 'logs')
+logfile = File.join(logfolder, "#{basename_normalized}_log.txt") 
+deploy_logfolder = File.join('S:','resources','logs')
+process_logfolder = File.join(deploy_logfolder,'processLogs')
+json_logfile = File.join(deploy_logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.json")
+human_logfile = File.join(deploy_logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.txt")
+p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#{timestamp}.txt")
+
+# ---------------------- LOCAL VARIABLES
+timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
 powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
+validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
 process_watcher = File.join(validator_dir,'process_watcher.rb')
 validator_tmparchive = File.join(validator_dir,'validator_tmparchive.rb')
-run_Bookmaker_Validator = File.join(validator_dir,'run_Bookmaker_Validator.ps1')
+run_macro = File.join(validator_dir,'run_macro.ps1')
+macro_name="Validator.Launch"
 validator_mailer = File.join(validator_dir,'validator_mailer.rb')
 validator_cleanup = File.join(validator_dir,'validator_cleanup.rb')
 
@@ -72,7 +87,11 @@ log_time(output_hash,'process_watcher','completion time',json_logfile)
 
 #the rest of the validator:
 run_script("#{ruby_exe} #{validator_tmparchive} \'#{input_file}\'", output_hash, "validator_tmparchive", json_logfile)
-run_script("#{powershell_exe} \"#{run_Bookmaker_Validator} \'#{input_file}\'\"", output_hash, "run_Bookmaker_Validator", json_logfile)
+if File.file?(bookinfo_file)
+	run_script("#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\"", output_hash, "run_macro", json_logfile)
+else
+	#log	
+end
 run_script("#{ruby_exe} #{validator_mailer} \'#{input_file}\'", output_hash, "validator_mailer", json_logfile)
 run_script("#{ruby_exe} #{validator_cleanup} \'#{input_file}\'", output_hash, "validator_cleanup", json_logfile)
 
