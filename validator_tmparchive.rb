@@ -103,6 +103,12 @@ if extension =~ /.doc/ && filename_normalized =~ /9(78|-78|7-8|78-|-7-8)[0-9-]{1
 elsif filename_normalized =~ /^.*_IN_PROGRESS.txt/ || filename_normalized =~ /ERROR_RUNNING_.*.txt/
 	logger.info('validator_tmparchive') {"ignoring our own .txt outfile"}
 elsif filename_normalized !~ /9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/
+    logger.info('validator_tmparchive') {"\"#{basename_normalized}\" is a .doc or .docx with isbn_num in title, moving to tmpdir"}
+    FileUtils.mkdir_p tmp_dir
+    File.open(inprogress_file, 'w') { |f|
+        f.puts "Processing in progress for file #{filename_normalized}."
+    }
+    FileUtils.cp input_file, working_file    
     #check for isbns in manuscript!    
     require 'open3'
     validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
