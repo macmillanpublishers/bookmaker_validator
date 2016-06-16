@@ -29,8 +29,8 @@ if ($fileext -eq ".doc" -Or $fileext -eq ".docx") {
 	$word = new-object -comobject word.application # create a com object interface (word application)
 	$word.visible = $true
 	$doc = $word.documents.open($working_file)
-	$word.run($macroName, [ref]$working_file, [ref]$logfile)	#this one for running via batch (deploy) script
-#	$word.run($macroName, $working_file, $logfile) 				#this one for calling direct from cmd line
+#	$word.run($macroName, [ref]$working_file, [ref]$logfile)	#this one for running via batch (deploy) script
+	$word.run($macroName, $working_file, $logfile) 				#this one for calling direct from cmd line
 	$doc.save()
 	$doc.close()
 	$word.quit()

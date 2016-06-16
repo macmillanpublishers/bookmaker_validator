@@ -114,7 +114,7 @@ elsif filename_normalized !~ /9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/
     validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
     run_macro = File.join(validator_dir,'run_macro.ps1')
     powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
-    macro_name="Test.IsbnSearch"
+    macro_name="Reports.IsbnSearch"
     powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
     command = "#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\""
 
