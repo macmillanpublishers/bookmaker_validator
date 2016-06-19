@@ -255,6 +255,10 @@ Private Function Main(DocPath As String) As Boolean
   Dim blnPass As Boolean
   Dim dictTests As genUtils.Dictionary
   
+' NOTE! Each procedure called returns a dictionary with results of various
+' tests. Each will include a "pass" key--a value of "False" means that the
+' validator should NOT continue (checked in `ReturnDict` sub.
+  
 ' ----- INITIALIZE ------------------------------------------------------------
   strKey = "initialize"
   Set dictTests = genUtils.Reports.ReportsStartup(DocPath)
@@ -268,14 +272,16 @@ Private Function Main(DocPath As String) As Boolean
   Set dictTests = genUtils.Reports.StyleCheck()
   Call ReturnDict(strKey, dictTests)
   
+
+' *****************************************************************************
+'       CONTINUE IF MS IS STYLED
+' *****************************************************************************
+
 ' ----- ISBN VALIDATION -------------------------------------------------------
   strKey = "isbn"
   Set dictTests = genUtils.Reports.IsbnCheck
   Call ReturnDict(strKey, dictTests)
 
-' *****************************************************************************
-'       CONTINUE IF MS IS STYLED
-' *****************************************************************************
 ' ----- TITLEPAGE VALIDATION --------------------------------------------------
   strKey = "titlepage"
   Set dictTests = genUtils.Reports.TitlepageCheck
