@@ -255,39 +255,57 @@ Private Function Main(DocPath As String) As Boolean
   Dim blnPass As Boolean
   Dim dictTests As genUtils.Dictionary
   
-  ' ----- INITIALIZE ----------------------------------------------------------
+' ----- INITIALIZE ------------------------------------------------------------
   strKey = "initialize"
   Set dictTests = genUtils.Reports.ReportsStartup(DocPath)
   Call ReturnDict(strKey, dictTests)
-  
-  ' ----- OVERALL STYLE CHECKS ------------------------------------------------
+
+' *****************************************************************************
+'       ALWAYS CHECK STYLES
+' *****************************************************************************
+' ----- OVERALL STYLE CHECKS --------------------------------------------------
   strKey = "styled"
   Set dictTests = genUtils.Reports.StyleCheck()
   Call ReturnDict(strKey, dictTests)
   
-  ' ----- ISBN VALIDATION -----------------------------------------------------
+' ----- ISBN VALIDATION -------------------------------------------------------
   strKey = "isbn"
   Set dictTests = genUtils.Reports.IsbnCheck
   Call ReturnDict(strKey, dictTests)
 
-  ' ----- SECTION TAGGING -----------------------------------------------------
-  strKey = "section"
-  
-  ' ----- TITLEPAGE VALIDATION ------------------------------------------------
+' *****************************************************************************
+'       CONTINUE IF MS IS STYLED
+' *****************************************************************************
+' ----- TITLEPAGE VALIDATION --------------------------------------------------
   strKey = "titlepage"
-  
-  ' ----- HEADING VALIDATION --------------------------------------------------
-  strKey = "headings"
-  
-  ' ----- RUN CLEANUP MACRO ---------------------------------------------------
-  ' To do: convert to function that returns dictionary of test results
-  
-  
-  ' ----- RUN CHAR STYLES MACRO -----------------------------------------------
-  ' To do: convert to function that returns dictionary of test results
-  
-  
+  Set dictTests = genUtils.Reports.TitlepageCheck
+  Call ReturnDict(strKey, dictTests)
 
+' ----- SECTION TAGGING -------------------------------------------------------
+  strKey = "sections"
+  Set dictTests = genUtils.Reports.SectionCheck
+  Call ReturnDict(strKey, dictTests)
+  
+' ----- HEADING VALIDATION ----------------------------------------------------
+  strKey = "headings"
+  Set dictTests = genUtils.Reports.HeadingCheck
+  Call ReturnDict(strKey, dictTests)
+  
+' ----- ILLUSTRATION VALIDATION -----------------------------------------------
+  strKey = "illustrations"
+  Set dictTests = genUtils.Reports.IllustrationCheck
+  Call ReturnDict(strKey, dictTests)
+
+' ----- RUN CLEANUP MACRO -----------------------------------------------------
+' To do: convert to function that returns dictionary of test results
+  
+  
+' ----- RUN CHAR STYLES MACRO -------------------------------------------------
+' To do: convert to function that returns dictionary of test results
+  
+  
+  Set dictTests = Nothing
+  
   Main = True
   Exit Function
 MainError:
@@ -339,7 +357,8 @@ Public Sub ValidatorCleanup()
   Dim strExt As String
   For Each objDoc In Documents
     ' don't close any macro templates, might be running code.
-    If VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), ".")) <> ".dotm" Then
+    strExt = VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), "."))
+    If strExt <> ".dotm" Then
       objDoc.Close saveValue
     End If
   Next objDoc
