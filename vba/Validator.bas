@@ -31,6 +31,7 @@ Private strJsonPath As String
 Private strLogPath As String
 
 Private StartTime As Double
+Private SecondsElapsed As Double
 
 
 ' ===== Enumerations ==========================================================
@@ -55,31 +56,40 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   ' Note, none of these will trap for compile errors!!
   On Error GoTo LaunchError   ' Suppresses run-time errors, passes to label
   Application.DisplayAlerts = wdAlertsNone  ' Only suppresses MsgBox function
+'  Application.ScreenUpdating = False
 
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
   If SetOutputPaths(FilePath, LogPath) = False Then
     Err.Raise err_PathInvalid
   End If
-  
-  ' ditto all that for LogPath
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print "Output paths set: " & SecondsElapsed
 
   ' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
   ' IN THIS PROCEDURE! If ref is missing, will throw compile error.
   If IsRefMissing = True Then
     Err.Raise err_RefMissing
   End If
-  
+
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print "References OK: " & SecondsElapsed
 ' ===================================================
 ' Once we're certain genUtils is available, pass to Main validator procedure
 ' and use that function for handling errors.
 ' ===================================================
-  Call Main(FilePath)
-  Call ValidatorCleanup
+  If Main(FilePath) = True Then
+    SecondsElapsed = Round(Timer - StartTime, 2)
+    Debug.Print "`Main` function complete: " & SecondsElapsed
+    Call ValidatorCleanup
+  Else
+    ' ?
+    Debug.Print "Main() = False"
+  End If
   
 Cleanup:
+' Project actually ends with `ValidatorCleanup` but have these here in case.
   Application.DisplayAlerts = wdAlertsAll
-  ' Only reset Error here, before completion.
   On Error GoTo 0
   Exit Sub
 
@@ -233,6 +243,9 @@ Private Sub WriteAlert(Optional blnEnd As Boolean = True)
   Open strAlertPath For Append As #FileNum
   Print #FileNum, strAlert
   Close #FileNum
+
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print "WriteAlert: " & strAlert & SecondsElapsed
   
   ' Optional: stops ALL code.
   If blnEnd = True Then
@@ -261,7 +274,7 @@ Private Function Main(DocPath As String) As Boolean
   
 ' ----- INITIALIZE ------------------------------------------------------------
   strKey = "initialize"
-  Set dictTests = genUtils.Reports.ReportsStartup(DocPath)
+  Set dictTests = genUtils.Reports.ReportsStartup(DocPath, strAlertPath)
   Call ReturnDict(strKey, dictTests)
 
 ' *****************************************************************************
@@ -306,6 +319,7 @@ Private Function Main(DocPath As String) As Boolean
 ' To do: convert to function that returns dictionary of test results
   
   
+  
 ' ----- RUN CHAR STYLES MACRO -------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
   
@@ -346,6 +360,7 @@ Public Sub ValidatorCleanup()
 ' Actually CAN'T set On Error here: it clears the Err object!
 ' And we need WriteAlert to read that, if there is one.
 
+
   Dim blnResult As Boolean
   Dim saveValue As WdSaveOptions
   If Err.Number = 0 Then
@@ -369,6 +384,8 @@ Public Sub ValidatorCleanup()
     End If
   Next objDoc
   
+  genUtils.zz_clearFind
+  
   ' Write our final element to `style_check.json` file
   Call genUtils.AddToJson(strJsonPath, "completed", blnResult)
   
@@ -382,15 +399,16 @@ Public Sub ValidatorCleanup()
 ValidatorCleanupError:
 ' ============================================================================
 ' ----------------------Timer End-------------------------------------------
-
-  Dim SecondsElapsed As Double
 ' Determine how many seconds code took to run
   SecondsElapsed = Round(Timer - StartTime, 2)
     
 ' Notify user in seconds
   Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
 ' ============================================================================
-
+  Application.DisplayAlerts = wdAlertsAll
+  Application.ScreenUpdating = True
+  Application.ScreenRefresh
+  On Error GoTo 0
   End   ' Stops ALL code execution.
 End Sub
 
@@ -407,10 +425,6 @@ Public Sub JsonToLog()
 ' Following Matt's formatting for other scripts
   strLog = Format(Now, "yyyy-mm-dd hh:mm:ss AMPM") & "   : " & strValidator _
     & "Launch -- results:" & vbNewLine
-    
-  Dim strSpaces As String
-' To get logs to line up nicely, haha
-  strSpaces = VBA.Space(27)
   
 ' Loop through `style_check.json` and write to log. Can add more detailed info
 ' in the future.
@@ -422,47 +436,51 @@ Public Sub JsonToLog()
 ' Value is neither (thus, number, string, boolean) - just write to string.
   Dim strKey1 As Variant
   Dim strKey2 As Variant
-  Dim arrValues() As Variant
+  Dim colValues As Collection
   Dim A As Long
   
 ' Anyway, loop through json data and build string to write to log
   With jsonDict
     For Each strKey1 In .Keys
+      strLog = strLog & strKey1 & ": "
     ' Value may be another dictionary/object
       If VBA.IsObject(.Item(strKey1)) = True Then
+        strLog = strLog & vbNewLine
       ' loop through THIS dictionary
         For Each strKey2 In .Item(strKey1).Keys
-          Debug.Print .Item(strKey1).Item(strKey2)
-          strLog = strLog & strSpaces & strKey1 & ": " & strKey2 & ": " & _
-            .Item(strKey1).Item(strKey2)
-          Debug.Print strLog
-        ' Value here might be an array
-          If VBA.IsArray(.Item(strKey1).Item(strKey2)) = True Then
-            arrValues = .Item(strKey1).Item(strKey2)
-            ' Loop through array, write values
-              For A = LBound(arrValues) To UBound(arrValues)
-                If A <> LBound(arrValues) Then
+          strLog = strLog & vbTab & strKey2 & ": "
+        ' Value at this level may be a Collection (how Dictionary class returns
+        ' an array from JSON)
+          If strKey2 = "list" Then
+            If VBA.IsObject(.Item(strKey1).Item(strKey2)) = True Then
+              strLog = strLog & vbNewLine & vbTab & vbTab
+              Set colValues = .Item(strKey1).Item(strKey2)
+            ' Loop through collection, write values
+              For A = 1 To colValues.Count
+                If A <> 1 Then
                   ' add comma and space between values
                   strLog = strLog & ", "
                 End If
-                strLog = strLog & arrValues(A)
+                strLog = strLog & colValues(A)
               Next A
-
+            End If
           Else
           ' Pretty sure it's something we can convert to string directly
-            strLog = strLog & .Item(strKey2)
+            strLog = strLog & .Item(strKey1).Item(strKey2)
           End If
           strLog = strLog & vbNewLine
         Next strKey2
       Else
-        strLog = strLog & strSpaces & strKey1 & ": " & .Item(strKey1) & vbNewLine
+        strLog = strLog & .Item(strKey1) & vbNewLine
       End If
+'      strLog = strLog & vbNewLine
     Next strKey1
   End With
-  
-  Debug.Print strLog
+  strLog = strLog & vbNewLine
+'  Debug.Print strLog
   
 ' Write string to log file, which should have been set earlier!
+'  Debug.Print strLogPath
   Call genUtils.AppendTextFile(strLogPath, strLog)
   
   Exit Sub
@@ -492,6 +510,10 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary)
       Err.Raise ValidatorError.err_NoPassKey
     End If
   End If
+
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print SectionKey & " complete: " & SecondsElapsed
+  
   Exit Sub
   
 ReturnDictError:
@@ -501,7 +523,7 @@ ReturnDictError:
       Err.Description = "The test dictionary for `" & SectionKey & "` returned empty."
       Call ValidatorCleanup
     Case ValidatorError.err_NoPassKey
-      Err.Description = strKey & " dictionary has no `pass` key."
+      Err.Description = SectionKey & " dictionary has no `pass` key."
       Call ValidatorCleanup
     Case Else
       If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
@@ -524,8 +546,9 @@ Sub ValidatorTest()
   StartTime = Timer
 ' =================================================
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", "C:\Users\erica.warren\Desktop\validator-test.log")
-  
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", _
+  "C:\Users\erica.warren\Desktop\validator-test.log")
+  MsgBox "Done!"
   Exit Sub
 
 TestError:
