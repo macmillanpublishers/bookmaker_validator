@@ -214,6 +214,12 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
 
   ' ditto global var for style check file
   strJsonPath = strDir & "style_check.json"
+  
+  ' delete if it exists already (don't want old test results)
+  If strJsonPath <> vbNullString And Dir(strJsonPath) <> vbNullString Then
+    Kill strJsonPath
+  End If
+
   ' Also verify log file. Could add more error handling later but for now
   ' just trusting that will be created by calling .ps1 script
   strLogPath = origLogPath
@@ -363,11 +369,40 @@ Public Sub ValidatorCleanup()
 
   Dim blnResult As Boolean
   Dim saveValue As WdSaveOptions
-  If Err.Number = 0 Then
+  Dim dictJson As genUtils.Dictionary
+  Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
+
+' If sent here because ReturnDict function detected "pass":false, then
+' "completed":false has already been set. SetOutputPaths deletes the style_check
+' file if it exists from a previous run, so should be OK to check "completed"
+  If dictJson.Exists("completed") = True Then
+    blnResult = dictJson("completed")
+  ElseIf Err.Number = 0 Then
     blnResult = True
-    saveValue = wdSaveChanges
   Else
     blnResult = False
+  End If
+
+  On Error GoTo ValidatorCleanupError
+
+  ' Write our final element to `style_check.json` file
+  Call genUtils.AddToJson(strJsonPath, "completed", blnResult)
+
+' Determine how many seconds code took to run
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Call genUtils.AddToJson(strJsonPath, "elaspedTime", SecondsElapsed)
+
+  ' Write log entry from JSON values
+  ' Should always be there (see previous line)
+  If genUtils.IsItThere(strJsonPath) = True Then
+    Call JsonToLog
+  End If
+  
+  ' ---- Close all open documents (and save changes if OK) -----------
+
+  If blnResult = True Then
+    saveValue = wdSaveChanges
+  Else
     saveValue = wdDoNotSaveChanges
     Call WriteAlert(False)
   End If
@@ -384,16 +419,8 @@ Public Sub ValidatorCleanup()
     End If
   Next objDoc
   
+  ' just to keep things tidy
   genUtils.zz_clearFind
-  
-  ' Write our final element to `style_check.json` file
-  Call genUtils.AddToJson(strJsonPath, "completed", blnResult)
-  
-  ' Write log entry from JSON values
-  ' Should always be there (see previous line)
-  If genUtils.IsItThere(strJsonPath) = True Then
-    Call JsonToLog
-  End If
 
 ' DON'T `Exit Sub` before this - we want it to `End` no matter what.
 ValidatorCleanupError:
@@ -504,6 +531,8 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary)
       ' write tests to JSON file
       Call genUtils.AddToJson(strJsonPath, SectionKey, TestDict)
       If TestDict("pass") = False Then
+        ' Write our final element to `style_check.json` file
+        Call genUtils.AddToJson(strJsonPath, "completed", False)
         Call ValidatorCleanup
       End If
     Else
@@ -535,7 +564,7 @@ ReturnDictError:
 
 End Sub
 
-Sub ValidatorTest()
+Private Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
 
@@ -546,9 +575,8 @@ Sub ValidatorTest()
   StartTime = Timer
 ' =================================================
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator-test.docx", _
-  "C:\Users\erica.warren\Desktop\validator-test.log")
-  MsgBox "Done!"
+  Call Validator.Launch("C:\Users\padwoadmin\Desktop\validator-test.docx", _
+  "C:\Users\padwoadmin\Desktop\validator-test.log")
   Exit Sub
 
 TestError:
