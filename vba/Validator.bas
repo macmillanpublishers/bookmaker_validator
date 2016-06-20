@@ -56,7 +56,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   ' Note, none of these will trap for compile errors!!
   On Error GoTo LaunchError   ' Suppresses run-time errors, passes to label
   Application.DisplayAlerts = wdAlertsNone  ' Only suppresses MsgBox function
-'  Application.ScreenUpdating = False
+  Application.ScreenUpdating = False
 
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
@@ -90,6 +90,8 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 Cleanup:
 ' Project actually ends with `ValidatorCleanup` but have these here in case.
   Application.DisplayAlerts = wdAlertsAll
+  Application.ScreenUpdating = True
+  Application.ScreenRefresh
   On Error GoTo 0
   Exit Sub
 
@@ -255,6 +257,10 @@ Private Sub WriteAlert(Optional blnEnd As Boolean = True)
   
   ' Optional: stops ALL code.
   If blnEnd = True Then
+    Application.DisplayAlerts = wdAlertsAll
+    Application.ScreenUpdating = True
+    Application.ScreenRefresh
+    On Error GoTo 0
     End
   End If
 End Sub
