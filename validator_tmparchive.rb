@@ -27,7 +27,7 @@ inbox = File.join(project_dir, 'IN')
 outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.dirname(__FILE__)
+validator_dir = File.expand_path(File.dirname(__FILE__))
 mailer_dir = File.join(validator_dir,'mailer_messages')
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
@@ -181,7 +181,7 @@ end
 
 
 #try lookup on filename isbn
-if (filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
+if filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
     lookup_isbn = filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = lookup_isbn
     if Vldtr::Tools.checkisbn(lookup_isbn)

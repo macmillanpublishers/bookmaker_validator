@@ -19,7 +19,7 @@ inbox = File.join(project_dir, 'IN')
 outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.dirname(__FILE__)
+validator_dir = File.expand_path(File.dirname(__FILE__))
 mailer_dir = File.join(validator_dir,'mailer_messages')
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
@@ -44,78 +44,122 @@ err_notice = File.join(outbox,"ERROR--#{filename_normalized}--Validator_Failed.t
 warn_notice = File.join(outbox,"WARNING--#{filename_normalized}--validator_completed_with_warnings.txt")
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
+isbn = ''
 permalog = File.join(logfolder,'validator_history_report.json')
+#for now setting to outbox and creating folders
+bookmaker_bot_folder = File.join(outbox, bookmaker_bot)
+bookmaker_bot_IN = File.join(bookmaker_bot_folder, 'convert')
+bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
+FileUtils.mkdir_p bookmaker_bot_IN
+FileUtils.mkdir bookmaker_bot_accessories
 
 
 #--------------------- RUN
-#load info from status.json
-if File.file?(status_file)
-	status_hash = Mcmlln::Tools.readjson(status_file)
-else
-	status_hash[errors] = "Error occurred, validator failed: no status.json available"
-	logger.info {"status.json not present or unavailable, creating error txt"}
-end	
-
-#let's move the original to outbox!
-FileUtils.mv input_file, outbox
-
-if !status_hash[errors].empty? || !status_hash[warnings].empty?
-	if !status_hash[errors].empty? 
-		#errors found!  use the text from mailer to write file:
-		text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
-		Mcmlln::Tools.overwriteFile(err_notice, text)
-	elsif !status_hash[warnings].empty?
-		#warnings found!  use the text from mailer to write file:
-		text = status_hash[warnings]
-		Mcmlln::Tools.overwriteFile(warn_notice, text)
-		#let's move the done file to outbox
-		File.rename(working_file, done_file)
-		FileUtils.mv done_file, outbox
-	end	
-	#save the tmp_dir for review
-	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
-	FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 	
-end	
-
-if status_hash[errors].empty? && status_hash[warnings].empty?
-	#let's move the done file to outbox
-	File.rename(working_file, done_file)
-	FileUtils.mv done_file, outbox
-end	
-
-if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
-if File.file?(errFile) then FileUtils.rm inprogress_file end
-
-
-#let's write to permalog!
+#load info from jsons, start to dish info out to permalog as available
 if File.file?(permalog)
 	permalog_hash = Mcmlln::Tools.readjson(permalog)
 else
 	permalog_hash = []	
 end	
-if File.file?(contacts_file)
-	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
-end	
-if File.file?(bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
-end	
-if File.file?(stylecheck_file)
-	stylecheck_hash = Mcmlln::Tools.readjson(stylecheck_file)
-end	
-
 index = permalog_hash.length + 1
 permalog_hash[index]['file'] = filename_normalized
 permalog_hash[index]['date'] = timestamp
-permalog_hash[index]['isbn'] = bookinfo_file['isbn']
-permalog_hash[index]['title'] = bookinfo_file['title']
-permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
-permalog_hash[index]['styled?'] = stylecheck_hash['styled']
-permalog_hash[index]['validator_completed?'] = stylecheck_hash['completed']
-permalog_hash[index]['errors'] = status_hash['errors']
-permalog_hash[index]['warnings'] = status_hash['warnings']
+
+if File.file?(status_file)
+	status_hash = Mcmlln::Tools.readjson(status_file)
+	permalog_hash[index]['errors'] = status_hash['errors']
+	permalog_hash[index]['warnings'] = status_hash['warnings']
+else
+	status_hash[errors] = "Error occurred, validator failed: no status.json available"
+	logger.info {"status.json not present or unavailable, creating error txt"}
+end	
+if File.file?(stylecheck_file)
+	stylecheck_hash = Mcmlln::Tools.readjson(stylecheck_file)
+	permalog_hash[index]['styled?'] = stylecheck_hash['styled']
+	permalog_hash[index]['validator_completed?'] = stylecheck_hash['completed']
+end	
+if File.file?(bookinfo_file)
+	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+	permalog_hash[index]['isbn'] = bookinfo_file['isbn']
+	permalog_hash[index]['title'] = bookinfo_file['title']	
+	isbn = bookinfo_file['isbn']
+end	
 
 
+#let's move the original to outbox!
+FileUtils.mv input_file, outbox
+
+
+#deal with errors & warnings!
+if !status_hash['errors'].empty? 
+	#errors found!  use the text from mailer to write file:
+	text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
+	Mcmlln::Tools.overwriteFile(err_notice, text)
+	#save the tmp_dir for review
+	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
+	FileUtils.cp_r "#{tmp_dir}__#{timestamp}", logfolder 	
+	logger.info {"errors found, writing err_notice, saving tmp_dir to logfolder"}
+end	
+if !status_hash['warnings'].empty?
+	#warnings found!  use the text from mailer to write file:
+	text = status_hash['warnings']
+	Mcmlln::Tools.overwriteFile(warn_notice, text)
+	logger.info {"warnings found, writing warn_notice"}
+end	
+
+
+#get ready for bookmaker to run on good docs!
+if status_hash['errors'].empty? && stylecheck_hash['styled']
+	#add isbn to filename if its missing, and isbn available
+	if filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && !isbn.empty?
+		working_file_old = working_file
+		working_file = working_file.gsub(/.#{extension}$/,"#{isbn}.#{extension}")
+		File.rename(working_file_old, working_file)
+	end	
+	File.rename(working_file, done_file)
+	FileUtils.mv done_file, bookmaker_bot_IN
+	#rename and move contacts.json
+	if !isbn.empty?
+		newcontacts_file = contacts_file.gsub(/.json$/,"#{isbn}.json")
+	else
+		newcontacts_file = contacts_file.gsub(/.json$/,"#{basename_normalized}.json")
+	end		
+	File.rename(contacts_file, newcontacts_file)
+	FileUtils.cp newcontacts_file, bookmaker_bot_accessories
+end	
+
+
+#unstyled docs had the cleanup macros run but dont go to bookmaker, they get renamed & output straight to OUT
+if status_hash['errors'].empty? && !stylecheck_hash['styled']
+	File.rename(working_file, done_file)
+	FileUtils.mv done_file, outbox
+end	
+
+
+#dump the rest of the jsons to std log:
+human_contacts = contacts_hash.map{|k,v| "#{k} = #{v}"}
+human_bookinfo = bookinfo_hash.map{|k,v| "#{k} = #{v}"}
+human_status = status_hash.map{|k,v| "#{k} = #{v}"}
+logger.info {"dumping contents of contacts.json:"}
+File.open(logfile, 'a') { |f| f.puts human_contacts }
+logger.info {"dumping contents of bookinfo.json:"}
+File.open(logfile, 'a') { |f| f.puts human_bookinfo }
+logger.info {"dumping contents of status.json:"}
+File.open(logfile, 'a') { |f| f.puts human_status }
+
+
+#finish writing to permalog!
+if File.file?(contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
+	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
+end	
 Vldtr::Tools.write_json(permalog_hash,permalog)
+
+
+#cleanup
+if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
+if File.file?(errFile) then FileUtils.rm inprogress_file end
+
 
 
 

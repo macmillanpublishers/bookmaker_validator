@@ -20,7 +20,7 @@ inbox = File.join(project_dir, 'IN')
 outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.dirname(__FILE__)
+validator_dir = File.expand_path(File.dirname(__FILE__))
 mailer_dir = File.join(validator_dir,'mailer_messages')
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
@@ -140,7 +140,6 @@ end
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
-To: #{user_name} <#{user_mail}>
 #{cc_address}
 Subject: #{subject}
 
@@ -221,29 +220,29 @@ end
 #or maybe we'll have two, one for bookmaker success, one for bookmaker failure
 #are we attaching errors or logs?  not necessary if we consolidate logs in one place
 
-if errors.empty && status_hash['document_styled'] && send_ok
-	unless File.file?(testing_value_file)
-		#conditional to addressees are complicated: 
-		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
-		if pm_mail =~ /@/ 
-			cc_mails << pm_mail 
-			to_address = "#{to_address}, #{pm_name} <#{pm_mail}>"
-		end
-		if pe_mail =~ /@/ && pe_mail != pm_mail
-			cc_mails << pe_mail 
-			to_address = "#{to_address}, #{pe_name} <#{pe_mail}>"
-		end
-		if pm_mail !~ /@/ && pe_mail !~ /@/
-			to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
-		else
-			cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
-		end	
-		subject = "#{project_name} successfully processed #{filename_split}"
-		body = validator_complete.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
-		logger.info {"Sending success message for validator to PE/PM"}	 		
-	end	
-end	
+# if errors.empty && status_hash['document_styled'] && send_ok
+# 	unless File.file?(testing_value_file)
+# 		#conditional to addressees are complicated: 
+# 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
+# 		if pm_mail =~ /@/ 
+# 			cc_mails << pm_mail 
+# 			to_address = "#{to_address}, #{pm_name} <#{pm_mail}>"
+# 		end
+# 		if pe_mail =~ /@/ && pe_mail != pm_mail
+# 			cc_mails << pe_mail 
+# 			to_address = "#{to_address}, #{pe_name} <#{pe_mail}>"
+# 		end
+# 		if pm_mail !~ /@/ && pe_mail !~ /@/
+# 			to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
+# 		else
+# 			cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
+# 		end	
+# 		subject = "#{project_name} successfully processed #{filename_split}"
+# 		body = validator_complete.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+# 		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
+# 		logger.info {"Sending success message for validator to PE/PM"}	 		
+# 	end	
+# end	
 
 
 #add errors/warnings to status.json for cleanup

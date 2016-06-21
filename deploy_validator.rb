@@ -19,9 +19,10 @@ inbox = File.join(project_dir, 'IN')
 outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.dirname(__FILE__)
+validator_dir = File.expand_path(File.dirname(__FILE__))
 testing_value_file = File.join("C:", "staging.txt")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
+thisscript = File.basename($0,'.rb')
 
 # ---------------------- LOGGING VARIABLES
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
@@ -40,11 +41,12 @@ process_watcher = File.join(validator_dir,'process_watcher.rb')
 validator_tmparchive = File.join(validator_dir,'validator_tmparchive.rb')
 run_macro = File.join(validator_dir,'run_macro.ps1')
 macro_name="Validator.Launch"
+validator_checker = File.join(validator_dir,'validator_checker.rb')
 validator_mailer = File.join(validator_dir,'validator_mailer.rb')
 validator_cleanup = File.join(validator_dir,'validator_cleanup.rb')
 
 
-#---------------------  FUNCTIONS  ####### method for calling other scritps, and merging and/or writing output to json.log
+#---------------------  FUNCTIONS & message template
 def log_time(currenthash,scriptname,txt,jsonlog)
 	timestamp_colon = Time.now.strftime('%y%m%d_%H:%M:%S')
 	time_hash = { "#{scriptname} #{txt}" => timestamp_colon }
@@ -63,6 +65,19 @@ def run_script(command,hash,scriptname,jsonlog)
 	Vldtr::Tools.update_json(outputhash, hash, jsonlog)
 	log_time(hash,scriptname,'completion time',jsonlog)	
 end	
+message = <<MESSAGE_END
+From: Workflows <workflows@macmillan.com>
+To: Workflows <workflows@macmillan.com>
+Subject: ALERT: #{project_name} process crashed
+
+#{thisscript}.rb has crashed during #{project_name} run.
+
+Please see the following logfiles for assistance in troubleshooting:
+#{logfile}
+#{human_logfile}
+#{p_logfile}
+
+MESSAGE_END
 
 
 #--------------------- LOGGING
@@ -80,32 +95,35 @@ log_time(output_hash,'process_watcher','completion time',json_logfile)
 
 
 #the rest of the validator:
-run_script("#{ruby_exe} #{validator_tmparchive} \'#{input_file}\'", output_hash, "validator_tmparchive", json_logfile)
-if File.file?(bookinfo_file)
-	run_script("#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\"", output_hash, "run_macro", json_logfile)
-else
-	#log	
-end
-#check to see if we're ready to run bookmaker; read in status.json:
-if File.file?(status_file) 
-	status_hash = Mcmlln::Tools.readjson(status_file)
-	if status_hash['bookmaker_ready']
-		#RUN BOOKMAKER!
-		puts "file is bookmaker ready! continuing"
+begin
+	run_script("#{ruby_exe} #{validator_tmparchive} \'#{input_file}\'", output_hash, "validator_tmparchive", json_logfile)
+	if File.file?(bookinfo_file)
+		run_script("#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\"", output_hash, "run_macro", json_logfile)
 	else
-		puts "file is not bookmaker ready, continuing"
-	end	
+		output_hash['bookinfo_file'] = false 
+		puts "skipping macro, no bookinfo file"
+	end
+	run_script("#{ruby_exe} #{validator_checker} \'#{input_file}\'", output_hash, "validator_checker", json_logfile)
+	run_script("#{ruby_exe} #{validator_mailer} \'#{input_file}\'", output_hash, "validator_mailer", json_logfile)
+	run_script("#{ruby_exe} #{validator_cleanup} \'#{input_file}\'", output_hash, "validator_cleanup", json_logfile)
+	#mark the process done for process watcher
+	output_hash['completed'] = true
+rescue Exception => e  
+	p e   #puts e.inspect
+	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"	
+	output_hash['validator_rescue_err'] = e
+	Process.kill(pid)
+	Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
+ensure
+	Vldtr::Tools.write_json(output_hash, json_logfile)
+	#generate some (more) human readable output
+	humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}
+	File.open(human_logfile, 'w+:UTF-8') { |f| f.puts humanreadie }
 end
 
-run_script("#{ruby_exe} #{validator_mailer} \'#{input_file}\'", output_hash, "validator_mailer", json_logfile)
-run_script("#{ruby_exe} #{validator_cleanup} \'#{input_file}\'", output_hash, "validator_cleanup", json_logfile)
 
-#mark the process done for process watcher
-output_hash['completed'] = true
-Vldtr::Tools.write_json(output_hash, json_logfile)
 
-#generate some (more) human readable output
-humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}
 
-File.open(human_logfile, 'w+:UTF-8') { |f| f.puts humanreadie }
+
+
 

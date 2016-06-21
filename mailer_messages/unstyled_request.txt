@@ -1,8 +1,6 @@
 Hello Westchester,
 
-Please see attached/linked manuscript file.
-
-Please generate a First-pass epub from the attached/linked manuscript file "FILENAME_NORMALIZED".  See below for further details regarding this title:
+Please generate a First-pass epub for file "FILENAME_NORMALIZED".  See below for details pertaining to this title:
 
 BOOKINFO
 
