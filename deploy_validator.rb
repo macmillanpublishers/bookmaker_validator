@@ -2,6 +2,8 @@ require 'fileutils'
 require 'open3'
 require 'process'
 require 'json'
+require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative './validator_tools.rb'
 
 #--------------------- HEADER - main declarations
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -17,6 +19,7 @@ inbox = File.join(project_dir, 'IN')
 outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
+validator_dir = File.dirname(__FILE__)
 testing_value_file = File.join("C:", "staging.txt")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 
@@ -33,7 +36,6 @@ p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#
 # ---------------------- LOCAL VARIABLES
 ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
 powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
-validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
 process_watcher = File.join(validator_dir,'process_watcher.rb')
 validator_tmparchive = File.join(validator_dir,'validator_tmparchive.rb')
 run_macro = File.join(validator_dir,'run_macro.ps1')
@@ -43,18 +45,10 @@ validator_cleanup = File.join(validator_dir,'validator_cleanup.rb')
 
 
 #---------------------  FUNCTIONS  ####### method for calling other scritps, and merging and/or writing output to json.log
-def write_json(hash, jsonlog)
-	finaljson = JSON.pretty_generate(hash)
-	File.open(jsonlog, 'w+:UTF-8') { |f| f.puts finaljson }
-end
-def update_json(newhash, currenthash, jsonlog)
-	currenthash.merge!(newhash)
-	write_json(currenthash,jsonlog)
-end	
 def log_time(currenthash,scriptname,txt,jsonlog)
 	timestamp_colon = Time.now.strftime('%y%m%d_%H:%M:%S')
 	time_hash = { "#{scriptname} #{txt}" => timestamp_colon }
-	update_json(time_hash,currenthash,jsonlog)
+	Vldtr::Tools.update_json(time_hash,currenthash,jsonlog)
 end	
 def run_script(command,hash,scriptname,jsonlog)
 	log_time(hash,scriptname,'start time',jsonlog)	
@@ -66,7 +60,7 @@ def run_script(command,hash,scriptname,jsonlog)
 		}
 	end	
 	outputhash={ "#{scriptname}" => alloutput }
-	update_json(outputhash, hash, jsonlog)
+	Vldtr::Tools.update_json(outputhash, hash, jsonlog)
 	log_time(hash,scriptname,'completion time',jsonlog)	
 end	
 
@@ -74,7 +68,7 @@ end
 #--------------------- LOGGING
 #create jsonlogfile 
 output_hash = { 'completed' => false }
-write_json(output_hash, json_logfile)
+Vldtr::Tools.write_json(output_hash, json_logfile)
 
 
 #--------------------- RUN
@@ -92,12 +86,23 @@ if File.file?(bookinfo_file)
 else
 	#log	
 end
+#check to see if we're ready to run bookmaker; read in status.json:
+if File.file?(status_file) 
+	status_hash = Mcmlln::Tools.readjson(status_file)
+	if status_hash['bookmaker_ready']
+		#RUN BOOKMAKER!
+		puts "file is bookmaker ready! continuing"
+	else
+		puts "file is not bookmaker ready, continuing"
+	end	
+end
+
 run_script("#{ruby_exe} #{validator_mailer} \'#{input_file}\'", output_hash, "validator_mailer", json_logfile)
 run_script("#{ruby_exe} #{validator_cleanup} \'#{input_file}\'", output_hash, "validator_cleanup", json_logfile)
 
 #mark the process done for process watcher
 output_hash['completed'] = true
-write_json(output_hash, json_logfile)
+Vldtr::Tools.write_json(output_hash, json_logfile)
 
 #generate some (more) human readable output
 humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}

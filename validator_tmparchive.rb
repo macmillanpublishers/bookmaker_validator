@@ -2,7 +2,6 @@ ENV["NLS_LANG"] = "AMERICAN_AMERICA.WE8MSWIN1252"
 
 require 'fileutils'
 require 'logger'
-require 'find'
 require 'oci8'
 require 'to_xml'
 require 'json'
@@ -12,9 +11,6 @@ require 'open3'
 require_relative '../utilities/oraclequery.rb'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
-
-#Mcmlln::Tools.cmd
-#Vldtr::Tools.cmd
 
 # ---------------------- VARIABLES (HEADER)
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -41,6 +37,7 @@ status_file = File.join(tmp_dir,'status_info.json')
 testing_value_file = File.join("C:", "staging.txt")
 #inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
 errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
+thisscript = File.basename($0,'.rb')
 
 
 # ---------------------- LOGGING
@@ -48,7 +45,7 @@ logfolder = File.join(working_dir, 'logs')
 logfile = File.join(logfolder, "#{basename_normalized}_log.txt") 
 logger = Logger.new(logfile)
 logger.formatter = proc do |severity, datetime, progname, msg|
-  "#{datetime}: #{progname} -- #{msg}\n"
+  "#{datetime}: #{thisscript} -- #{msg}\n"
 end
 FileUtils.mkdir_p logfolder
 
@@ -87,10 +84,10 @@ def getbookinfo(lookup_isbn,pisbn_or_isbn_lookup_ok)
 
     #verify that data warehouse returned something
     if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book'] 
-        logger.info('validator_tmparchive') {"data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"}
+        logger.info {"data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"}
         status_hash['pisbn_or_isbn_lookup_ok'] = false
     else  #lookup was good, continue: 
-        logger.info('validator_tmparchive') {"data warehouse lookup PM for isbn_num \"#{lookup_isbn}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
+        logger.info {"data warehouse lookup PM for isbn_num \"#{lookup_isbn}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
         thissql_D = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Editor")
         myhash_D = runPeopleQuery(thissql_D)
         
@@ -114,7 +111,7 @@ def getbookinfo(lookup_isbn,pisbn_or_isbn_lookup_ok)
         Vldtr::Tools.write_json(book_hash, bookinfo_file)
 
         status_hash['pisbn_or_isbn_lookup_ok'] = true
-        logger.info('validator_tmparchive') {"bookinfo from #{pisbn_or_isbn} #{isbn}- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""}    
+        logger.info {"bookinfo from #{pisbn_or_isbn} #{isbn}- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""}    
 end
 
 
@@ -122,7 +119,7 @@ end
 #--------------------- RUN
 #kick off logging
 logger.info "############################################################################"
-logger.info('validator_tmparchive') {"file \"#{filename_normalized}\" was dropped into the #{project_name} folder"}
+logger.info {"file \"#{filename_normalized}\" was dropped into the #{project_name} folder"}
 
 #make tmpdir
 FileUtils.mkdir_p tmp_dir
@@ -173,7 +170,7 @@ end
 #test fileext for =~ .doc
 if extension !~ /.doc/      
     status_hash['docfile'] = false
-    logger.info('validator_tmparchive') {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
+    logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
     File.open(errFile, 'w') { |f|
         f.puts "Unable to process \"#{filename_normalized}\". Your document is not a .doc or .docx file."
     }
@@ -189,18 +186,18 @@ if (filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
     status_hash['filename_isbn']["isbn"] = lookup_isbn
     if Vldtr::Tools.checkisbn(lookup_isbn)
         status_hash['filename_isbn']['checkdigit'] = true  
-        logger.info('validator_tmparchive') {"got isbn \"#{lookup_isbn}\" from filename proceeding with getting book info"}
+        logger.info {"got isbn \"#{lookup_isbn}\" from filename proceeding with getting book info"}
         getbookinfo(lookup_isbn,'isbn_lookup_ok')
     else
         status_hash['isbn_lookup_ok'] = false
-        logger.info('validator_tmparchive') {"got isbn \"#{lookup_isbn}\" from filename but checkdigit failed, moving on to pisbns"}
+        logger.info {"got isbn \"#{lookup_isbn}\" from filename but checkdigit failed, moving on to pisbns"}
     end     
 end
 
 
 #if no or bad isbn exists in filename or filename isbn lookup failed, see if we can find a good pisbn from manuscript!
 if (status_hash['isbn_lookup_ok'] = false || filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/) && extension =~ /.doc/ 
-    logger.info('validator_tmparchive') {"\"#{basename_normalized}\" is a .doc or .docx with no isbn_num in title, checking manuscript"}
+    logger.info {"\"#{basename_normalized}\" is a .doc or .docx with no isbn_num in title, checking manuscript"}
     
     #get isbns from Manuscript
     Open3.popen2e("#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\"") do |stdin, stdouterr, wait_thr|
@@ -209,29 +206,29 @@ if (status_hash['isbn_lookup_ok'] = false || filename_normalized !~ /9(7(8|9)|-7
       status_hash['isbnstring'] << line
       }
     end
-    logger.info('validator_tmparchive') {"isbnstring pulled from manuscript & added to status.json"}   
+    logger.info {"isbnstring pulled from manuscript & added to status.json"}   
     isbn_array = status_hash['isbnstring'].gsub!(/[^0-9,]/,'').split(',')
     isbn_array.each { |i|
         if i =~ /97(8|9)[0-9]{10}/
             if Vldtr::Tools.checkisbn(i)
                 status_hash['doc_isbn_list'] << i
             else
-                logger.info('validator_tmparchive') {"isbn from manuscript failed checkdigit: #{i}"}
+                logger.info {"isbn from manuscript failed checkdigit: #{i}"}
                 status_hash['pisbn_checkdigit_fail'] << i
             end    
         end
     }
     unique_isbns = status_hash['doc_isbn_list'].uniq
     if unique_isbns.empty? || unique_isbns.length > 10
-        logger.info('validator_tmparchive') {"either 0 (or >10) good isbns found in status_hash['isbnstring'] :( "}
+        logger.info {"either 0 (or >10) good isbns found in status_hash['isbnstring'] :( "}
     else
-        logger.info('validator_tmparchive') {"#{unique_isbns.length} good isbns found in isbnstring; looking them up @ data warehouse"}         
+        logger.info {"#{unique_isbns.length} good isbns found in isbnstring; looking them up @ data warehouse"}         
         #now we go get work ids for each isbn... 
         unique_isbns.each { |j|
             thissql = exactSearchSingleKey(j, "EDITION_EAN")
             myhash = runPeopleQuery(thissql)
             if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book'] 
-                logger.info('validator_tmparchive') {"isbn data-warehouse-lookup for manuscript isbn: #{j} failed."}
+                logger.info {"isbn data-warehouse-lookup for manuscript isbn: #{j} failed."}
 
             else
                 #and now we go get print isbn for each unique workid... 
@@ -249,11 +246,11 @@ if (status_hash['isbn_lookup_ok'] = false || filename_normalized !~ /9(7(8|9)|-7
         } 
         status_hash['doc_isbn_list'] = status_hash['doc_isbn_list'].uniq
         if status_hash['pisbns'].length > 1
-            logger.info('validator_tmparchive') {"too many pisbns found via doc_isbn lookup: marking pisbn_match false."}
+            logger.info {"too many pisbns found via doc_isbn lookup: marking pisbn_match false."}
             status_hash['pisbns_match'] = false
         elsif status_hash['pisbns'].length = 1
             #perform book info lookup on good pisbn!
-            logger.info('validator_tmparchive') {"found a good pisbn #{status_hash['pisbns'][0]} from doc_isbn workid(s), using that for lookups!"}
+            logger.info {"found a good pisbn #{status_hash['pisbns'][0]} from doc_isbn workid(s), using that for lookups!"}
             getbookinfo(status_hash['pisbns'][0],'pisbn_lookup_ok')   
         end            
     end       
