@@ -1,0 +1,13 @@
+An error occurred while attempting to run PROJECT_NAME on your file FILENAME_NORMALIZED."	
+
+Your original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
+
+See below for more information on any error(s), other warnings detected, and lookup info based on the ISBN:
+
+BOOKINFO 
+
+ERRORS
+
+WARNINGS
+
+

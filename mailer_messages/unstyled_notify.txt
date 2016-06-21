@@ -1,0 +1,11 @@
+Your file, "FILENAME_NORMALIZED", appeared to be un-styled; and has been successfully submitted to Westchester for First-pass epub creation. 
+
+Your original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
+
+See below for more information on any warnings detected in the manuscript and lookup info based on the ISBN:
+
+BOOKINFO 
+
+WARNINGS
+
+
