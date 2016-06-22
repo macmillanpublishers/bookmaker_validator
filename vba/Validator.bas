@@ -299,7 +299,7 @@ Private Function Main(DocPath As String) As Boolean
   
 ' NOTE! Each procedure called returns a dictionary with results of various
 ' tests. Each will include a "pass" key--a value of "False" means that the
-' validator should NOT continue (checked in `ReturnDict` sub.
+' validator should NOT continue (checked in `ReturnDict` sub).
   
 ' ----- INITIALIZE ------------------------------------------------------------
   strKey = "initialize"
@@ -346,12 +346,15 @@ Private Function Main(DocPath As String) As Boolean
 
 ' ----- RUN CLEANUP MACRO -----------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
-  
-  
+  strKey = "cleanupMacro"
+  Set dictTests = genUtils.CleanupMacro.MacmillanManuscriptCleanup
+  Call ReturnDict(strKey, dictTests)
   
 ' ----- RUN CHAR STYLES MACRO -------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
-  
+  strKey = "characterStyles"
+  Set dictTests = genUtils.CharacterStyles.MacmillanCharStyles
+  Call ReturnDict(strKey, dictTests)
   
   Set dictTests = Nothing
   
