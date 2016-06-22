@@ -59,9 +59,6 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   Application.ScreenUpdating = False
 
 ' Find a more universal way to do this later. For now, must fix w/o genUtils
-  Dim strFinalPath As String
-  strFinalPath = LogPath
-  
   Dim strCharacter(1 To 3) As String
   strCharacter(1) = ":"
   strCharacter(2) = "/"
@@ -69,14 +66,18 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   
   Dim A As Long
   For A = LBound(strCharacter) To UBound(strCharacter)
-    If InStr(strOrigPath, A) > 0 Then
-      strFinalPath = VBA.Replace(strFinalPath, A, Application.PathSeparator)
+    If InStr(FilePath, A) > 0 Then
+      FilePath = VBA.Replace(FilePath, A, Application.PathSeparator)
+    End If
+    If InStr(LogPath, A) > 0 Then
+      LogPath = VBA.Replace(LogPath, A, Application.PathSeparator)
     End If
   Next A
 
+
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
-  If SetOutputPaths(FilePath, strFinalPath) = False Then
+  If SetOutputPaths(FilePath, LogPath) = False Then
     Err.Raise err_PathInvalid
   End If
   SecondsElapsed = Round(Timer - StartTime, 2)
