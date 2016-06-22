@@ -34,8 +34,8 @@ bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json')
 contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json') 
-testing_value_file = File.join("C:", "staging.txt")
-#inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
+#testing_value_file = File.join("C:", "staging.txt")
+testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
 thisscript = File.basename($0,'.rb')
 
@@ -51,6 +51,7 @@ FileUtils.mkdir_p logfolder
 
 
 # ---------------------- LOCAL VARIABLES
+inprogress_file = File.join(project_dir,"#{filename_normalized}_IN_PROGRESS.txt")
 dropbox_filepath = File.join('/', project_name, 'IN', filename_split)
 #bookmaker_authkeys_dir = File.join(File.dirname(__FILE__), '../bookmaker_authkeys')
 #generated_access_token = File.read("#{bookmaker_authkeys_dir}/access_token.txt")
@@ -67,8 +68,8 @@ status_hash['api_ok'] = true
 status_hash['docfile'] = true
 status_hash['filename_isbn'] = {"isbn"=> ''}
 status_hash['filename_isbn'] = {"checkdigit"=> false}
-status_hash['isbn_lookup_ok'] = true
-status_hash['pisbn_lookup_ok'] = true
+status_hash['isbn_lookup_ok'] = 'true'
+status_hash['pisbn_lookup_ok'] = ''
 status_hash['pisbns_match'] = true
 status_hash['pisbn_checkdigit_fail'] = []
 status_hash['isbnstring'] = ''
@@ -78,17 +79,17 @@ status_hash['pisbns'] = []
 
 
 #---------------------  FUNCTIONS
-def getbookinfo(lookup_isbn,pisbn_or_isbn_lookup_ok)
+def getbookinfo(lookup_isbn, pisbn_or_isbn_lookup_ok, status_hash, bookinfo_file)
     thissql_C = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Manager")
     myhash_C = runPeopleQuery(thissql_C)
 
     #verify that data warehouse returned something
     if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book'] 
-        logger.info {"data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"}
-        status_hash['pisbn_or_isbn_lookup_ok'] = false
+        #logger.info {"data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"}
+        loginfo = "data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"
+		status_hash[pisbn_or_isbn_lookup_ok] = false
     else  #lookup was good, continue: 
-        logger.info {"data warehouse lookup PM for isbn_num \"#{lookup_isbn}\"succeeded, looking up PE, writing to json, exiting tmparchive.rb"}
-        thissql_D = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Editor")
+   		thissql_D = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Editor")
         myhash_D = runPeopleQuery(thissql_D)
         
         #write to var for logs:
@@ -110,10 +111,12 @@ def getbookinfo(lookup_isbn,pisbn_or_isbn_lookup_ok)
 
         Vldtr::Tools.write_json(book_hash, bookinfo_file)
 
-        status_hash['pisbn_or_isbn_lookup_ok'] = true
-        logger.info {"bookinfo from #{pisbn_or_isbn} #{isbn}- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""}    
+        status_hash[pisbn_or_isbn_lookup_ok] = true
+        #logger.info {"bookinfo from #{isbn} OK- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""}    
+		loginfo = "bookinfo from #{lookup_isbn} OK- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""
+	end
+	loginfo
 end
-
 
 
 #--------------------- RUN
@@ -145,25 +148,39 @@ else
 end
 
 #send email upon file receipt:
-cc_address, subject, body = '','',''
+to_address, cc_address, subject, body = '','',''
+if status_hash['api_ok'] && user_email =~ /@/ 
+	to_address = "To: #{user_name} <#{user_email}>"
+    cc_address = "CC: Workflows <workflows@macmillan.com>"
+    subject = "File: \"filename_normalized\" being processed by #{project_name}"
+    body = file_recd_text.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name)
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
-To: #{user_name} <#{user_email}>
+#{to_address}
 #{cc_address}
 Subject: #{subject}
 
 #{body}
 MESSAGE_END
 
-if status_hash['api_ok'] && user_email =~ /@/ 
-    cc_address = "CC: Workflows <workflows@macmillan.com>"
-    subject = "File: \"filename_normalized\" being processed by #{project_name}"
-    body = file_recd_text.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name)
-    Vldtr::Tools.sendmail(message_a,user_email,'workflows@macmillan.com')
-else    
+	unless File.file?(testing_value_file)
+		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
+	end	
+else
+	to_address = "To: Workflows <workflows@macmillan.com>"
     subject = "ERROR: dropbox api lookup failure"
-    body = "Dropbox api lookup failed for file: #{input_file}, (found email is: \"#{user_email}\")"    
-    Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
+    body = "Dropbox api lookup failed for file: #{input_file}, (found email is: \"#{user_email}\")" 
+message_b = <<MESSAGE_B_END
+From: Workflows <workflows@macmillan.com>
+#{to_address}
+Subject: #{subject}
+
+#{body}
+MESSAGE_B_END
+	
+	unless File.file?(testing_value_file)	
+		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
+	end
 end
 
 
@@ -176,7 +193,10 @@ if extension !~ /.doc/
     }
 else
     #if its a .doc(x) lets go ahead and make a working copy
-    FileUtils.cp input_file, working_file          
+    FileUtils.cp input_file, working_file  
+	File.open(inprogress_file, 'w') { |f|
+        f.puts "Unable to process \"#{filename_normalized}\". Your document is not a .doc or .docx file."
+    }
 end
 
 
@@ -187,7 +207,8 @@ if filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
     if Vldtr::Tools.checkisbn(lookup_isbn)
         status_hash['filename_isbn']['checkdigit'] = true  
         logger.info {"got isbn \"#{lookup_isbn}\" from filename proceeding with getting book info"}
-        getbookinfo(lookup_isbn,'isbn_lookup_ok')
+        lookuplog = getbookinfo(lookup_isbn,'isbn_lookup_ok',status_hash,bookinfo_file)
+		logger.info {lookuplog}
     else
         status_hash['isbn_lookup_ok'] = false
         logger.info {"got isbn \"#{lookup_isbn}\" from filename but checkdigit failed, moving on to pisbns"}
@@ -196,9 +217,8 @@ end
 
 
 #if no or bad isbn exists in filename or filename isbn lookup failed, see if we can find a good pisbn from manuscript!
-if (status_hash['isbn_lookup_ok'] = false || filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/) && extension =~ /.doc/ 
+if !status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && extension =~ /.doc/ 
     logger.info {"\"#{basename_normalized}\" is a .doc or .docx with no isbn_num in title, checking manuscript"}
-    
     #get isbns from Manuscript
     Open3.popen2e("#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\"") do |stdin, stdouterr, wait_thr|
     stdin.close
@@ -248,10 +268,11 @@ if (status_hash['isbn_lookup_ok'] = false || filename_normalized !~ /9(7(8|9)|-7
         if status_hash['pisbns'].length > 1
             logger.info {"too many pisbns found via doc_isbn lookup: marking pisbn_match false."}
             status_hash['pisbns_match'] = false
-        elsif status_hash['pisbns'].length = 1
+        elsif status_hash['pisbns'].length == 1
             #perform book info lookup on good pisbn!
             logger.info {"found a good pisbn #{status_hash['pisbns'][0]} from doc_isbn workid(s), using that for lookups!"}
-            getbookinfo(status_hash['pisbns'][0],'pisbn_lookup_ok')   
+            lookuplog = getbookinfo(status_hash['pisbns'][0],'pisbn_lookup_ok',status_hash,bookinfo_file)   
+			logger.info {lookuplog}
         end            
     end       
 end

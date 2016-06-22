@@ -27,8 +27,8 @@ bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json') 
 contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json')
-testing_value_file = File.join("C:", "staging.txt")
-#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
+#testing_value_file = File.join("C:", "staging.txt")
+testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
 thisscript = File.basename($0,'.rb')
 
@@ -45,7 +45,7 @@ send_ok = true
 error_text = File.read(File.join(mailer_dir,'error_occurred.txt'))
 unstyled_notify = File.read(File.join(mailer_dir,'unstyled_notify.txt'))
 unstyled_request = File.read(File.join(mailer_dir,'unstyled_request.txt'))
-validator_complete = File.read(File.join(mailer_dir,'validator_complete.txt'))
+#validator_complete = File.read(File.join(mailer_dir,'validator_complete.txt'))
 cc_mails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 to_address = 'To: '
@@ -57,8 +57,10 @@ WC_mail = 'matthew.retzer@macmillan.com'
 #get info from status.json, define status/errors & status/warnings
 if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
-	if (defined?(status_hash[errors])).nil? then status_hash[errors] = '' end
-	if (defined?(status_hash[warnings])).nil? then status_hash[warnings] = '' end
+	#if (defined?(status_hash['errors'])).nil? then status_hash['errors'] = '' end
+	#if (defined?(status_hash['warnings'])).nil? then status_hash['warnings'] = '' end
+	status_hash['warnings'] = ''
+	status_hash['errors'] = ''
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
@@ -127,26 +129,32 @@ when !status_hash['docfile']
 	errors = "#{errors}- The submitted document \"#{filename_normalized}\" was not a .doc or .docx\n"
 when !status_hash['pisbns_match']
 	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['pisbns']}\n"
-when status_hash['pisbns'].length.empty? && (status_hash['filename_isbn']['isbn'].empty? || !status_hash['filename_isbn']["checkdigit"])
+when status_hash['pisbns'].empty? && (status_hash['filename_isbn']['isbn'].empty? || !status_hash['filename_isbn']["checkdigit"])
 	errors = "#{errors}- No usable ISBN present in the filename or in the manuscript (for title info lookup)\n"
 when !status_hash['pisbn_lookup_ok']
 	errors = "#{errors}- No usable ISBN present in the filename, lookup from ISBN in manuscript (#{status_hash['pisbns']}) failed.\n"
-when !status_hash['validator_run_ok']
+when !status_hash['validator_macro_complete']
 	errors = "#{errors}- An error occurred while running #{project_name}, please contact workflows@macmillan.com.\n"
 else
 	errors = ''
 end	
 
-message = <<MESSAGE_END
-From: Workflows <workflows@macmillan.com>
-#{to_address}
-#{cc_address}
-Subject: #{subject}
 
-#{body}
-MESSAGE_END
+#send submitter an error notification
+if !errors.empty? && send_ok
+	unless File.file?(testing_value_file)
+		#prepare for attaching log: Read a file and encode it into base64 format for attaching
+		attachment = logfile
+		filecontent = File.read(attachment)
+		encodedcontent = [filecontent].pack("m")   # base64
+		marker = "zzzzzzzzzz"
 
-message_attachment = <<MESSAGE_END_B
+		#address etc
+		to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
+		subject = "ERROR running #{project_name} on #{filename_split}"
+		body = error_text.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		
+		message_attachment = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
 #{cc_address}
@@ -163,25 +171,13 @@ Content-Transfer-Encoding:base64
 Content-Disposition: attachment; filename="#{attachment}"
 #{encodedcontent}
 --#{marker}--
-MESSAGE_END_B
-
-#send submitter an error notification
-if !errors.empty? && send_ok
-	unless File.file?(testing_value_file)
-		#prepare for attaching log: Read a file and encode it into base64 format for attaching
-		attachment = logfile
-		filecontent = File.read(attachment)
-		encodedcontent = [filecontent].pack("m")   # base64
-		marker = "zzzzzzzzzz"
-
-		#address etc
-		to_address = "#{to_address}, #{submitter_name} <#{submitter_email}>"
-		subject = "ERROR running #{project_name} on #{filename_split}"
-		body = error_text.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+MESSAGE_END
+		
 		Vldtr::Tools.sendmail(message_attachment, submitter_mail, cc_mails)
 		logger.info {"sent message to submitter re: fatal ERRORS encountered"}	 		
 	end	
 end
+
 	
 if !status_hash['document_styled'] && send_ok
 	unless File.file?(testing_value_file)
@@ -199,19 +195,39 @@ if !status_hash['document_styled'] && send_ok
 		cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
 		subject = "Request for First-pass epub for #{filename_split}"
 		body = unstyled_request.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-		Vldtr::Tools.sendmail(message, WC_mail, cc_mails)
+
+message_a = <<MESSAGE_END_A
+From: Workflows <workflows@macmillan.com>
+#{to_address}
+#{cc_address}
+Subject: #{subject}
+
+#{body}
+MESSAGE_END_A
+		
+		Vldtr::Tools.sendmail(message_a, WC_mail, cc_mails)
 		logger.info {"sent message to westchester requesting firstpassepub for unstyled doc"}
 
 
 		#send email to submitter cc:pe&pm to notify of success
-		to_address = "To: #{submitter_name} <#{submitter_email}>"
+		to_address = "To: #{submitter_name} <#{submitter_mail}>"
 		cc_mails = cc_mails - submitter_mail
 		cc_address = cc_address.gsub(/, #{submitter_name} <#{submitter_mail}>/,'')
 		subject = "Notification of First-pass epub request for #{filename_split}"
 		body = unstyled_notify.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 		#remove unstyled warning from body:
 		body = body.gsub(/- Document not styled with Macmillan styles.\n/,'')
-		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
+		
+message_b = <<MESSAGE_END_B
+From: Workflows <workflows@macmillan.com>
+#{to_address}
+#{cc_address}
+Subject: #{subject}
+
+#{body}
+MESSAGE_END_B
+		
+		Vldtr::Tools.sendmail(message_b, submitter_mail, cc_mails)
 		logger.info {"sent message to submitter cc pe/pm notifying them of request to westchester for 1stpassepub"}	 		
 	end	
 end
@@ -220,8 +236,12 @@ end
 #or maybe we'll have two, one for bookmaker success, one for bookmaker failure
 #are we attaching errors or logs?  not necessary if we consolidate logs in one place
 
-# if errors.empty && status_hash['document_styled'] && send_ok
-# 	unless File.file?(testing_value_file)
+if errors.empty? && status_hash['document_styled'] && send_ok
+	logger.info {"this file looks bookmaker_ready, no mailer at this point"}
+	if !warnings.empty?
+		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
+	end
+# 	unless File.file?(testing_value_file)	
 # 		#conditional to addressees are complicated: 
 # 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
 # 		if pm_mail =~ /@/ 
@@ -239,21 +259,27 @@ end
 # 		end	
 # 		subject = "#{project_name} successfully processed #{filename_split}"
 # 		body = validator_complete.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-# 		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
+# 		
+#message = <<MESSAGE_END
+#From: Workflows <workflows@macmillan.com>
+##{to_address}
+##{cc_address}
+#Subject: #{subject}
+#
+##{body}
+#MESSAGE_END
+#
+#		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
 # 		logger.info {"Sending success message for validator to PE/PM"}	 		
 # 	end	
-# end	
+end	
 
 
 #add errors/warnings to status.json for cleanup
-if !errors.empty? then status_hash[errors] = errors end
-if !warnings.empty? then status_hash[warnings] = warnings end
+if !errors.empty? then status_hash['errors'] = errors end
+if !warnings.empty? then status_hash['warnings'] = warnings end
 
 Vldtr::Tools.write_json(status_hash,status_file)
-
-
-
-
 
 
 

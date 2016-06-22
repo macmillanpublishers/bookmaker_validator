@@ -33,8 +33,8 @@ bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json') 
 contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json')
-testing_value_file = File.join("C:", "staging.txt")
-#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
+#testing_value_file = File.join("C:", "staging.txt")
+testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
 thisscript = File.basename($0,'.rb')
 
@@ -68,7 +68,7 @@ if File.file?(status_file)
 	status_hash['docisbn_checkdigit_fail'] = []
 	status_hash['docisbn_lookup_fail'] = []	
 	status_hash['docisbn_match_fail'] = []
-	status_hash['validator_run_ok'] = true
+	status_hash['validator_macro_complete'] = true
 	status_hash['document_styled'] = true
 	status_hash['pe_lookup'] = true
 	status_hash['pm_lookup'] = true
@@ -190,7 +190,7 @@ end
 #check for alert or other unplanned items in tmp_dir:
 if Dir.exist?(tmp_dir)
 	Find.find(tmp_dir) { |file|
-		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != contacts_file && file != tmp_dir && != status_file
+		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != contacts_file && file != tmp_dir && file != status_file
 			logger.info {"error log found in tmpdir: #{file}"}
 			logger.info {"file: #{file}"}
 			errlog = true
@@ -200,7 +200,7 @@ if Dir.exist?(tmp_dir)
 end
 
 #if file is ready for bookmaker to run, tag it in status.json so the deploy.rb can scoop it up
-if File.file?(bookinfo_file) && errlog = false && stylecheck_complete && stylecheck_styled
+if File.file?(bookinfo_file) && !errlog && stylecheck_complete && stylecheck_styled
 	status_hash['bookmaker_ready'] = true
 end	
 
@@ -212,6 +212,7 @@ Vldtr::Tools.write_json(status_hash, status_file)
 #emailing workflows if pe/pm lookups failed
 if (File.file?(bookinfo_file) && (!status_hash['pm_lookup'] || !status_hash['pm_lookup']))
 	logger.info {"pe or pm lookup failed"}	 
+	
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
@@ -223,12 +224,11 @@ PE name (from data-warehouse): #{pe_name}
 PM name (from data-warehouse): #{pm_name}
 PE email (lookup against our static json): #{pe_mail} 
 PM email (lookup against our static json): #{pm_mail}
-
 MESSAGE_END
 
 	#now sending
 	unless File.file?(testing_value_file)
-		Vldtr::Tools.sendmail(message, workflows@macmillan.com, '')
+		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
 		logger.info {"sent email re failed lookup, now exiting validator_checker"}	 	
 	end
 

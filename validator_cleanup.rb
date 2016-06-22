@@ -40,6 +40,7 @@ logger.formatter = proc do |severity, datetime, progname, msg|
 end
 
 # ---------------------- LOCAL VARIABLES
+inprogress_file = File.join(project_dir,"#{filename_normalized}_IN_PROGRESS.txt")
 err_notice = File.join(outbox,"ERROR--#{filename_normalized}--Validator_Failed.txt")
 warn_notice = File.join(outbox,"WARNING--#{filename_normalized}--validator_completed_with_warnings.txt")
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
@@ -47,11 +48,11 @@ timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
 permalog = File.join(logfolder,'validator_history_report.json')
 #for now setting to outbox and creating folders
-bookmaker_bot_folder = File.join(outbox, bookmaker_bot)
+bookmaker_bot_folder = File.join(outbox, 'bookmaker_bot')
 bookmaker_bot_IN = File.join(bookmaker_bot_folder, 'convert')
-bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
+#bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
 FileUtils.mkdir_p bookmaker_bot_IN
-FileUtils.mkdir bookmaker_bot_accessories
+#FileUtils.mkdir_p bookmaker_bot_accessories
 
 
 #--------------------- RUN
@@ -62,6 +63,7 @@ else
 	permalog_hash = []	
 end	
 index = permalog_hash.length + 1
+permalog_hash[index]={}
 permalog_hash[index]['file'] = filename_normalized
 permalog_hash[index]['date'] = timestamp
 
@@ -80,9 +82,9 @@ if File.file?(stylecheck_file)
 end	
 if File.file?(bookinfo_file)
 	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
-	permalog_hash[index]['isbn'] = bookinfo_file['isbn']
-	permalog_hash[index]['title'] = bookinfo_file['title']	
-	isbn = bookinfo_file['isbn']
+	permalog_hash[index]['isbn'] = bookinfo_hash['isbn']
+	permalog_hash[index]['title'] = bookinfo_hash['title']	
+	isbn = bookinfo_hash['isbn']
 end	
 
 
@@ -91,7 +93,7 @@ FileUtils.mv input_file, outbox
 
 
 #deal with errors & warnings!
-if !status_hash['errors'].empty? 
+if !status_hash['errors'].empty?
 	#errors found!  use the text from mailer to write file:
 	text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
 	Mcmlln::Tools.overwriteFile(err_notice, text)
@@ -109,32 +111,30 @@ end
 
 
 #get ready for bookmaker to run on good docs!
-if status_hash['errors'].empty? && stylecheck_hash['styled']
+if status_hash['bookmaker_ready'] = true
 	#add isbn to filename if its missing, and isbn available
 	if filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && !isbn.empty?
 		working_file_old = working_file
 		working_file = working_file.gsub(/.#{extension}$/,"#{isbn}.#{extension}")
 		File.rename(working_file_old, working_file)
+		tmp_dir_old = tmp_dir
+		tmp_dir = tmp_dir.gsub(/$/,'#{isbn}')
+		FileUtils.mv tmp_dir_old, tmp_dir
+		working_file = File.join(tmp_dir, filename_normalized)
 	end	
 	File.rename(working_file, done_file)
-	FileUtils.mv done_file, bookmaker_bot_IN
-	#rename and move contacts.json
-	if !isbn.empty?
-		newcontacts_file = contacts_file.gsub(/.json$/,"#{isbn}.json")
-	else
-		newcontacts_file = contacts_file.gsub(/.json$/,"#{basename_normalized}.json")
-	end		
-	File.rename(contacts_file, newcontacts_file)
-	FileUtils.cp newcontacts_file, bookmaker_bot_accessories
+	FileUtils.cp done_file, bookmaker_bot_IN
+else	
+	if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
 end	
 
 
-#unstyled docs had the cleanup macros run but dont go to bookmaker, they get renamed & output straight to OUT
-if status_hash['errors'].empty? && !stylecheck_hash['styled']
-	File.rename(working_file, done_file)
-	FileUtils.mv done_file, outbox
+#finish writing to permalog!
+if File.file?(contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
+	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
 end	
-
+Vldtr::Tools.write_json(permalog_hash,permalog)
 
 #dump the rest of the jsons to std log:
 human_contacts = contacts_hash.map{|k,v| "#{k} = #{v}"}
@@ -147,19 +147,9 @@ File.open(logfile, 'a') { |f| f.puts human_bookinfo }
 logger.info {"dumping contents of status.json:"}
 File.open(logfile, 'a') { |f| f.puts human_status }
 
-
-#finish writing to permalog!
-if File.file?(contacts_file)
-	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
-	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
-end	
-Vldtr::Tools.write_json(permalog_hash,permalog)
-
-
 #cleanup
-if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
 if File.file?(errFile) then FileUtils.rm inprogress_file end
-
+if File.file?(inprogress_file) then FileUtils.rm inprogress_file end
 
 
 
