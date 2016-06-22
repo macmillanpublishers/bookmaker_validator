@@ -20,7 +20,8 @@ outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
 validator_dir = File.expand_path(File.dirname(__FILE__))
-testing_value_file = File.join("C:", "staging.txt")
+#testing_value_file = File.join("C:", "staging.txt")
+testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 thisscript = File.basename($0,'.rb')
 
@@ -91,7 +92,7 @@ Vldtr::Tools.write_json(output_hash, json_logfile)
 log_time(output_hash,'process_watcher','start time',json_logfile)
 pid = spawn("#{ruby_exe} #{process_watcher} \'#{input_file}\' #{timestamp}",[:out, :err]=>[p_logfile, "a"])		
 Process.detach(pid)
-log_time(output_hash,'process_watcher','completion time',json_logfile)
+#log_time(output_hash,'process_watcher','completion time',json_logfile)
 
 
 #the rest of the validator:
@@ -113,7 +114,9 @@ rescue Exception => e
 	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"	
 	output_hash['validator_rescue_err'] = e
 	Process.kill(pid)
-	Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
+	unless File.file?(testing_value_file)
+		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
+	end
 ensure
 	Vldtr::Tools.write_json(output_hash, json_logfile)
 	#generate some (more) human readable output
