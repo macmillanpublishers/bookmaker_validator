@@ -47,6 +47,7 @@ done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
 permalog = File.join(logfolder,'validator_history_report.json')
+permalogtxt = File.join(logfolder,'validator_history_report.txt')
 #for now setting to outbox and creating folders
 bookmaker_bot_folder = File.join(outbox, 'bookmaker_bot')
 bookmaker_bot_IN = File.join(bookmaker_bot_folder, 'convert')
@@ -56,21 +57,48 @@ FileUtils.mkdir_p bookmaker_bot_IN
 
 
 #--------------------- RUN
-#load info from jsons, start to dish info out to permalog as available
+#load info from jsons, start to dish info out to permalog as available, dump readable json into log
 if File.file?(permalog)
 	permalog_hash = Mcmlln::Tools.readjson(permalog)
 else
 	permalog_hash = []	
 end	
 index = permalog_hash.length + 1
+index = index.to_i
 permalog_hash[index]={}
 permalog_hash[index]['file'] = filename_normalized
 permalog_hash[index]['date'] = timestamp
+#puts "index is #{index}"
 
+if File.file?(contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
+	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
+	#dump json to logfile
+	human_contacts = contacts_hash.map{|k,v| "#{k} = #{v}"}
+	logger.info {"------------------------------------"}	
+	logger.info {"dumping contents of contacts.json:"}
+	File.open(logfile, 'a') { |f| f.puts human_contacts }
+end	
+if File.file?(bookinfo_file)
+	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+	permalog_hash[index]['isbn'] = bookinfo_hash['isbn']
+	permalog_hash[index]['title'] = bookinfo_hash['title']	
+	isbn = bookinfo_hash['isbn']
+	#dump json to logfile
+	human_bookinfo = bookinfo_hash.map{|k,v| "#{k} = #{v}"}
+	logger.info {"------------------------------------"}
+	logger.info {"dumping contents of bookinfo.json:"}
+	File.open(logfile, 'a') { |f| f.puts human_bookinfo }
+end
 if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
 	permalog_hash[index]['errors'] = status_hash['errors']
 	permalog_hash[index]['warnings'] = status_hash['warnings']
+	#dump json to logfile
+	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
+	logger.info {"------------------------------------"}
+	logger.info {"dumping contents of status.json:"}
+	File.open(logfile, 'a') { |f| f.puts human_status }
 else
 	status_hash[errors] = "Error occurred, validator failed: no status.json available"
 	logger.info {"status.json not present or unavailable, creating error txt"}
@@ -80,12 +108,13 @@ if File.file?(stylecheck_file)
 	permalog_hash[index]['styled?'] = stylecheck_hash['styled']
 	permalog_hash[index]['validator_completed?'] = stylecheck_hash['completed']
 end	
-if File.file?(bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
-	permalog_hash[index]['isbn'] = bookinfo_hash['isbn']
-	permalog_hash[index]['title'] = bookinfo_hash['title']	
-	isbn = bookinfo_hash['isbn']
-end	
+#write to json permalog!
+#Vldtr::Tools.write_json(permalog_hash,permalog)
+finaljson = JSON.pretty_generate(permalog_hash)
+File.open(permalog, 'w+:UTF-8') { |f| f.puts finaljson }
+#write permalog to text (& overwrite old text one!)
+#human_permalog = permalog_hash.map{|k,v| "#{k} = #{v}"}
+#File.open(permalogtxt, 'w') { |f| f.puts human_permalog }
 
 
 #let's move the original to outbox!
@@ -98,11 +127,15 @@ if !status_hash['errors'].empty?
 	text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
 	Mcmlln::Tools.overwriteFile(err_notice, text)
 	#save the tmp_dir for review
-	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
-	FileUtils.cp_r "#{tmp_dir}__#{timestamp}", logfolder 	
-	logger.info {"errors found, writing err_notice, saving tmp_dir to logfolder"}
+	if Dir.exists?(tmp_dir)
+		FileUtils.cp_r tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
+		FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 	
+		logger.info {"errors found, writing err_notice, saving tmp_dir to logfolder"}
+	else
+		logger.info {"no tmpdir exists, this was probably not a .doc file"}
+	end
 end	
-if !status_hash['warnings'].empty?
+if !status_hash['warnings'].empty? && status_hash['errors'].empty?
 	#warnings found!  use the text from mailer to write file:
 	text = status_hash['warnings']
 	Mcmlln::Tools.overwriteFile(warn_notice, text)
@@ -111,16 +144,16 @@ end
 
 
 #get ready for bookmaker to run on good docs!
-if status_hash['bookmaker_ready'] = true
+if status_hash['bookmaker_ready']
 	#add isbn to filename if its missing, and isbn available
 	if filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && !isbn.empty?
-		working_file_old = working_file
-		working_file = working_file.gsub(/.#{extension}$/,"#{isbn}.#{extension}")
-		File.rename(working_file_old, working_file)
 		tmp_dir_old = tmp_dir
-		tmp_dir = tmp_dir.gsub(/$/,'#{isbn}')
+		tmp_dir = tmp_dir.gsub(/$/,"#{isbn}")
 		FileUtils.mv tmp_dir_old, tmp_dir
-		working_file = File.join(tmp_dir, filename_normalized)
+		working_file_old = File.join(tmp_dir, filename_normalized)
+		working_file = working_file_old.gsub(/#{extension}$/,"#{isbn}#{extension}")
+		done_file = working_file.gsub(/#{extension}$/,"_DONE#{extension}")
+		File.rename(working_file_old, working_file)		
 	end	
 	File.rename(working_file, done_file)
 	FileUtils.cp done_file, bookmaker_bot_IN
@@ -129,27 +162,14 @@ else
 end	
 
 
-#finish writing to permalog!
-if File.file?(contacts_file)
-	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
-	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
-end	
-Vldtr::Tools.write_json(permalog_hash,permalog)
-
-#dump the rest of the jsons to std log:
-human_contacts = contacts_hash.map{|k,v| "#{k} = #{v}"}
-human_bookinfo = bookinfo_hash.map{|k,v| "#{k} = #{v}"}
-human_status = status_hash.map{|k,v| "#{k} = #{v}"}
-logger.info {"dumping contents of contacts.json:"}
-File.open(logfile, 'a') { |f| f.puts human_contacts }
-logger.info {"dumping contents of bookinfo.json:"}
-File.open(logfile, 'a') { |f| f.puts human_bookinfo }
-logger.info {"dumping contents of status.json:"}
-File.open(logfile, 'a') { |f| f.puts human_status }
-
 #cleanup
-if File.file?(errFile) then FileUtils.rm inprogress_file end
+if File.file?(errFile) then FileUtils.rm errFile end
 if File.file?(inprogress_file) then FileUtils.rm inprogress_file end
+
+
+
+
+
 
 
 
