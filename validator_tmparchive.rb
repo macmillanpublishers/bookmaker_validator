@@ -152,7 +152,7 @@ to_address, cc_address, subject, body = '','',''
 if status_hash['api_ok'] && user_email =~ /@/ 
 	to_address = "To: #{user_name} <#{user_email}>"
     cc_address = "CC: Workflows <workflows@macmillan.com>"
-    subject = "File: \"filename_normalized\" being processed by #{project_name}"
+    subject = "File: \"#{filename_split}\" being processed by #{project_name}"
     body = file_recd_text.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name)
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
