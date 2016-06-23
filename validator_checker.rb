@@ -65,9 +65,6 @@ cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 #get info from status.json, set local vars for status_hash
 if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
-	status_hash['docisbn_checkdigit_fail'] = []
-	status_hash['docisbn_lookup_fail'] = []	
-	status_hash['docisbn_match_fail'] = []
 	status_hash['validator_macro_complete'] = true
 	status_hash['document_styled'] = true
 	status_hash['pe_lookup'] = true
@@ -121,13 +118,13 @@ if File.file?(bookinfo_file)
 	if File.file?(contacts_file)
 		contacts_hash = Mcmlln::Tools.readjson(contacts_file)
 	else
-		contacts_hash = []
+		contacts_hash = {}
 		logger.info {"contacts json not found?"}
 	end
 	
 	pm_mail = ''
 	pe_mail = ''
-	contacts_hash['cc_emails'] = []
+	#contacts_hash['cc_emails'] = ''
 	for i in 0..pe_pm_hash.length - 1
 		if pm_name == "#{pe_pm_hash[i]['firstName']} #{pe_pm_hash[i]['lastName']}"
 		 	pm_mail = pe_pm_hash[i]['email']
@@ -161,7 +158,7 @@ else
 end		
 
 
-#crosscheck document isbns via work_id
+#crosscheck document isbns via work_id if docisbn check wasn't done in tmparchive
 if File.file?(bookinfo_file) && File.file?(stylecheck_file) && File.file?(status_file)
 	stylecheck_isbns.each { |sc_isbn| 
 		if sc_isbn != bookinfo_hash['isbn']

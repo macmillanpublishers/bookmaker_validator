@@ -102,7 +102,7 @@ begin
 		run_script("#{powershell_exe} \"#{run_macro} \'#{input_file}\' \'#{macro_name}\' \'#{logfile}\'\"", output_hash, "run_macro", json_logfile)
 	else
 		output_hash['bookinfo_file'] = false 
-		puts "skipping macro, no bookinfo file"
+		output_hash['deploy.rb'] = 'skipping macro, no bookinfo file'
 	end
 	run_script("#{ruby_exe} #{validator_checker} \'#{input_file}\'", output_hash, "validator_checker", json_logfile)
 	run_script("#{ruby_exe} #{validator_mailer} \'#{input_file}\'", output_hash, "validator_mailer", json_logfile)

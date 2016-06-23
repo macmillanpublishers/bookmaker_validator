@@ -96,46 +96,61 @@ end
 
 #Prepare warning/error text
 warnings = "WARNINGS:\n"
-case 
-when !status_hash['api_ok']		#condition 2:  dropbox api fails 
+if !status_hash['api_ok']
 	warnings = "#{warnings}- Dropbox api cannot determine file submitter.\n"
-when !status_hash['filename_isbn']["checkdigit"]  	#condition 3:  filename isbn bad checkdigit
-	warnings = "#{warnings}- The ISBN included in the filename is not valid (#{status_hash['filename_isbn']['isbn']}): the checkdigit does not match. \n"
-when !status_hash['isbn_lookup_ok']
-	warnings = "#{warnings}- Data-warehouse lookup of the ISBN included in the filename failed (#{status_hash['filename_isbn']['isbn']}).\n"
-when status_hash['filename_isbn']['isbn'].empty?
-	warnings = "#{warnings}- No ISBN was included in the filename.\n"
-when !status_hash['pisbn_checkdigit_fail'].empty? || !status_hash['docisbn_checkdigit_fail'].empty?
-	bad_isbns = status_hash['pisbn_checkdigit_fail'] + status_hash['docisbn_checkdigit_fail']
-	warnings = "#{warnings}- ISBN(s) found in the manuscript are invalid; the check-digit does not match: #{bad_isbns.uniq}\n"
-when !status_hash['docisbn_lookup_fail'].empty?
-	warnings = "#{warnings}- Data-warehouse lookup of ISBN(s) found in the manuscript failed: #{status_hash['docisbn_lookup_fail']}\n"
-when !status_hash['docisbn_match_fail'].empty?
-	warnings = "#{warnings}- ISBN(s) found in manuscript do not match the work-id of filename ISBN - they may be incorrect: #{status_hash['docisbn_match_fail']}\n"
-when !status_hash['pm_lookup']
-	warnings = "#{warnings}- Error looking up Production Manager info for this title. Found PM_name/email: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
-when !status_hash['pe_lookup']
-	warnings = "#{warnings}- Error looking up Production Editor info for this title. Found PE_name/email: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"	
-when !status_hash['document_styled']
-	warnings = "#{warnings}- Document not styled with Macmillan styles.\n"
-else 
-	warnings = ''
 end	
+if status_hash['filename_isbn']['isbn'].empty?
+	warnings = "#{warnings}- No ISBN was included in the filename.\n"
+end	
+if !status_hash['filename_isbn']["checkdigit"]
+	warnings = "#{warnings}- The ISBN included in the filename is not valid (#{status_hash['filename_isbn']['isbn']}): the checkdigit does not match. \n"
+end
+if !status_hash['isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"]
+	warnings = "#{warnings}- Data-warehouse lookup of the ISBN included in the filename failed (#{status_hash['filename_isbn']['isbn']}).\n"
+end
+if !status_hash['docisbn_checkdigit_fail'].empty?
+	#bad_isbns = status_hash['pisbn_checkdigit_fail'] + status_hash['docisbn_checkdigit_fail']
+	warnings = "#{warnings}- ISBN(s) found in the manuscript are invalid; the check-digit does not match: #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
+end
+if !status_hash['docisbn_lookup_fail'].empty?
+	warnings = "#{warnings}- Data-warehouse lookup of ISBN(s) found in the manuscript failed: #{status_hash['docisbn_lookup_fail'].uniq}\n"
+end
+if !status_hash['docisbn_match_fail'].empty?
+	warnings = "#{warnings}- ISBN(s) found in manuscript do not match the work-id of filename ISBN and may be incorrect: #{status_hash['docisbn_match_fail']}\n"
+end
+if !status_hash['pm_lookup'] && File.file?(bookinfo_file)
+	warnings = "#{warnings}- Error looking up Production Manager info for this title. Found PM_name/email: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
+end
+if !status_hash['pe_lookup'] && File.file?(bookinfo_file)
+	warnings = "#{warnings}- Error looking up Production Editor info for this title. Found PE_name/email: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"	
+end
+if !status_hash['document_styled']
+	warnings = "#{warnings}- Document not styled with Macmillan styles.\n"
+end
+if warnings == "WARNINGS:\n"
+	warnings = ''
+end
 
 
 errors = "ERROR(s): One or more problems prevented #{project_name} from completing successfully:\n"
-case
-when !status_hash['docfile']
-	errors = "#{errors}- The submitted document \"#{filename_normalized}\" was not a .doc or .docx\n"
-when !status_hash['pisbns_match']
+if !status_hash['pisbns_match']
 	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['pisbns']}\n"
-when status_hash['pisbns'].empty? && (status_hash['filename_isbn']['isbn'].empty? || !status_hash['filename_isbn']["checkdigit"])
+end
+if status_hash['pisbns'].empty? && !status_hash['isbn_lookup_ok']
 	errors = "#{errors}- No usable ISBN present in the filename or in the manuscript (for title info lookup)\n"
-when !status_hash['pisbn_lookup_ok']
-	errors = "#{errors}- No usable ISBN present in the filename, lookup from ISBN in manuscript (#{status_hash['pisbns']}) failed.\n"
-when !status_hash['validator_macro_complete']
+end
+if !status_hash['pisbn_lookup_ok']
+	errors = "#{errors}- No usable ISBN present in the filename, lookups from ISBN in manuscript (#{status_hash['pisbns']}) failed.\n"
+end
+if !status_hash['validator_macro_complete']
 	errors = "#{errors}- An error occurred while running #{project_name}, please contact workflows@macmillan.com.\n"
-else
+end
+if !status_hash['docfile']
+	#reset warnings & errors for a simpler message
+	warnings, errors = '',"ERROR(s): One or more problems prevented #{project_name} from completing successfully:\n"	
+	errors = "#{errors}- The submitted document \"#{filename_normalized}\" was not a .doc or .docx\n"
+end
+if errors == "ERROR(s): One or more problems prevented #{project_name} from completing successfully:\n"	
 	errors = ''
 end	
 
@@ -148,12 +163,10 @@ if !errors.empty? && send_ok
 		filecontent = File.read(attachment)
 		encodedcontent = [filecontent].pack("m")   # base64
 		marker = "zzzzzzzzzz"
-
 		#address etc
 		to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
 		subject = "ERROR running #{project_name} on #{filename_split}"
-		body = error_text.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-		
+		body = error_text.gsub(/FILENAME_NORMALIZED/, filename_normalized).gsub(/PROJECT_NAME/, project_name).gsub(/WARNINGS/, warnings.to_s).gsub(/ERRORS/, errors.to_s).gsub(/BOOKINFO/, bookinfo.to_s)	
 		message_attachment = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
@@ -194,7 +207,7 @@ if !status_hash['document_styled'] && send_ok
 		cc_mails << submitter_mail
 		cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
 		subject = "Request for First-pass epub for #{filename_split}"
-		body = unstyled_request.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		body = unstyled_request.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings.to_s).gsub(/ERRORS/,errors.to_s).gsub(/BOOKINFO/,bookinfo.to_s)
 
 message_a = <<MESSAGE_END_A
 From: Workflows <workflows@macmillan.com>
@@ -211,10 +224,10 @@ MESSAGE_END_A
 
 		#send email to submitter cc:pe&pm to notify of success
 		to_address = "To: #{submitter_name} <#{submitter_mail}>"
-		cc_mails = cc_mails - submitter_mail
+		cc_mails = cc_mails.delete(submitter_mail)
 		cc_address = cc_address.gsub(/, #{submitter_name} <#{submitter_mail}>/,'')
 		subject = "Notification of First-pass epub request for #{filename_split}"
-		body = unstyled_notify.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		body = unstyled_notify.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings.to_s).gsub(/ERRORS/,errors.to_s).gsub(/BOOKINFO/,bookinfo.to_s)
 		#remove unstyled warning from body:
 		body = body.gsub(/- Document not styled with Macmillan styles.\n/,'')
 		
