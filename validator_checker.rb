@@ -33,8 +33,8 @@ bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json') 
 contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json')
-#testing_value_file = File.join("C:", "staging.txt")
-testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
+testing_value_file = File.join("C:", "staging.txt")
+#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
 thisscript = File.basename($0,'.rb')
 
@@ -65,11 +65,11 @@ cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 #get info from status.json, set local vars for status_hash
 if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
-	status_hash['validator_macro_complete'] = true
-	status_hash['document_styled'] = true
-	status_hash['pe_lookup'] = true
-	status_hash['pm_lookup'] = true
-	status_hash['bookmaker_ready'] = false
+	status_hash['validator_macro_complete'] = ''
+	status_hash['document_styled'] = ''
+	status_hash['pe_lookup'] = ''
+	status_hash['pm_lookup'] = ''
+	status_hash['bookmaker_ready'] = ''
 else
 	logger.info {"status.json not present or unavailable"}
 end	
@@ -85,7 +85,7 @@ if File.file?(stylecheck_file)
 
 	#get status on run from syle)check items:
 	if !stylecheck_complete 
-		status_hash['validator_run_ok'] = false
+		status_hash['validator_macro_complete'] = false
 		logger.info {"stylecheck not complete accirdign to sylecheck.json, flagging for mailer"}
 	end	
 	if !stylecheck_styled 
@@ -95,7 +95,7 @@ if File.file?(stylecheck_file)
 
 else	
 	logger.info {"style_check.json not present or unavailable"}
-	status_hash['validator_run_ok'] = false
+	status_hash['validator_macro_complete'] = false
 end	
 
 
@@ -158,7 +158,7 @@ else
 end		
 
 
-#crosscheck document isbns via work_id if docisbn check wasn't done in tmparchive
+#crosscheck document isbns via work_id
 if File.file?(bookinfo_file) && File.file?(stylecheck_file) && File.file?(status_file)
 	stylecheck_isbns.each { |sc_isbn| 
 		if sc_isbn != bookinfo_hash['isbn']
@@ -191,7 +191,7 @@ if Dir.exist?(tmp_dir)
 			logger.info {"error log found in tmpdir: #{file}"}
 			logger.info {"file: #{file}"}
 			errlog = true
-			status_hash['validator_run_ok'] = false
+			status_hash['validator_macro_complete'] = false
 		end
 	}
 end

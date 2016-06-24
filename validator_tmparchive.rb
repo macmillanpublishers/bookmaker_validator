@@ -128,9 +128,9 @@ logger.info "###################################################################
 logger.info {"file \"#{filename_normalized}\" was dropped into the #{project_name} folder"}
 
 #for testing, to comment out later
-File.open(inprogress_file, 'w') { |f|
-	f.puts "\"#{filename_normalized}\"is being processed"
-}
+#File.open(inprogress_file, 'w') { |f|
+#	f.puts "\"#{filename_normalized}\"is being processed"
+#}
 
 #clean old, make new tmpdir
 #if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end

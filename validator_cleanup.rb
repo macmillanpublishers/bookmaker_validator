@@ -48,9 +48,12 @@ timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
 permalog = File.join(logfolder,'validator_history_report.json')
 permalogtxt = File.join(logfolder,'validator_history_report.txt')
-#for now setting to outbox and creating folders
-bookmaker_bot_folder = File.join(outbox, 'bookmaker_bot')
-bookmaker_bot_IN = File.join(bookmaker_bot_folder, 'convert')
+if File.file?(testing_value_file)
+	bot_egalleys_dir = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)','bookmaker_bot_stg','bookmaker_egalley')
+else
+	bot_egalleys_dir = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)','bookmaker_bot','bookmaker_egalley')
+end
+bookmaker_bot_IN = File.join(bot_egalleys_dir, 'convert')
 #bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
 FileUtils.mkdir_p bookmaker_bot_IN
 #FileUtils.mkdir_p bookmaker_bot_accessories
@@ -61,7 +64,7 @@ FileUtils.mkdir_p bookmaker_bot_IN
 if File.file?(permalog)
 	permalog_hash = Mcmlln::Tools.readjson(permalog)
 else
-	permalog_hash = []	
+	permalog_hash = {}	
 end	
 index = permalog_hash.length + 1
 index = index.to_i
@@ -109,16 +112,8 @@ if File.file?(stylecheck_file)
 	permalog_hash[index]['validator_completed?'] = stylecheck_hash['completed']
 end	
 #write to json permalog!
-#Vldtr::Tools.write_json(permalog_hash,permalog)
 finaljson = JSON.pretty_generate(permalog_hash)
 File.open(permalog, 'w+:UTF-8') { |f| f.puts finaljson }
-#write permalog to text (& overwrite old text one!)
-#human_permalog = permalog_hash.map{|k,v| "#{k} = #{v}"}
-#File.open(permalogtxt, 'w') { |f| f.puts human_permalog }
-
-
-#let's move the original to outbox!
-FileUtils.mv input_file, outbox
 
 
 #deal with errors & warnings!
@@ -134,6 +129,8 @@ if !status_hash['errors'].empty?
 	else
 		logger.info {"no tmpdir exists, this was probably not a .doc file"}
 	end
+	#let's move the original to outbox!
+	FileUtils.mv input_file, outbox	
 end	
 if !status_hash['warnings'].empty? && status_hash['errors'].empty?
 	#warnings found!  use the text from mailer to write file:

@@ -18,8 +18,8 @@ json_logfile = File.join(logfolder,"#{filename_normalized}_out-err_validator_#{t
 human_logfile = File.join(logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.txt")
 p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#{timestamp}.txt")
 validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
-#testing_value_file = File.join("C:", "staging.txt")
-testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
+testing_value_file = File.join("C:", "staging.txt")
+#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 thisscript = File.basename($0,'.rb')
 
 #------ local var names

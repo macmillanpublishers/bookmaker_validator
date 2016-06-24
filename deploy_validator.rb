@@ -20,8 +20,8 @@ outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
 validator_dir = File.expand_path(File.dirname(__FILE__))
-#testing_value_file = File.join("C:", "staging.txt")
-testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
+testing_value_file = File.join("C:", "staging.txt")
+#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 thisscript = File.basename($0,'.rb')
 
@@ -94,7 +94,6 @@ pid = spawn("#{ruby_exe} #{process_watcher} \'#{input_file}\' #{timestamp}",[:ou
 Process.detach(pid)
 #log_time(output_hash,'process_watcher','completion time',json_logfile)
 
-
 #the rest of the validator:
 begin
 	run_script("#{ruby_exe} #{validator_tmparchive} \'#{input_file}\'", output_hash, "validator_tmparchive", json_logfile)
@@ -113,10 +112,15 @@ rescue Exception => e
 	p e   #puts e.inspect
 	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"	
 	output_hash['validator_rescue_err'] = e
-	Process.kill(pid)
+	#Process.kill(pid)
+	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
+	#https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
 	unless File.file?(testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
+		puts "sent alertmail"
 	end
+	kill_output = `taskkill /f /pid #{pid}`
+	puts "pid termination return: #{kill_output}"
 ensure
 	Vldtr::Tools.write_json(output_hash, json_logfile)
 	#generate some (more) human readable output
