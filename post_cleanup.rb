@@ -13,13 +13,9 @@ input_file_normalized = input_file.gsub(/ /, "")
 filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
 basename_normalized = File.basename(filename_normalized, ".*")
 extension = File.extname(filename_normalized)
-project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
-project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
-inbox = File.join(project_dir, 'IN')
-outbox = File.join(project_dir, 'OUT')
+validator_dir = File.expand_path(File.dirname(__FILE__))
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.expand_path(File.dirname(__FILE__))
 mailer_dir = File.join(validator_dir,'mailer_messages')
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
@@ -28,8 +24,13 @@ contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json')
 testing_value_file = File.join("C:", "staging.txt")
 #testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
-errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
 thisscript = File.basename($0,'.rb')
+# ---------------------- These now refer to bookmaker_bot project
+project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
+project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
+inbox = File.join(project_dir, 'IN')
+outbox = File.join(project_dir, 'OUT')
+
 
 # ---------------------- LOGGING
 logfolder = File.join(working_dir, 'logs')
@@ -55,9 +56,24 @@ else
 end
 bookmaker_bot_IN = File.join(bot_egalleys_dir, 'convert')
 #bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
+coresource_dir = 'O:'
 
 
 #--------------------- RUN
+test dumoing four files in at once
+what do we do with simul runs - add stamp, or increment?  incerment?
+link / check contents of file with epub & local tmpfolder. - check for errors in error folder?
+move original file to outbox
+copy done epub to coresource
+copy either done folder or key done files to outbox (manuscript, epub)
+(update done message text)
+delete tmpdir.  
+update old cleanup so tmpdir = isbn and 
+
+
+
+
+
 #load info from jsons, start to dish info out to permalog as available, dump readable json into log
 if File.file?(permalog)
 	permalog_hash = Mcmlln::Tools.readjson(permalog)
@@ -95,7 +111,6 @@ if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
 	permalog_hash[index]['errors'] = status_hash['errors']
 	permalog_hash[index]['warnings'] = status_hash['warnings']
-	permalog_hash[index]['bookmaker_ready'] = status_hash['bookmaker_ready']	
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}
@@ -161,3 +176,11 @@ end
 #cleanup
 if File.file?(errFile) then FileUtils.rm errFile end
 if File.file?(inprogress_file) then FileUtils.rm inprogress_file end
+
+
+
+
+
+
+
+
