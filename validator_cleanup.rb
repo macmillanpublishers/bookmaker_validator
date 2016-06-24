@@ -1,7 +1,8 @@
 require 'fileutils'
 require 'logger'
-require 'find'
 require 'json'
+require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative './validator_tools.rb'
 
 # ---------------------- VARIABLES (HEADER)
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -18,106 +19,154 @@ inbox = File.join(project_dir, 'IN')
 outbox = File.join(project_dir, 'OUT')
 working_dir = File.join('S:', 'validator_tmp')
 tmp_dir=File.join(working_dir, basename_normalized)
+validator_dir = File.expand_path(File.dirname(__FILE__))
+mailer_dir = File.join(validator_dir,'mailer_messages')
 working_file = File.join(tmp_dir, filename_normalized)
 bookinfo_file = File.join(tmp_dir,'book_info.json')
-stylecheck_file = File.join(tmp_dir,'style_check.json')
-submitter_file = File.join(tmp_dir,'contact_info.json')
+stylecheck_file = File.join(tmp_dir,'style_check.json') 
+contacts_file = File.join(tmp_dir,'contacts.json')
+status_file = File.join(tmp_dir,'status_info.json')
 testing_value_file = File.join("C:", "staging.txt")
-inprogress_file = File.join(inbox,"#{filename_normalized}_IN_PROGRESS.txt")
-errFile = File.join(inbox, "ERROR_RUNNING_#{filename_normalized}.txt")
+#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
+errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
+thisscript = File.basename($0,'.rb')
 
 # ---------------------- LOGGING
 logfolder = File.join(working_dir, 'logs')
 logfile = File.join(logfolder, "#{basename_normalized}_log.txt")
 logger = Logger.new(logfile)
 logger.formatter = proc do |severity, datetime, progname, msg|
-  "#{datetime}: #{progname} -- #{msg}\n"
+  "#{datetime}: #{thisscript} -- #{msg}\n"
 end
 
 # ---------------------- LOCAL VARIABLES
+inprogress_file = File.join(project_dir,"#{filename_normalized}_IN_PROGRESS.txt")
 err_notice = File.join(outbox,"ERROR--#{filename_normalized}--Validator_Failed.txt")
 warn_notice = File.join(outbox,"WARNING--#{filename_normalized}--validator_completed_with_warnings.txt")
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
-errlog = false
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-stylecheck_complete = false 
-stylecheck_styled = false
-isbn_mismatch = false
+isbn = ''
+permalog = File.join(logfolder,'validator_history_report.json')
+permalogtxt = File.join(logfolder,'validator_history_report.txt')
+if File.file?(testing_value_file)
+	bot_egalleys_dir = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)','bookmaker_bot_stg','bookmaker_egalley')
+else
+	bot_egalleys_dir = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)','bookmaker_bot','bookmaker_egalley')
+end
+bookmaker_bot_IN = File.join(bot_egalleys_dir, 'convert')
+#bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
+FileUtils.mkdir_p bookmaker_bot_IN
+#FileUtils.mkdir_p bookmaker_bot_accessories
 
 
 #--------------------- RUN
-#load info from syle_check.json
-if File.file?(stylecheck_file)
-	file_c = File.open(stylecheck_file, "r:utf-8")
-	content_c = file_c.read
-	file_c.close
-	stylecheck_hash = JSON.parse(content_c)
-	stylecheck_complete = stylecheck_hash['completed']
-	stylecheck_styled = stylecheck_hash['styled']['pass']	
-end
-
-#check for isbn_mismatch
-if File.file?(stylecheck_file)
-	file_a = File.open(bookinfo_file, "r:utf-8")
-	content_a = file_a.read
-	file_a.close
-	bookinfo_hash = JSON.parse(content_a)
-	isbn_mismatch = bookinfo_hash["isbn_mismatch"]
-end
-
-#check for errlog in tmp_dir:
-if Dir.exist?(tmp_dir)
-	Find.find(tmp_dir) { |file|
-		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != submitter_file && file != tmp_dir
-			logger.info('validator_cleanup') {"error log found in tmpdir: #{file}"}
-			errlog = true
-		end
-	}
-end
-
-case
-when filename_normalized =~ /^.*_IN_PROGRESS.txt/
-	logger.info('validator_mailer') {"this is a validator marker file, skipping (e.g. IN_PROGRESS)"}	
-when File.file?(errFile)
-	logger.info('validator_cleanup') {"errFile found, indicating file failed basic validation, moving orig & errNotice from IN to OUT folder"}
-	FileUtils.mv input_file, outbox
-	FileUtils.mv errFile, outbox
-when !File.file?(bookinfo_file) || (File.file?(stylecheck_file) && !stylecheck_styled)
-	FileUtils.mv input_file, outbox	  #return the original file to user
-	if !File.file?(bookinfo_file)
-    	logger.info('validator_cleanup') {"book_info.json missing, returned orig file and isbn lookup error notice to user, exiting cleanup"}
-    	File.open(err_notice, 'w') { |f|
-    		f.puts "isbn lookup failed for file #{filename_normalized}, bookmaker_validator could not run! Please double-check the isbn in your filename!"
-    	}
-    else
-		logger.info('validator_cleanup') {"adding warn notice to outbox for unstyled doc"}
-		File.open(warn_notice, 'w') { |f|
-        	f.puts "WARNING: Your document is NOT STYLED. Bookmaker_validator cannot run on an unstyled document."
-    	}
-	end
-	FileUtils.rm_rf tmp_dir   #alt:  could keep the tmpdir for review like following case	
-when errlog || !File.file?(stylecheck_file) || (File.file?(stylecheck_file) && !stylecheck_complete)
-	logger.info('validator_cleanup') {"a major error(ALERT) was detected while running macros on \"#{filename_normalized}\", moving tmpdir to logfolder for further study"}
-	FileUtils.mv tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
-	FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 
-	FileUtils.mv input_file, outbox
-    File.open(err_notice, 'w') { |f|
-        f.puts "Bookmaker_validator failed for file #{filename_normalized}. Please email workflows@macmillan.com for help!"
-    }
-    logger.info('validator_cleanup') {"returned orig file and error notice to user, exitng cleanup"}
+#load info from jsons, start to dish info out to permalog as available, dump readable json into log
+if File.file?(permalog)
+	permalog_hash = Mcmlln::Tools.readjson(permalog)
 else
-	logger.info('validator_cleanup') {"file \"#{filename_normalized}\" processing complete, renaming and moving to OUT folder"}
-	File.rename(working_file, done_file)
-	FileUtils.mv done_file, outbox
-	FileUtils.mv input_file, outbox
-	FileUtils.rm_rf tmp_dir
-	logger.info('validator_cleanup') {"processing of \"#{filename_normalized}\" completed"}
-end
-if isbn_mismatch
- 	logger.info('validator_cleanup') {"adding warn notice to outbox for isbn mismatch"}
- 	File.open(warn_notice, 'a') { |f|
-       	f.puts "WARNING: ISBN mismatch: the ISBN in your document's filename does not match one found in the manuscript."
-   	}
-end 
+	permalog_hash = {}	
+end	
+index = permalog_hash.length + 1
+index = index.to_i
+permalog_hash[index]={}
+permalog_hash[index]['file'] = filename_normalized
+permalog_hash[index]['date'] = timestamp
+#puts "index is #{index}"
 
+if File.file?(contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
+	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
+	#dump json to logfile
+	human_contacts = contacts_hash.map{|k,v| "#{k} = #{v}"}
+	logger.info {"------------------------------------"}	
+	logger.info {"dumping contents of contacts.json:"}
+	File.open(logfile, 'a') { |f| f.puts human_contacts }
+end	
+if File.file?(bookinfo_file)
+	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+	permalog_hash[index]['isbn'] = bookinfo_hash['isbn']
+	permalog_hash[index]['title'] = bookinfo_hash['title']	
+	isbn = bookinfo_hash['isbn']
+	#dump json to logfile
+	human_bookinfo = bookinfo_hash.map{|k,v| "#{k} = #{v}"}
+	logger.info {"------------------------------------"}
+	logger.info {"dumping contents of bookinfo.json:"}
+	File.open(logfile, 'a') { |f| f.puts human_bookinfo }
+end
+if File.file?(status_file)
+	status_hash = Mcmlln::Tools.readjson(status_file)
+	permalog_hash[index]['errors'] = status_hash['errors']
+	permalog_hash[index]['warnings'] = status_hash['warnings']
+	#dump json to logfile
+	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
+	logger.info {"------------------------------------"}
+	logger.info {"dumping contents of status.json:"}
+	File.open(logfile, 'a') { |f| f.puts human_status }
+else
+	status_hash[errors] = "Error occurred, validator failed: no status.json available"
+	logger.info {"status.json not present or unavailable, creating error txt"}
+end	
+if File.file?(stylecheck_file)
+	stylecheck_hash = Mcmlln::Tools.readjson(stylecheck_file)
+	permalog_hash[index]['styled?'] = stylecheck_hash['styled']
+	permalog_hash[index]['validator_completed?'] = stylecheck_hash['completed']
+end	
+#write to json permalog!
+finaljson = JSON.pretty_generate(permalog_hash)
+File.open(permalog, 'w+:UTF-8') { |f| f.puts finaljson }
+
+
+#deal with errors & warnings!
+if !status_hash['errors'].empty?
+	#errors found!  use the text from mailer to write file:
+	text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
+	Mcmlln::Tools.overwriteFile(err_notice, text)
+	#save the tmp_dir for review
+	if Dir.exists?(tmp_dir)
+		FileUtils.cp_r tmp_dir, "#{tmp_dir}__#{timestamp}"  #rename folder
+		FileUtils.mv "#{tmp_dir}__#{timestamp}", logfolder 	
+		logger.info {"errors found, writing err_notice, saving tmp_dir to logfolder"}
+	else
+		logger.info {"no tmpdir exists, this was probably not a .doc file"}
+	end
+	#let's move the original to outbox!
+	FileUtils.mv input_file, outbox	
+end	
+if !status_hash['warnings'].empty? && status_hash['errors'].empty?
+	#warnings found!  use the text from mailer to write file:
+	text = status_hash['warnings']
+	Mcmlln::Tools.overwriteFile(warn_notice, text)
+	logger.info {"warnings found, writing warn_notice"}
+end	
+
+
+#get ready for bookmaker to run on good docs!
+if status_hash['bookmaker_ready']
+	#add isbn to filename if its missing, and isbn available
+	if filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && !isbn.empty?
+		tmp_dir_old = tmp_dir
+		tmp_dir = tmp_dir.gsub(/$/,"#{isbn}")
+		FileUtils.mv tmp_dir_old, tmp_dir
+		working_file_old = File.join(tmp_dir, filename_normalized)
+		working_file = working_file_old.gsub(/#{extension}$/,"#{isbn}#{extension}")
+		done_file = working_file.gsub(/#{extension}$/,"_DONE#{extension}")
+		File.rename(working_file_old, working_file)		
+	end	
+	File.rename(working_file, done_file)
+	FileUtils.cp done_file, bookmaker_bot_IN
+else	
+	if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
+end	
+
+
+#cleanup
+if File.file?(errFile) then FileUtils.rm errFile end
 if File.file?(inprogress_file) then FileUtils.rm inprogress_file end
+
+
+
+
+
+
+
+

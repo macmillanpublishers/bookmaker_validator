@@ -1,0 +1,7 @@
+Hello Westchester,
+
+Please generate a First-pass epub for file "FILENAME_NORMALIZED".  See below for details pertaining to this title:
+
+BOOKINFO
+
+Please contact the Workflows team at workflows@macmillan.com with any questions.

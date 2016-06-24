@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'json'
 require 'net/smtp'
+require_relative './validator_tools.rb'
 
 #--------------------- HEADER - main declarations
 unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -19,7 +20,7 @@ p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#
 validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
 testing_value_file = File.join("C:", "staging.txt")
 #testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
-
+thisscript = File.basename($0,'.rb')
 
 #------ local var names
 json_exist = true
@@ -59,15 +60,12 @@ MESSAGE_END
 
 	#now sending
 	unless File.file?(testing_value_file)
-	  Net::SMTP.start('10.249.0.12') do |smtp|
-  	  smtp.send_message message, 'workflows@macmillan.com', 
-	                              'workflows@macmillan.com'
-	  end
+		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')		
 	end
 end	
 
 
-if !deploy_complete
+if json_exist && !deploy_complete
 	if !File.file?(human_logfile)
 		humanreadie = jsonlog_hash.map{|k,v| "#{k} = #{v}"}
 		File.open(human_logfile, 'w+:UTF-8') { |f| f.puts humanreadie }
@@ -102,14 +100,7 @@ MESSAGE_END
 
 	#now sending
 	unless File.file?(testing_value_file)
-		begin 	
-	  		Net::SMTP.start('10.249.0.12') do |smtp|
-  	  		smtp.send_message message, 'workflows@macmillan.com', 
-	                              'workflows@macmillan.com'
-	  		end
-	  	rescue Exception => e  
-			print "Exception occured: " + e  	
-		end
+		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')	
 	end
 end	
 

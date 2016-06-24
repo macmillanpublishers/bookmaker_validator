@@ -1,0 +1,5 @@
+A copy of your file "FILENAME_NORMALIZED" is now being processed by PROJECT_NAME.
+
+You will receive another email once the process has finished.  It may take up to 30 minutes.
+
+Please contact the Workflows team at workflows@macmillan.com with any questions!
