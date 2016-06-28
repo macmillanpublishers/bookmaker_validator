@@ -197,7 +197,7 @@ end
 
 
 #test fileext for =~ .doc
-if extension !~ /.doc/      
+if extension !~ /.doc($|x$)/    
     status_hash['docfile'] = false
     logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
     File.open(errFile, 'w') { |f|
@@ -210,7 +210,7 @@ end
 
 
 #try lookup on filename isbn
-if filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && extension =~ /.doc/
+if filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && extension =~ /.doc($|x$)/
     lookup_isbn = filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = lookup_isbn
     if Vldtr::Tools.checkisbn(lookup_isbn)
@@ -227,7 +227,7 @@ end
 
 
 #if no or bad isbn exists in filename or filename isbn lookup failed, see if we can find a good pisbn from manuscript!
-if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/) && extension =~ /.doc/ 
+if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/) && extension =~ /.doc($|x$)/
     logger.info {"\"#{basename_normalized}\" is a .doc or .docx with bad or missing isbn_num in title, checking manuscript"}
     #get isbns from Manuscript
 	status_hash['docisbn_check'] = true

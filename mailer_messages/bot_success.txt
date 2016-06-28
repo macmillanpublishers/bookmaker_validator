@@ -1,7 +1,11 @@
-Hello Westchester,
+The file, "FILENAME_NORMALIZED", has been successfully processed by egalley_transmittal.  
 
-Please generate a First-pass epub for file "FILENAME_NORMALIZED".  See below for details pertaining to this title:
+Epubs generated from your manuscript can be found in the following folder:
+'Dropbox (Macmillan Publishers)\egalley_transmittal\OUT
+
+See below for book info, and any warnings detected in the manuscript:
 
 BOOKINFO
+WARNINGS
 
 Please contact the Workflows team at workflows@macmillan.com with any questions.

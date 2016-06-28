@@ -2,10 +2,9 @@ Your file, "FILENAME_NORMALIZED", appeared to be un-styled; and a request has be
 
 Your original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
 
-See below for book info, and any warnings detected in the manuscript and lookup info based on the ISBN:
+See below for book info, and any warnings detected in the manuscript:
 
 BOOKINFO 
-
 WARNINGS
 
 
