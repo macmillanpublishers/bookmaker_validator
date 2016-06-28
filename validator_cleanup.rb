@@ -167,8 +167,13 @@ if status_hash['bookmaker_ready']
 			done_file = working_file.gsub(/#{extension}$/,"_#{isbn}#{extension}")
     	end	
     	done_file = done_file.gsub(/#{extension}$/,"_DONE-#{index}#{extension}")
-		FileUtils.cp working_file_old, done_file
-		FileUtils.cp done_file, bookmaker_bot_IN	
+		FileUtils.cp working_file, done_file
+		FileUtils.cp done_file, bookmaker_bot_IN
+		#rename working file to keep it distinct from infile
+		new_workingfile = working_file.gsub(/#{extension}$/,"_workingfile#{extension}")
+		File.rename(working_file, new_workingfile)
+		#make a copy of infile so we have a reference to it for posts
+		FileUtils.cp input_file, tmp_dir
 	else
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end	

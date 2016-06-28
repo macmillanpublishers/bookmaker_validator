@@ -22,26 +22,42 @@ testing_value_file = File.join("C:", "staging.txt")
 #testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
 thisscript = File.basename($0,'.rb')
 
+# ---------------------- LOCAL VARIABLES
+# these refer to bookmaker_bot/bookmaker_egalley now
+bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
+bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
+project_done_dir = File.join(bookmaker_project_dir,'done')
+isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+index = basename_normalized.split('-').last.to_i
+done_isbn_dir = File.join(project_done_dir, isbn)
+epub = File.join(done_isbn_dir,"#{isbn}_EPUB.epub") 
+epub_firstpass = epub = File.join(done_isbn_dir,"#{isbn}_EPUBfirstpass.epub")
+
+# these are all relative to the found tmpdir 
+tmp_dir = File.join(working_dir, "#{isbn}_to_bookmaker-#{index}")
+bookinfo_file = File.join(tmp_dir,'book_info.json')
+stylecheck_file = File.join(tmp_dir,'style_check.json') 
+contacts_file = File.join(tmp_dir,'contacts.json')
+status_file = File.join(tmp_dir,'status_info.json')
+working_file, validator_infile_basename = '',''
+Find.find(tmp_dir) { |file|
+if file !~ /_DONE-#{index}#{extension}$/ && extension =~ /.doc($|x$)/
+	if file =~ /_workingfile#{extension}$/
+		working_file = file
+	else
+		validator_infile_basename = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
+	end
+end
+}
 
 # ---------------------- LOGGING - has dependency on tmpdir!! - this stays the logfile if no tmp_dir is found
 logfolder = File.join(working_dir, 'logs')
-logfile = File.join(logfolder, "#{basename_normalized}_log.txt")
+logfile = File.join(logfolder, File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt'))
 logger = Logger.new(logfile)
 logger.formatter = proc do |severity, datetime, progname, msg|
   "#{datetime}: #{thisscript} -- #{msg}\n"
 end
 
-
-# ---------------------- LOCAL VARIABLES
-# these refer to bookmaker_bot/bookmaker_egalley now
-bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-3].join(File::SEPARATOR)
-bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-3].pop
-project_done_dir = File.join(bookmaker_project_dir,'done')
-done_isbn_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-1].join(File::SEPARATOR)
-isbn = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-1].pop
-infile_index = basename_normalized.split('-').last.to_i
-epub = File.join(done_isbn_dir,"#{isbn}_EPUB.epub") 
-epub_firstpass = epub = File.join(done_isbn_dir,"#{isbn}_EPUBfirstpass.epub")
 #just for posts_mailer.rb:
 send_ok = true
 errtxt_files = []
@@ -50,50 +66,30 @@ cc_mails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 to_address = 'To: '
 
-# these are all relative to the found tmpdir 
-tmp_dir = ''
-Find.find(working_dir) { |dir|
-	if dir =~ /to_bookmaker-#{infile_index}$/ && File.directory?(dir)
-		tmp_dir = dir
-	end
-}
-if !tmp_dir.empty?
-	bookinfo_file = File.join(tmp_dir,'book_info.json')
-	stylecheck_file = File.join(tmp_dir,'style_check.json') 
-	contacts_file = File.join(tmp_dir,'contacts.json')
-	status_file = File.join(tmp_dir,'status_info.json')
-	#done_file = input file in tmpdir
-	working_file = ''
-	Find.find(tmp_dir) { |file|
-	if file !~ /_DONE#{extension}$/ && extension =~ /.doc($|x$)/
-		working_file = file
-	end
-	}
-	logfile = File.join(logfolder, File.basename(working_file, ".*").gsub(/$/,'_log.txt'))
-else
-	send_ok = false
-	logger.info {"cannot find tmp_dir! skip to the end :("}
-end	
 
 
 #--------------------- RUN
 logger.info {"Bookmaker has completed!  Verifying epub present:"}
 #presumes epub is named properly
-if !File.file?(epub) && !File.file?(epub_firstpass)
-	send_ok = false
-	logger.info {"no epub exists! skip to the end :("}
-end
-
-logger.info {"checking for error files in bookmaker?:"}
 if Dir.exist?(done_isbn_dir)
+	if !File.file?(epub) && !File.file?(epub_firstpass)
+		send_ok = false
+		logger.info {"no epub exists! skip to the end :("}
+	end
+	logger.info {"checking for error files in bookmaker?:"}
 	Find.find(done_isbn_dir) { |file|
 		if file =~ /ERROR.txt/
 			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
 			file = file.gsub(//,'.txt')
 			errtxt_files << file
+			send_ok = false
 		end
 	}
+else
+	logger.info {"no done/isbn_dir exists! bookmaker must have found/used a different ISBN! :("}
+	send_ok = false
 end
+
 
 logger.info {"Reading in jsons from validator run"}
 #get info from contacts.json
@@ -114,7 +110,7 @@ end
 if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
 	warnings = status_hash['warnings']
-#	errors = status_hash['errors']
+	errors = status_hash['errors']
 	if !errtxt_files.empty?
 		errors = "ERROR(s):\n-#{bookmaker_project_name} encountered non-fatal errors: #{errtxt_files}"
 		status_hash['errors'] = errors
@@ -138,10 +134,6 @@ if File.file?(bookinfo_file)
 	bookinfo_pename = bookinfo_hash['production_editor']
 	bookinfo_pmname = bookinfo_hash['production_manager']
 	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\", AUTHOR: \'#{author}\', IMPRINT: \'#{imprint}\', PRODUCT-TYPE: \'#{product_type}\'\n"
-	if bookinfo_isbn != isbn
-		send_ok = false
-		logger.info {"json isbn does not match filename isbn!?"}
-	end	
 else
 	send_ok = false
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
@@ -150,7 +142,7 @@ end
 
 #send a success notification email!
 if send_ok
-	logger.info {"this file looks bookmaker_ready, no mailer at this point"}
+	logger.info {"everything checks out, sending email if we're not on staging :)"}
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
@@ -177,7 +169,7 @@ if send_ok
 			to_mail = submitter_mail
 		end	
 		subject = "#{bookmaker_project_name} successfully processed #{filename_split}"
-		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,done_file).gsub(/bookmaker_project_name/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,working_file).gsub(/bookmaker_project_name/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 		
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -205,8 +197,10 @@ No notification email was sent to PE/PMs/submitter.
 #{errors}
 #{warnings}
 MESSAGE_END_B
-
-	Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
-	logger.info {"send_ok is FALSE, something's wrong"}
+	
+	unless File.file?(testing_value_file)
+		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
+		logger.info {"send_ok is FALSE, something's wrong"}
+	end	
 end	
 

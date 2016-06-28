@@ -162,34 +162,9 @@ end
 #send submitter an error notification
 if !errors.empty? && send_ok
 	unless File.file?(testing_value_file)
-		#prepare for attaching log: Read a file and encode it into base64 format for attaching
-#		attachment = logfile
-#		filecontent = File.read(attachment)
-#		encodedcontent = [filecontent].pack("m")   # base64
-#		marker = "zzzzzzzzzz"
-		#address etc
 		to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
 		subject = "ERROR running #{project_name} on #{filename_split}"
-		body = error_text.gsub(/FILENAME_NORMALIZED/, filename_normalized).gsub(/PROJECT_NAME/, project_name).gsub(/WARNINGS/, warnings.to_s).gsub(/ERRORS/, errors.to_s).gsub(/BOOKINFO/, bookinfo.to_s)	
-#		message_attachment = <<MESSAGE_END
-#From: Workflows <workflows@macmillan.com>
-##{to_address}
-##{cc_address}
-#Subject: #{subject}
-#MIME-Version: 1.0
-#Content-Type: multipart/mixed; boundary=#{marker}
-#--#{marker}
-#Content-Type: text/plain
-#Content-Transfer-Encoding:8bit
-##{body}
-#--#{marker}
-#Content-Type: multipart/mixed; name=\"#{attachment}\"
-#Content-Transfer-Encoding:base64
-#Content-Disposition: attachment; filename="#{attachment}"
-##{encodedcontent}
-#--#{marker}--
-#MESSAGE_END
-
+		body = error_text.gsub(/FILENAME_NORMALIZED/, filename_normalized).gsub(/PROJECT_NAME/, project_name).gsub(/WARNINGS/, warnings.to_s).gsub(/ERRORS/, errors.to_s).gsub(/BOOKINFO/, bookinfo.to_s)
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
@@ -259,46 +234,12 @@ MESSAGE_END_B
 	end	
 end
 
-#this is a placeholder, eventually we won't do this until/unless bookmaker has run.. 
-#or maybe we'll have two, one for bookmaker success, one for bookmaker failure
-#are we attaching errors or logs?  not necessary if we consolidate logs in one place
 
 if errors.empty? && status_hash['document_styled'] && send_ok
 	logger.info {"this file looks bookmaker_ready, no mailer at this point"}
 	if !warnings.empty?
 		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
 	end
-# 	unless File.file?(testing_value_file)	
-# 		#conditional to addressees are complicated: 
-# 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
-# 		if pm_mail =~ /@/ 
-# 			cc_mails << pm_mail 
-# 			to_address = "#{to_address}, #{pm_name} <#{pm_mail}>"
-# 		end
-# 		if pe_mail =~ /@/ && pe_mail != pm_mail
-# 			cc_mails << pe_mail 
-# 			to_address = "#{to_address}, #{pe_name} <#{pe_mail}>"
-# 		end
-# 		if pm_mail !~ /@/ && pe_mail !~ /@/
-# 			to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
-# 		else
-# 			cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
-# 		end	
-# 		subject = "#{project_name} successfully processed #{filename_split}"
-# 		body = validator_complete.gsub(/FILENAME_NORMALIZED/,filename_normalized).gsub(/PROJECT_NAME/,project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-# 		
-#message = <<MESSAGE_END
-#From: Workflows <workflows@macmillan.com>
-##{to_address}
-##{cc_address}
-#Subject: #{subject}
-#
-##{body}
-#MESSAGE_END
-#
-#		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
-# 		logger.info {"Sending success message for validator to PE/PM"}	 		
-# 	end	
 end	
 
 
