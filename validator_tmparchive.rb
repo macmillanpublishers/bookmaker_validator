@@ -250,7 +250,7 @@ if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7
       }
     end
     logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['isbnstring']}"}   
-    isbn_array = status_hash['isbnstring'].gsub!(/-/,'').split(',')
+    isbn_array = status_hash['isbnstring'].gsub(/-/,'').split(',')
     isbn_array.each { |i|
         if i =~ /97(8|9)[0-9]{10}/
             if Vldtr::Tools.checkisbn(i)

@@ -25,7 +25,7 @@ thisscript = File.basename($0,'.rb')
 # ---------------------- LOCAL VARIABLES
 # these refer to the input file
 lookup_isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-index = basename_normalized.split('-').last.to_i
+index = basename_normalized.split('-').last
 # these refer to bookmaker_bot/bookmaker_egalley
 bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
@@ -194,7 +194,7 @@ if send_ok
 			to_mail = submitter_mail
 		end	
 		subject = "#{bookmaker_project_name} successfully processed #{filename_split}"
-		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,working_file).gsub(/bookmaker_project_name/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,working_file).gsub(/PROJECT_NAME/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 		
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>

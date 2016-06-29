@@ -162,7 +162,7 @@ end
 #crosscheck document isbns via work_id
 if File.file?(bookinfo_file) && File.file?(stylecheck_file) && File.file?(status_file)
 	stylecheck_isbns.each { |sc_isbn| 
-		sc_isbn = sc_isbn.gsub!(/-/,'')		
+		sc_isbn = sc_isbn.to_s.gsub(/-/,'')	
 		if sc_isbn != bookinfo_hash['isbn']
 			if Vldtr::Tools.checkisbn(sc_isbn)
 				thissql = exactSearchSingleKey(sc_isbn, "EDITION_EAN")

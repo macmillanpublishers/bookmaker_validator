@@ -24,7 +24,7 @@ thisscript = File.basename($0,'.rb')
 # ---------------------- LOCAL VARIABLES
 # these refer to the input file
 lookup_isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-index = basename_normalized.split('-').last.to_i
+index = basename_normalized.split('-').last
 # these refer to bookmaker_bot/bookmaker_egalley
 bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
