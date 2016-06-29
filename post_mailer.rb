@@ -4,6 +4,7 @@ require 'net/smtp'
 require 'logger'
 require 'find'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative '../bookmaker/core/metadata.rb'
 require_relative './validator_tools.rb'
 
 # ---------------------- VARIABLES (HEADER)
@@ -30,7 +31,7 @@ index = basename_normalized.split('-').last
 bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
 project_done_dir = File.join(bookmaker_project_dir,'done')
-done_isbn_dir = File.join(project_done_dir, lookup_isbn)
+done_isbn_dir = File.join(project_done_dir, Metadata.pisbn)
 
 # these are all relative to the found tmpdir 
 tmp_dir = File.join(working_dir, "#{lookup_isbn}_to_bookmaker-#{index}")
@@ -74,39 +75,39 @@ to_address = 'To: '
 if File.file?(bookinfo_file)
 	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
 	work_id = bookinfo_hash['work_id']
-	author = bookinfo_hash['author']
-	title = bookinfo_hash['title']
-	imprint = bookinfo_hash['imprint']
+	bookinfo_author = bookinfo_hash['bookinfo_author']
+	bookinfo_title = bookinfo_hash['bookinfo_title']
+	bookinfo_imprint = bookinfo_hash['bookinfo_imprint']
 	product_type = bookinfo_hash['product_type']
 	bookinfo_isbn = bookinfo_hash['isbn']
 	bookinfo_pename = bookinfo_hash['production_editor']
 	bookinfo_pmname = bookinfo_hash['production_manager']
-	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
-	alt_isbns = bookinfo_hash['alt_isbns']
+	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\nbookinfo_title: \"#{bookinfo_title}\"\nbookinfo_author: \'#{bookinfo_author}\'\nbookinfo_imprint: \'#{bookinfo_imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 else
 	send_ok = false
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
 end	
 
-#find done_isbn_dir if bookmaker is using an alt isbn
-if !Dir.exist?(done_isbn_dir)
-	logger.info {"expected done/isbn_dir does not exist, checking alt_isbns for our work_id to see what bookmaker used..."}
-	dir_matches = []
-	alt_isbns.each { |alt_isbn|
-		testdir = File.join(project_done_dir, 'alt_isbn')
-		if Dir.exist?(testdir)
-			dir_matches << testdir
-		end
-	}
-	if !dir_matches.empty?
-		#if multiple matches, get the latest one
-		done_isbn_dir = dir_matches.sort_by{ |d| File.mtime(d) }.pop
-		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
-	else
-		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
-		send_ok = false
-	end	
-end	
+
+# #find done_isbn_dir if bookmaker is using an alt isbn
+# if !Dir.exist?(done_isbn_dir)
+# 	logger.info {"expected done/isbn_dir does not exist, checking alt_isbns for our work_id to see what bookmaker used..."}
+# 	dir_matches = []
+# 	alt_isbns.each { |alt_isbn|
+# 		testdir = File.join(project_done_dir, 'alt_isbn')
+# 		if Dir.exist?(testdir)
+# 			dir_matches << testdir
+# 		end
+# 	}
+# 	if !dir_matches.empty?
+# 		#if multiple matches, get the latest one
+# 		done_isbn_dir = dir_matches.sort_by{ |d| File.mtime(d) }.pop
+# 		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
+# 	else
+# 		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
+# 		send_ok = false
+# 	end	
+# end	
 
 #find our epubs, check for error files in bookmaker
 logger.info {"Verifying epub present..."}
@@ -131,7 +132,11 @@ if Dir.exist?(done_isbn_dir)
 			send_ok = false
 		end
 	}	
-end
+else
+	logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
+	send_ok = false
+end	
+
 
 logger.info {"Reading in jsons from validator run"}
 #get info from contacts.json

@@ -3,6 +3,7 @@ require 'logger'
 require 'json'
 require 'find'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative '../bookmaker/core/metadata.rb'
 require_relative './validator_tools.rb'
 
 # ---------------------- VARIABLES (HEADER)
@@ -29,7 +30,7 @@ index = basename_normalized.split('-').last
 bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
 project_done_dir = File.join(bookmaker_project_dir,'done')
-done_isbn_dir = File.join(project_done_dir, lookup_isbn)
+done_isbn_dir = File.join(project_done_dir, Metadata.pisbn)
 
 # these are all relative to the found tmpdir 
 tmp_dir = File.join(working_dir, "#{lookup_isbn}_to_bookmaker-#{index}")
@@ -79,30 +80,30 @@ errFile = File.join(et_project_dir, "ERROR_RUNNING_#{validator_infile_basename}#
 
 
 #--------------------- RUN
-#get info from bookinfo.json so we can determine done_isbn_dir if its isbn doesn't match lookup_isbn
-if File.file?(bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
-	alt_isbns = bookinfo_hash['alt_isbns']
-end	
+# #get info from bookinfo.json so we can determine done_isbn_dir if its isbn doesn't match lookup_isbn
+# if File.file?(bookinfo_file)
+# 	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+# 	alt_isbns = bookinfo_hash['alt_isbns']
+# end	
 
-#find done_isbn_dir if bookmaker is using an alt isbn
-if !Dir.exist?(done_isbn_dir)
-	logger.info {"expected done/isbn_dir does not exist, checking alt_isbns for our work_id to see what bookmaker used..."}
-	dir_matches = []
-	alt_isbns.each { |alt_isbn|
-		testdir = File.join(project_done_dir, 'alt_isbn')
-		if Dir.exist?(testdir)
-			dir_matches << testdir
-		end
-	}
-	if !dir_matches.empty?
-		#if multiple matches, get the latest one
-		done_isbn_dir = dir_matches.sort_by{ |d| File.mtime(d) }.pop
-		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
-	else
-		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
-	end	
-end	
+# #find done_isbn_dir if bookmaker is using an alt isbn
+# if !Dir.exist?(done_isbn_dir)
+# 	logger.info {"expected done/isbn_dir does not exist, checking alt_isbns for our work_id to see what bookmaker used..."}
+# 	dir_matches = []
+# 	alt_isbns.each { |alt_isbn|
+# 		testdir = File.join(project_done_dir, 'alt_isbn')
+# 		if Dir.exist?(testdir)
+# 			dir_matches << testdir
+# 		end
+# 	}
+# 	if !dir_matches.empty?
+# 		#if multiple matches, get the latest one
+# 		done_isbn_dir = dir_matches.sort_by{ |d| File.mtime(d) }.pop
+# 		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
+# 	else
+# 		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
+# 	end	
+# end	
 
 #find our epubs
 if Dir.exist?(done_isbn_dir)
