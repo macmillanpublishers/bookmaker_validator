@@ -22,18 +22,17 @@ testing_value_file = File.join("C:", "staging.txt")
 thisscript = File.basename($0,'.rb')
 
 # ---------------------- LOCAL VARIABLES
-# these refer to bookmaker_bot/bookmaker_egalley now
+# these refer to the input file
+lookup_isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+index = basename_normalized.split('-').last.to_i
+# these refer to bookmaker_bot/bookmaker_egalley
 bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
 project_done_dir = File.join(bookmaker_project_dir,'done')
-isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-index = basename_normalized.split('-').last
-done_isbn_dir = File.join(project_done_dir, isbn)
-epub = ''
-epub_firstpass =''
+done_isbn_dir = File.join(project_done_dir, lookup_isbn)
 
 # these are all relative to the found tmpdir 
-tmp_dir = File.join(working_dir, "#{isbn}_to_bookmaker-#{index}")
+tmp_dir = File.join(working_dir, "#{lookup_isbn}_to_bookmaker-#{index}")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json') 
 contacts_file = File.join(tmp_dir,'contacts.json')
@@ -58,12 +57,14 @@ logger.formatter = proc do |severity, datetime, progname, msg|
 end
 
 #just for posts_cleanup.rb:
+epub = ''
+epub_firstpass = ''
 inprogress_file = File.join(bookmaker_project_dir,"#{filename_normalized}_IN_PROGRESS.txt")
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 permalog = File.join(logfolder,'validator_history_report.json')
 permalogtxt = File.join(logfolder,'validator_history_report.txt')
 coresource_dir = 'O:'
-epub_created = true
+epub_found = true
 if File.file?(testing_value_file)
 	et_project_dir = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)','egalley_transmittal_stg')
 else
@@ -78,8 +79,30 @@ errFile = File.join(et_project_dir, "ERROR_RUNNING_#{validator_infile_basename}#
 
 
 #--------------------- RUN
-#create outfolder:
-FileUtils.mkdir_p outfolder
+#get info from bookinfo.json so we can determine done_isbn_dir if its isbn doesn't match lookup_isbn
+if File.file?(bookinfo_file)
+	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+	alt_isbns = bookinfo_hash['alt_isbns']
+end	
+
+#find done_isbn_dir if bookmaker is using an alt isbn
+if !Dir.exist?(done_isbn_dir)
+	logger.info {"expected done/isbn_dir does not exist, checking alt_isbns for our work_id to see what bookmaker used..."}
+	dir_matches = []
+	alt_isbns.each { |alt_isbn|
+		testdir = File.join(project_done_dir, 'alt_isbn')
+		if Dir.exist?(testdir)
+			dir_matches << testdir
+		end
+	}
+	if !dir_matches.empty?
+		#if multiple matches, get the latest one
+		done_isbn_dir = dir_matches.sort_by{ |d| File.mtime(d) }.pop
+		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
+	else
+		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
+	end	
+end	
 
 #find our epubs
 if Dir.exist?(done_isbn_dir)
@@ -92,9 +115,12 @@ if Dir.exist?(done_isbn_dir)
 	}
 end
 
+#create outfolder:
+FileUtils.mkdir_p outfolder
+
 #presumes epub is named properly, moves a copy to coresource
 if !File.file?(epub) && !File.file?(epub_firstpass)
-	epub_created = false
+	epub_found = false
 elsif File.file?(epub_firstpass) 
 	if !File.file?(testing_value_file)
 		FileUtils.cp epub_firstpass, coresource_dir
@@ -138,9 +164,9 @@ end
 if File.file?(permalog)
 	permalog_hash = Mcmlln::Tools.readjson(permalog)
 	permalog_hash[index]['bookmaker_ran'] = true
-	permalog_hash[index]['epub_created'] = true	
-	if !epub_created
-		permalog_hash[index]['epub_created'] = false
+	permalog_hash[index]['epub_found'] = true	
+	if !epub_found
+		permalog_hash[index]['epub_found'] = false
 	end
 	#write to json permalog!
 	finaljson = JSON.pretty_generate(permalog_hash)
