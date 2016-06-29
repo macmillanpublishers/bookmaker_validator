@@ -92,7 +92,7 @@ if File.file?(bookinfo_file)
 	bookinfo_isbn = bookinfo_hash['isbn']
 	bookinfo_pename = bookinfo_hash['production_editor']
 	bookinfo_pmname = bookinfo_hash['production_manager']
-	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\", AUTHOR: \'#{author}\', IMPRINT: \'#{imprint}\', PRODUCT-TYPE: \'#{product_type}\'\n"
+	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 else
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
 end	

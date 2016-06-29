@@ -30,8 +30,8 @@ project_done_dir = File.join(bookmaker_project_dir,'done')
 isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
 index = basename_normalized.split('-').last.to_i
 done_isbn_dir = File.join(project_done_dir, isbn)
-epub = File.join(done_isbn_dir,"#{isbn}_EPUB.epub") 
-epub_firstpass = epub = File.join(done_isbn_dir,"#{isbn}_EPUBfirstpass.epub")
+epub = ''
+epub_firstpass = ''
 
 # these are all relative to the found tmpdir 
 tmp_dir = File.join(working_dir, "#{isbn}_to_bookmaker-#{index}")
@@ -69,8 +69,33 @@ to_address = 'To: '
 
 
 #--------------------- RUN
+
+#find our epubs, check for error files in bookmaker
 logger.info {"Bookmaker has completed!  Verifying epub present:"}
-#presumes epub is named properly
+if Dir.exist?(done_isbn_dir)
+	Find.find(done_isbn_dir) { |file|
+		if file =~ /_EPUBfirstpass.epub$/
+			epub_firstpass = file
+		elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
+			epub = file
+		end	
+	}
+	if epub.empty? && epub_firstpass.empty?
+		send_ok = false
+		logger.info {"no epub exists! skip to the end :("}
+	end
+	logger.info {"checking for error files in bookmaker?:"}
+	Find.find(done_isbn_dir) { |file|
+		if file =~ /ERROR.txt/
+			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
+			file = file.gsub(//,'.txt')
+			errtxt_files << file
+			send_ok = false
+		end
+	}	
+end
+
+
 if Dir.exist?(done_isbn_dir)
 	if !File.file?(epub) && !File.file?(epub_firstpass)
 		send_ok = false
@@ -133,7 +158,7 @@ if File.file?(bookinfo_file)
 	bookinfo_isbn = bookinfo_hash['isbn']
 	bookinfo_pename = bookinfo_hash['production_editor']
 	bookinfo_pmname = bookinfo_hash['production_manager']
-	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\", AUTHOR: \'#{author}\', IMPRINT: \'#{imprint}\', PRODUCT-TYPE: \'#{product_type}\'\n"
+	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 else
 	send_ok = false
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}

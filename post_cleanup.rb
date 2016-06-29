@@ -29,8 +29,8 @@ project_done_dir = File.join(bookmaker_project_dir,'done')
 isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
 index = basename_normalized.split('-').last
 done_isbn_dir = File.join(project_done_dir, isbn)
-epub = File.join(done_isbn_dir,"#{isbn}_EPUB.epub") 
-epub_firstpass = epub = File.join(done_isbn_dir,"#{isbn}_EPUBfirstpass.epub")
+epub = ''
+epub_firstpass =''
 
 # these are all relative to the found tmpdir 
 tmp_dir = File.join(working_dir, "#{isbn}_to_bookmaker-#{index}")
@@ -69,7 +69,7 @@ if File.file?(testing_value_file)
 else
 	et_project_dir = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)','egalley_transmittal')
 end
-outfolder = File.join(et_project_dir,'OUT',basename_normalized)
+outfolder = File.join(et_project_dir,'OUT',basename_normalized).gsub(/_DONE-#{index}$/,'')
 warn_notice = File.join(outfolder,"WARNING--#{filename_normalized}--validator_completed_with_warnings.txt")
 err_notice = File.join(outfolder,"ERROR--#{filename_normalized}--Validator_Failed.txt")
 validator_infile = File.join(et_project_dir,'IN',validator_infile_basename)
@@ -80,6 +80,17 @@ errFile = File.join(et_project_dir, "ERROR_RUNNING_#{validator_infile_basename}#
 #--------------------- RUN
 #create outfolder:
 FileUtils.mkdir_p outfolder
+
+#find our epubs
+if Dir.exist?(done_isbn_dir)
+	Find.find(done_isbn_dir) { |file|
+		if file =~ /_EPUBfirstpass.epub$/
+			epub_firstpass = file
+		elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
+			epub = file
+		end	
+	}
+end
 
 #presumes epub is named properly, moves a copy to coresource
 if !File.file?(epub) && !File.file?(epub_firstpass)
@@ -92,9 +103,10 @@ elsif File.file?(epub_firstpass)
 	FileUtils.cp epub_firstpass, outfolder
 	logger.info {"copied epub_firstpass to validator outfolder"}
 elsif File.file?(epub)
+	File.rename(epub, epub_firstpass)
 	if !File.file?(testing_value_file)
-		File.rename(epub, epub_firstpass)
 		FileUtils.cp epub_firstpass, coresource_dir
+		logger.info {"copied epub_firstpass to coresource_dir"}	
 	end
 	logger.info {"renamed epub to epub_firstpass, copied to coresource_dir"}
 	FileUtils.cp epub_firstpass, outfolder
