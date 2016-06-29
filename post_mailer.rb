@@ -4,6 +4,7 @@ require 'net/smtp'
 require 'logger'
 require 'find'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative '../bookmaker/core/metadata.rb'
 require_relative './validator_tools.rb'
 
 # ---------------------- VARIABLES (HEADER)
@@ -23,18 +24,17 @@ testing_value_file = File.join("C:", "staging.txt")
 thisscript = File.basename($0,'.rb')
 
 # ---------------------- LOCAL VARIABLES
-# these refer to bookmaker_bot/bookmaker_egalley now
+# these refer to the input file
+lookup_isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+index = basename_normalized.split('-').last
+# these refer to bookmaker_bot/bookmaker_egalley
 bookmaker_project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
 project_done_dir = File.join(bookmaker_project_dir,'done')
-isbn = basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-index = basename_normalized.split('-').last.to_i
-done_isbn_dir = File.join(project_done_dir, isbn)
-epub = ''
-epub_firstpass = ''
+done_isbn_dir = File.join(project_done_dir, Metadata.pisbn)
 
 # these are all relative to the found tmpdir 
-tmp_dir = File.join(working_dir, "#{isbn}_to_bookmaker-#{index}")
+tmp_dir = File.join(working_dir, "#{lookup_isbn}_to_bookmaker-#{index}")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
 stylecheck_file = File.join(tmp_dir,'style_check.json') 
 contacts_file = File.join(tmp_dir,'contacts.json')
@@ -59,6 +59,8 @@ logger.formatter = proc do |severity, datetime, progname, msg|
 end
 
 #just for posts_mailer.rb:
+epub = ''
+epub_firstpass = ''
 send_ok = true
 errtxt_files = []
 bot_success_txt = File.read(File.join(mailer_dir,'bot_success.txt'))
@@ -69,9 +71,46 @@ to_address = 'To: '
 
 
 #--------------------- RUN
+#get info from bookinfo.json so we can determine done_isbn_dir if its isbn doesn't match lookup_isbn
+if File.file?(bookinfo_file)
+	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+	work_id = bookinfo_hash['work_id']
+	bookinfo_author = bookinfo_hash['bookinfo_author']
+	bookinfo_title = bookinfo_hash['bookinfo_title']
+	bookinfo_imprint = bookinfo_hash['bookinfo_imprint']
+	product_type = bookinfo_hash['product_type']
+	bookinfo_isbn = bookinfo_hash['isbn']
+	bookinfo_pename = bookinfo_hash['production_editor']
+	bookinfo_pmname = bookinfo_hash['production_manager']
+	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\nbookinfo_title: \"#{bookinfo_title}\"\nbookinfo_author: \'#{bookinfo_author}\'\nbookinfo_imprint: \'#{bookinfo_imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
+else
+	send_ok = false
+	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
+end	
+
+
+# #find done_isbn_dir if bookmaker is using an alt isbn
+# if !Dir.exist?(done_isbn_dir)
+# 	logger.info {"expected done/isbn_dir does not exist, checking alt_isbns for our work_id to see what bookmaker used..."}
+# 	dir_matches = []
+# 	alt_isbns.each { |alt_isbn|
+# 		testdir = File.join(project_done_dir, 'alt_isbn')
+# 		if Dir.exist?(testdir)
+# 			dir_matches << testdir
+# 		end
+# 	}
+# 	if !dir_matches.empty?
+# 		#if multiple matches, get the latest one
+# 		done_isbn_dir = dir_matches.sort_by{ |d| File.mtime(d) }.pop
+# 		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
+# 	else
+# 		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
+# 		send_ok = false
+# 	end	
+# end	
 
 #find our epubs, check for error files in bookmaker
-logger.info {"Bookmaker has completed!  Verifying epub present:"}
+logger.info {"Verifying epub present..."}
 if Dir.exist?(done_isbn_dir)
 	Find.find(done_isbn_dir) { |file|
 		if file =~ /_EPUBfirstpass.epub$/
@@ -84,7 +123,7 @@ if Dir.exist?(done_isbn_dir)
 		send_ok = false
 		logger.info {"no epub exists! skip to the end :("}
 	end
-	logger.info {"checking for error files in bookmaker?:"}
+	logger.info {"checking for error files in bookmaker..."}
 	Find.find(done_isbn_dir) { |file|
 		if file =~ /ERROR.txt/
 			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
@@ -93,27 +132,10 @@ if Dir.exist?(done_isbn_dir)
 			send_ok = false
 		end
 	}	
-end
-
-
-if Dir.exist?(done_isbn_dir)
-	if !File.file?(epub) && !File.file?(epub_firstpass)
-		send_ok = false
-		logger.info {"no epub exists! skip to the end :("}
-	end
-	logger.info {"checking for error files in bookmaker?:"}
-	Find.find(done_isbn_dir) { |file|
-		if file =~ /ERROR.txt/
-			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
-			file = file.gsub(//,'.txt')
-			errtxt_files << file
-			send_ok = false
-		end
-	}
 else
-	logger.info {"no done/isbn_dir exists! bookmaker must have found/used a different ISBN! :("}
+	logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
 	send_ok = false
-end
+end	
 
 
 logger.info {"Reading in jsons from validator run"}
@@ -147,23 +169,6 @@ else
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
 end	
 
-#get info from bookinfo.json
-if File.file?(bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
-	work_id = bookinfo_hash['work_id']
-	author = bookinfo_hash['author']
-	title = bookinfo_hash['title']
-	imprint = bookinfo_hash['imprint']
-	product_type = bookinfo_hash['product_type']
-	bookinfo_isbn = bookinfo_hash['isbn']
-	bookinfo_pename = bookinfo_hash['production_editor']
-	bookinfo_pmname = bookinfo_hash['production_manager']
-	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
-else
-	send_ok = false
-	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
-end	
-
 
 #send a success notification email!
 if send_ok
@@ -194,7 +199,7 @@ if send_ok
 			to_mail = submitter_mail
 		end	
 		subject = "#{bookmaker_project_name} successfully processed #{filename_split}"
-		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,working_file).gsub(/bookmaker_project_name/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,working_file).gsub(/PROJECT_NAME/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 		
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>

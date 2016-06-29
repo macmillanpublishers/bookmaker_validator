@@ -100,8 +100,18 @@ def getbookinfo(lookup_isbn, pisbn_or_isbn_lookup_ok, status_hash, bookinfo_file
         author = myhash_C['book']['WORK_COVERAUTHOR'][0]
         imprint = myhash_C['book']['IMPRINT_DISPLAY'][0]
         product_type = myhash_C['book']['PRODUCTTYPE_DESC'][0]
+
+        #get alternate isbns:
+        thissql_E = exactSearchSingleKey(myhash_C['book']['WORK_ID'][0], "WORK_ID")
+        editionshash_B = runQuery(thissql_E)
+        isbnarray = []
+        editionshash_B.each { |book, hash|
+          hash.each { |k,v|
+            if k == 'EDITION_EAN' then isbnarray << v end  
+          }
+        }        
         
-        #write to hash, write json:
+        #write to hash
         book_hash = {}
         book_hash.merge!(production_editor: myhash_D['book']['PERSON_REALNAME'][0])
         book_hash.merge!(production_manager: myhash_C['book']['PERSON_REALNAME'][0])
@@ -111,7 +121,9 @@ def getbookinfo(lookup_isbn, pisbn_or_isbn_lookup_ok, status_hash, bookinfo_file
         book_hash.merge!(author: author)
         book_hash.merge!(product_type: product_type)
         book_hash.merge!(imprint: imprint)   
+        book_hash.merge!(alt_isbns: isbnarray)     
 
+        #write json:
         Vldtr::Tools.write_json(book_hash, bookinfo_file)
 
         status_hash[pisbn_or_isbn_lookup_ok] = true
@@ -238,7 +250,7 @@ if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7
       }
     end
     logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['isbnstring']}"}   
-    isbn_array = status_hash['isbnstring'].gsub!(/[^0-9,]/,'').split(',')
+    isbn_array = status_hash['isbnstring'].gsub(/-/,'').split(',')
     isbn_array.each { |i|
         if i =~ /97(8|9)[0-9]{10}/
             if Vldtr::Tools.checkisbn(i)
@@ -249,7 +261,8 @@ if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7
             end    
         end
     }
-    unique_isbns = status_hash['doc_isbn_list'].uniq
+    status_hash['doc_isbn_list'] = status_hash['doc_isbn_list'].uniq
+    unique_isbns = status_hash['doc_isbn_list']
     if unique_isbns.empty? || unique_isbns.length > 10
         logger.info {"either 0 (or >10) good isbns found in status_hash['isbnstring'] :( "}
     else
@@ -257,11 +270,12 @@ if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7
         #now we go get work ids for each isbn... 
         unique_isbns.each { |j|
             thissql = exactSearchSingleKey(j, "EDITION_EAN")
-            myhash = runPeopleQuery(thissql)
+            myhash = runQuery(thissql)
             if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book'] 
                 logger.info {"isbn data-warehouse-lookup for manuscript isbn: #{j} failed."}
 				status_hash['docisbn_lookup_fail'] << j
             else
+
                 #and now we go get print isbn for each unique workid... 
                 thissql_B = exactSearchSingleKey(myhash['book']['WORK_ID'][0], "WORK_ID")
                 editionshash = runQuery(thissql_B)
@@ -275,7 +289,6 @@ if (!status_hash['isbn_lookup_ok'] || filename_normalized !~ /9(7(8|9)|-7(8|9)|7
                 end
             end    
         } 
-        status_hash['doc_isbn_list'] = status_hash['doc_isbn_list'].uniq
         if status_hash['pisbns'].length > 1
             logger.info {"too many pisbns found via doc_isbn lookup: marking pisbn_match false."}
             status_hash['pisbns_match'] = false

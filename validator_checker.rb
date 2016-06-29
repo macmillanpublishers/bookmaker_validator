@@ -114,6 +114,7 @@ if File.file?(bookinfo_file)
 
 	#read in our static pe/pm json
 	pe_pm_hash = Mcmlln::Tools.readjson(pe_pm_file)
+	
 	#read in out contacts.json so we can update it with pe/pm:
 	if File.file?(contacts_file)
 		contacts_hash = Mcmlln::Tools.readjson(contacts_file)
@@ -161,6 +162,7 @@ end
 #crosscheck document isbns via work_id
 if File.file?(bookinfo_file) && File.file?(stylecheck_file) && File.file?(status_file)
 	stylecheck_isbns.each { |sc_isbn| 
+		sc_isbn = sc_isbn.to_s.gsub(/-/,'')	
 		if sc_isbn != bookinfo_hash['isbn']
 			if Vldtr::Tools.checkisbn(sc_isbn)
 				thissql = exactSearchSingleKey(sc_isbn, "EDITION_EAN")
