@@ -40,9 +40,10 @@ logger.formatter = proc do |severity, datetime, progname, msg|
 end
 
 # ---------------------- LOCAL VARIABLES
+outfolder = File.join(outbox,basename_normalized)
 inprogress_file = File.join(project_dir,"#{filename_normalized}_IN_PROGRESS.txt")
-err_notice = File.join(outbox,"ERROR--#{filename_normalized}--Validator_Failed.txt")
-warn_notice = File.join(outbox,"WARNING--#{filename_normalized}--validator_completed_with_warnings.txt")
+err_notice = File.join(outfolder,"ERROR--#{filename_normalized}--Validator_Failed.txt")
+warn_notice = File.join(outfolder,"WARNING--#{filename_normalized}--validator_completed_with_warnings.txt")
 done_file = File.join(tmp_dir, "#{basename_normalized}_DONE#{extension}")
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
@@ -55,8 +56,6 @@ else
 end
 bookmaker_bot_IN = File.join(bot_egalleys_dir, 'convert')
 #bookmaker_bot_accessories = File.join(bookmaker_bot_folder, 'submitted_images')
-FileUtils.mkdir_p bookmaker_bot_IN
-#FileUtils.mkdir_p bookmaker_bot_accessories
 
 
 #--------------------- RUN
@@ -97,6 +96,7 @@ if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
 	permalog_hash[index]['errors'] = status_hash['errors']
 	permalog_hash[index]['warnings'] = status_hash['warnings']
+	permalog_hash[index]['bookmaker_ready'] = status_hash['bookmaker_ready']	
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}
@@ -118,6 +118,8 @@ File.open(permalog, 'w+:UTF-8') { |f| f.puts finaljson }
 
 #deal with errors & warnings!
 if !status_hash['errors'].empty?
+	#create outfolder:
+	FileUtils.mkdir_p outfolder
 	#errors found!  use the text from mailer to write file:
 	text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
 	Mcmlln::Tools.overwriteFile(err_notice, text)
@@ -130,9 +132,11 @@ if !status_hash['errors'].empty?
 		logger.info {"no tmpdir exists, this was probably not a .doc file"}
 	end
 	#let's move the original to outbox!
-	FileUtils.mv input_file, outbox	
+	FileUtils.mv input_file, outfolder	
 end	
-if !status_hash['warnings'].empty? && status_hash['errors'].empty?
+if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
+	#create outfolder:
+	FileUtils.mkdir_p outfolder
 	#warnings found!  use the text from mailer to write file:
 	text = status_hash['warnings']
 	Mcmlln::Tools.overwriteFile(warn_notice, text)
@@ -142,31 +146,39 @@ end
 
 #get ready for bookmaker to run on good docs!
 if status_hash['bookmaker_ready']
-	#add isbn to filename if its missing, and isbn available
-	if filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && !isbn.empty?
+	#change file & folder name to isbn if its available,keep a DONE file with orig filename
+	if !isbn.empty?
+		#rename tmp_dir so it doesn't get re-used and has index #
 		tmp_dir_old = tmp_dir
-		tmp_dir = tmp_dir.gsub(/$/,"#{isbn}")
+		tmp_dir = File.join(working_dir,"#{isbn}_to_bookmaker-#{index}")
 		FileUtils.mv tmp_dir_old, tmp_dir
-		working_file_old = File.join(tmp_dir, filename_normalized)
-		working_file = working_file_old.gsub(/#{extension}$/,"#{isbn}#{extension}")
-		done_file = working_file.gsub(/#{extension}$/,"_DONE#{extension}")
-		File.rename(working_file_old, working_file)		
+		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
+		working_file = File.join(tmp_dir, filename_normalized)
+		done_file = working_file
+		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
+		if working_file =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
+    		isbn_condensed = working_file.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+    		if isbn_condensed != isbn
+    			done_file = working_file.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
+    			logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
+    		end
+    	else	
+    		logger.info {"adding isbn to done_filename because it was missing"}
+			done_file = working_file.gsub(/#{extension}$/,"_#{isbn}#{extension}")
+    	end	
+    	done_file = done_file.gsub(/#{extension}$/,"_DONE-#{index}#{extension}")
+		FileUtils.cp working_file, done_file
+		FileUtils.cp done_file, bookmaker_bot_IN
+		#rename working file to keep it distinct from infile
+		new_workingfile = working_file.gsub(/#{extension}$/,"_workingfile#{extension}")
+		File.rename(working_file, new_workingfile)
+		#make a copy of infile so we have a reference to it for posts
+		FileUtils.cp input_file, tmp_dir
+	else
+		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end	
-	File.rename(working_file, done_file)
-	FileUtils.cp done_file, bookmaker_bot_IN
 else	
 	if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
+	if File.file?(errFile) then FileUtils.rm errFile end
+	if File.file?(inprogress_file) then FileUtils.rm inprogress_file end	
 end	
-
-
-#cleanup
-if File.file?(errFile) then FileUtils.rm errFile end
-if File.file?(inprogress_file) then FileUtils.rm inprogress_file end
-
-
-
-
-
-
-
-

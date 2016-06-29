@@ -1,0 +1,11 @@
+The file, "FILENAME_NORMALIZED", has been successfully processed by egalley_transmittal.  
+
+Epubs generated from your manuscript can be found in the following folder:
+'Dropbox (Macmillan Publishers)\egalley_transmittal\OUT
+
+See below for book info, and any warnings detected in the manuscript:
+
+BOOKINFO
+WARNINGS
+
+Please contact the Workflows team at workflows@macmillan.com with any questions.
