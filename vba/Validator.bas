@@ -59,22 +59,30 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   Application.ScreenUpdating = False
 
 ' Find a more universal way to do this later. For now, must fix w/o genUtils
-  Dim strCharacter(1 To 3) As String
-  strCharacter(1) = ":"
-  strCharacter(2) = "/"
-  strCharacter(3) = "\"
+' This way below messes up the colon after the drive letter!
+'  Dim strCharacter(1 To 3) As String
+'  strCharacter(1) = ":"
+'  strCharacter(2) = "/"
+'  strCharacter(3) = "\"
+'
+'  Dim A As Long
+'  For A = LBound(strCharacter) To UBound(strCharacter)
+'    If InStr(FilePath, strCharacter(A)) > 0 Then
+'      FilePath = VBA.Replace(FilePath, strCharacter(A), Application.PathSeparator)
+'    End If
+'    If InStr(LogPath, strCharacter(A)) > 0 Then
+'      LogPath = VBA.Replace(LogPath, strCharacter(A), Application.PathSeparator)
+'    End If
+'  Next A
+  If InStr(FilePath, "/") > 0 Then
+    FilePath = VBA.Replace(FilePath, "/", Application.PathSeparator)
+  End If
+  If InStr(LogPath, "/") > 0 Then
+    LogPath = VBA.Replace(LogPath, "/", Application.PathSeparator)
+  End If
+  Debug.Print FilePath
+  Debug.Print LogPath
   
-  Dim A As Long
-  For A = LBound(strCharacter) To UBound(strCharacter)
-    If InStr(FilePath, A) > 0 Then
-      FilePath = VBA.Replace(FilePath, A, Application.PathSeparator)
-    End If
-    If InStr(LogPath, A) > 0 Then
-      LogPath = VBA.Replace(LogPath, A, Application.PathSeparator)
-    End If
-  Next A
-
-
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
   If SetOutputPaths(FilePath, LogPath) = False Then
@@ -376,6 +384,7 @@ MainError:
         Call ValidatorCleanup
       End If
   End Select
+  
 End Function
 
 
@@ -601,8 +610,8 @@ Private Sub ValidatorTest()
   StartTime = Timer
 ' =================================================
 
-  Call Validator.Launch("C:\Users\padwoadmin\Desktop\validator-test.docx", _
-  "C:\Users\padwoadmin\Desktop\validator-test.log")
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\validator-test.docx", _
+  "C:\Users\erica.warren\Desktop\validator\validator-test.log")
   Exit Sub
 
 TestError:
