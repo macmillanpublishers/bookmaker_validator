@@ -83,26 +83,40 @@ status_hash['pisbns'] = []
 
 #---------------------  FUNCTIONS
 def getbookinfo(lookup_isbn, pisbn_or_isbn_lookup_ok, status_hash, bookinfo_file)
-    thissql_C = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Manager")
-    myhash_C = runPeopleQuery(thissql_C)
+    thissql_F = exactSearchSingleKey(lookup_isbn, "EDITION_EAN")
+    myhash_F = runQuery(thissql_F)	
 
     #verify that data warehouse returned something
-    if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book'] 
+    if myhash_F.nil? or myhash_F.empty? or !myhash_F or myhash_F['book'].nil? or myhash_F['book'].empty? or !myhash_F['book'] 
         #logger.info {"data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"}
         loginfo = "data warehouse lookup on isbn_num \"#{lookup_isbn}\"failed, setting status: \'#{pisbn_or_isbn_lookup_ok}\' to false"
 		status_hash[pisbn_or_isbn_lookup_ok] = false
     else  #lookup was good, continue: 
+		thissql_C = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Manager")
+		myhash_C = runPeopleQuery(thissql_C)	
+		if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book'] 
+			pm_name = ''
+			loginfo = "no pm found for this EDITION_EAN"			
+		else
+			pm_name = myhash_C['book']['PERSON_REALNAME'][0]
+		end
    		thissql_D = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Editor")
         myhash_D = runPeopleQuery(thissql_D)
-        
+        if myhash_D.nil? or myhash_D.empty? or !myhash_D or myhash_D['book'].nil? or myhash_D['book'].empty? or !myhash_D['book'] 
+			pe_name = ''
+			loginfo = "no pm found for this EDITION_EAN"
+		else
+			pe_name = myhash_D['book']['PERSON_REALNAME'][0]
+		end
+		
         #write to var for logs:
-        title = myhash_C['book']['WORK_COVERTITLE'][0]
-        author = myhash_C['book']['WORK_COVERAUTHOR'][0]
-        imprint = myhash_C['book']['IMPRINT_DISPLAY'][0]
-        product_type = myhash_C['book']['PRODUCTTYPE_DESC'][0]
+        title = myhash_F['book']['WORK_COVERTITLE'][0]
+        author = myhash_F['book']['WORK_COVERAUTHOR'][0]
+        imprint = myhash_F['book']['IMPRINT_DISPLAY'][0]
+        product_type = myhash_F['book']['PRODUCTTYPE_DESC'][0]
 
         #get alternate isbns:
-        thissql_E = exactSearchSingleKey(myhash_C['book']['WORK_ID'][0], "WORK_ID")
+        thissql_E = exactSearchSingleKey(myhash_F['book']['WORK_ID'][0], "WORK_ID")
         editionshash_B = runQuery(thissql_E)
         isbnarray = []
         editionshash_B.each { |book, hash|
@@ -113,9 +127,9 @@ def getbookinfo(lookup_isbn, pisbn_or_isbn_lookup_ok, status_hash, bookinfo_file
         
         #write to hash
         book_hash = {}
-        book_hash.merge!(production_editor: myhash_D['book']['PERSON_REALNAME'][0])
-        book_hash.merge!(production_manager: myhash_C['book']['PERSON_REALNAME'][0])
-        book_hash.merge!(work_id: myhash_C['book']['WORK_ID'][0])        
+        book_hash.merge!(production_editor: pe_name)
+        book_hash.merge!(production_manager: pm_name)
+        book_hash.merge!(work_id: myhash_F['book']['WORK_ID'][0])        
         book_hash.merge!(isbn: lookup_isbn)
         book_hash.merge!(title: title)
         book_hash.merge!(author: author)
