@@ -23,6 +23,7 @@ Attribute VB_Name = "Validator"
 Option Explicit
 ' For error checking:
 Private Const strValidator As String = "Bookmaker.Validator."
+Private lngCleanupCount As Long
 ' Create path for alert file in same dir as ACTIVE doc (NOT ThisDocument)
 Private strAlertPath As String
 ' Store style check pass/fail values in this json
@@ -55,33 +56,19 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 
   ' Note, none of these will trap for compile errors!!
   On Error GoTo LaunchError   ' Suppresses run-time errors, passes to label
+  StartTime = Timer
   Application.DisplayAlerts = wdAlertsNone
   Application.ScreenUpdating = False
 
 ' Find a more universal way to do this later. For now, must fix w/o genUtils
-' This way below messes up the colon after the drive letter!
-'  Dim strCharacter(1 To 3) As String
-'  strCharacter(1) = ":"
-'  strCharacter(2) = "/"
-'  strCharacter(3) = "\"
-'
-'  Dim A As Long
-'  For A = LBound(strCharacter) To UBound(strCharacter)
-'    If InStr(FilePath, strCharacter(A)) > 0 Then
-'      FilePath = VBA.Replace(FilePath, strCharacter(A), Application.PathSeparator)
-'    End If
-'    If InStr(LogPath, strCharacter(A)) > 0 Then
-'      LogPath = VBA.Replace(LogPath, strCharacter(A), Application.PathSeparator)
-'    End If
-'  Next A
   If InStr(FilePath, "/") > 0 Then
     FilePath = VBA.Replace(FilePath, "/", Application.PathSeparator)
   End If
   If InStr(LogPath, "/") > 0 Then
     LogPath = VBA.Replace(LogPath, "/", Application.PathSeparator)
   End If
-  Debug.Print FilePath
-  Debug.Print LogPath
+'  Debug.Print FilePath
+'  Debug.Print LogPath
   
   ' set global variable for path to write alert messages to, returns False if
   ' FilePath doesn't exist or point to a real file.
@@ -199,6 +186,7 @@ End Function
 
 Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   Boolean
+  On Error GoTo SetOutputPathsError
   Dim strDir As String
   Dim strFile As String
   Dim lngSep As Long
@@ -250,7 +238,11 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   ' Also verify log file. Could add more error handling later but for now
   ' just trusting that will be created by calling .ps1 script
   strLogPath = origLogPath
-
+  Exit Function
+  
+SetOutputPathsError:
+  Err.Source = strValidator & "SetOutputPaths"
+  Call WriteAlert
 End Function
 
 
@@ -277,11 +269,14 @@ Private Sub WriteAlert(Optional blnEnd As Boolean = True)
   Print #FileNum, strAlert
   Close #FileNum
 
-  SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print "WriteAlert: " & strAlert & SecondsElapsed
+'  SecondsElapsed = Round(Timer - StartTime, 2)
+'  Debug.Print "WriteAlert: " & strAlert & SecondsElapsed
   
   ' Optional: stops ALL code.
   If blnEnd = True Then
+    If Not activeDoc Is Nothing Then
+      Set activeDoc = Nothing
+    End If
     Application.DisplayAlerts = wdAlertsAll
     Application.ScreenUpdating = True
     Application.ScreenRefresh
@@ -393,61 +388,53 @@ End Function
 ' be last! If Err object is not 0, will write an ALERT. Only call AFTER you
 ' know we've set the `strAlertPath` and `strLogPath` variables.
 
+' Also should only be run after we know ref to genUtils is set.
+
 Public Sub ValidatorCleanup()
-  ' I don't love this, but adding `On Error` statement to cancel previous,
-  ' at least we'll be sure the macro ends and doesn't get sent in a loop.
+
+' Global variable counter in case error throw before we reset On Error
+' More than 1 is an error, but letting it run a few times to capture more data
+  lngCleanupCount = lngCleanupCount + 1
+  If lngCleanupCount > 3 Then GoTo ValidatorCleanupError
+
+' NOTE!! Must get Err object values before setting new On Error statement
+  Dim blnCompleted As Boolean
+
+  If Err.Number = 0 Then
+    blnCompleted = True
+  Else
+    blnCompleted = False
+    Call WriteAlert(False)
+  End If
+
+' Now we can reset On Error (which includes Err.Clear)
+  On Error GoTo ValidatorCleanupError
   
-  ' What if one of the procedures we are calling fails?
-' Actually CAN'T set On Error here: it clears the Err object!
-' And we need WriteAlert to read that, if there is one.
-
-
-  Dim blnResult As Boolean
-  Dim saveValue As WdSaveOptions
   Dim dictJson As genUtils.Dictionary
   Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
 
-' If sent here because ReturnDict function detected "pass":false, then
-' "completed":false has already been set. SetOutputPaths deletes the style_check
-' file if it exists from a previous run, so should be OK to check "completed"
-  If dictJson.Exists("completed") = True Then
-    blnResult = dictJson("completed")
-  ElseIf Err.Number = 0 Then
-    blnResult = True
-  Else
-    blnResult = False
+' Write our final element to `style_check.json` file
+  Call genUtils.AddToJson(strJsonPath, "completed", blnCompleted)
+
+' Only save doc if macro completed w/o error AND correctly styled
+' If errored before checking styles, item won't exist
+  Dim blnStyled As Boolean
+  If dictJson("styled").Exists("pass") = True Then
+    blnStyled = dictJson("styled")("pass")
   End If
 
-  On Error GoTo ValidatorCleanupError
-
-  ' Write our final element to `style_check.json` file
-  Call genUtils.AddToJson(strJsonPath, "completed", blnResult)
-
-' Determine how many seconds code took to run
-  SecondsElapsed = Round(Timer - StartTime, 2)
-  Call genUtils.AddToJson(strJsonPath, "elaspedTime", SecondsElapsed)
-
-  ' Write log entry from JSON values
-  ' Should always be there (see previous line)
-  If genUtils.IsItThere(strJsonPath) = True Then
-    Call JsonToLog
-  End If
-  
-  ' ---- Close all open documents (and save changes if OK) -----------
-
-  If blnResult = True Then
+  Dim saveValue As WdSaveOptions
+  If blnCompleted = True And blnStyled = True Then
     saveValue = wdSaveChanges
   Else
     saveValue = wdDoNotSaveChanges
-    Call WriteAlert(False)
   End If
   
-  On Error GoTo ValidatorCleanupError
-  ' Close all open documents
+' Close all open documents
   Dim objDoc As Document
   Dim strExt As String
   For Each objDoc In Documents
-    ' don't close any macro templates, might be running code.
+  ' don't close any templates, might be running code.
     strExt = VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), "."))
     If strExt <> ".dotm" Then
       objDoc.Close saveValue
@@ -457,6 +444,16 @@ Public Sub ValidatorCleanup()
   ' just to keep things tidy
   genUtils.zz_clearFind
 
+' Determine how many seconds code took to run
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Call genUtils.AddToJson(strJsonPath, "elaspedTime", SecondsElapsed)
+
+' Write log entry from JSON values
+' Should always be there (see previous line)
+  If genUtils.IsItThere(strJsonPath) = True Then
+    Call JsonToLog
+  End If
+  
 ' DON'T `Exit Sub` before this - we want it to `End` no matter what.
 ValidatorCleanupError:
 ' ============================================================================
@@ -467,6 +464,9 @@ ValidatorCleanupError:
 ' Notify user in seconds
   Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
 ' ============================================================================
+  If Not activeDoc Is Nothing Then
+    Set activeDoc = Nothing
+  End If
   Application.DisplayAlerts = wdAlertsAll
   Application.ScreenUpdating = True
   Application.ScreenRefresh
@@ -603,15 +603,8 @@ Private Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
 
-' =================================================
-' Timer Start
-                                  
-' Remember time when macro starts
-  StartTime = Timer
-' =================================================
-
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\validator-test.docx", _
-  "C:\Users\erica.warren\Desktop\validator\validator-test.log")
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\Auster_UNSTYLED_InText_978-1-62779-446-6.docx", _
+  "C:\Users\erica.warren\Desktop\validator\LOG_Auster_UNSTYLED_InText_978-1-62779-446-6.log")
   Exit Sub
 
 TestError:
