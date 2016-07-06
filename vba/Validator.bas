@@ -299,6 +299,9 @@ Private Function Main(DocPath As String) As Boolean
   Dim strKey As String
   Dim blnPass As Boolean
   Dim dictTests As genUtils.Dictionary
+
+' ----- START JSON FILE -------------------------------------------------------
+  Call genUtils.ClassHelpers.AddToJson(strJsonPath, "completed", False)
   
 ' NOTE! Each procedure called returns a dictionary with results of various
 ' tests. Each will include a "pass" key--a value of "False" means that the
@@ -310,22 +313,24 @@ Private Function Main(DocPath As String) As Boolean
   Call ReturnDict(strKey, dictTests)
 
 ' *****************************************************************************
-'       ALWAYS CHECK STYLES
-' *****************************************************************************
-' ----- OVERALL STYLE CHECKS --------------------------------------------------
-  strKey = "styled"
-  Set dictTests = genUtils.Reports.StyleCheck()
-  Call ReturnDict(strKey, dictTests)
-  
-
-' *****************************************************************************
-'       CONTINUE IF MS IS STYLED
+'       ALWAYS CHECK ISBN and STYLES
 ' *****************************************************************************
 
 ' ----- ISBN VALIDATION -------------------------------------------------------
   strKey = "isbn"
   Set dictTests = genUtils.Reports.IsbnCheck
+  Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
+
+' ----- OVERALL STYLE CHECKS --------------------------------------------------
+  strKey = "styled"
+  Set dictTests = genUtils.Reports.StyleCheck()
   Call ReturnDict(strKey, dictTests)
+
+
+
+' *****************************************************************************
+'       CONTINUE IF MS IS STYLED
+' *****************************************************************************
 
 ' ----- TITLEPAGE VALIDATION --------------------------------------------------
   strKey = "titlepage"
@@ -555,9 +560,12 @@ End Sub
 
 
 ' ===== ReturnDict ============================================================
-' Process dictionary returned from reports section
+' Process dictionary returned from reports section. If the procedure that made
+' the dictionary returns "pass":False then whole macro will quit unless you
+' set QuitIfFailed:=False when calling this sub.
 
-Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary)
+Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary, _
+  Optional QuitIfFailed As Boolean = True)
   On Error GoTo ReturnDictError
   If TestDict Is Nothing Then
     Err.Raise ValidatorError.err_TestsFailed
@@ -566,9 +574,12 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary)
       ' write tests to JSON file
       Call genUtils.AddToJson(strJsonPath, SectionKey, TestDict)
       If TestDict("pass") = False Then
-        ' Write our final element to `style_check.json` file
+      ' Write our final element to `style_check.json` file
         Call genUtils.AddToJson(strJsonPath, "completed", False)
-        Call ValidatorCleanup
+        If QuitIfFailed = True Then
+        ' ValidatorCleanup will end code execution
+          Call ValidatorCleanup
+        End If
       End If
     Else
       Err.Raise ValidatorError.err_NoPassKey
