@@ -42,8 +42,56 @@ Public Enum ValidatorError
   err_RefMissing = 30002
   err_PathInvalid = 30003
   err_NoPassKey = 30004
+  err_StartupFail = 30005
 End Enum
 
+' ===== IsbnSearch ============================================================
+' Implementation of IsbnCheck that returns a string, for Powershell call.
+
+' PUBLIC because needs to be called independently from powershell if file name
+' doesn't include ISBN. Optional FilePath is for passing doc path from PS.
+
+' Don't actually need to log anything with LogFile param, but powershell expects
+' to pass that argument so we'll make it optional.
+
+Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
+  As String
+  On Error GoTo IsbnSearchError
+  
+' Make sure relevant file exists, is open
+  If genUtils.GeneralHelpers.IsOpen(FilePath) = False Then
+    Documents.Open FilePath
+  End If
+
+' Set reference to correct document
+  Set activeDoc = Documents(FilePath)
+
+' Create dictionary object to receive from IsbnCheck function
+  Dim dictIsbn As genUtils.Dictionary
+  Set dictIsbn = New Dictionary
+  Set dictIsbn = IsbnCheck(AddFromJson:=False)
+  
+' If ISBNs were found, they will be in the "list" element
+  If dictIsbn.Exists("list") = True Then
+  ' Reduce array elements to a comma-delimited string
+    IsbnSearch = genUtils.Reduce(dictIsbn.Item("list"), ",")
+  Else
+    IsbnSearch = vbNullString
+  End If
+  
+  activeDoc.Close wdDoNotSaveChanges
+  Set activeDoc = Nothing
+  
+  Exit Function
+  
+IsbnSearchError:
+  Err.Source = strReports & "IsbnSearch"
+  If ErrorChecker(Err, FilePath) = False Then
+    Resume
+  Else
+    Call genUtils.Reports.ReportsTerminate
+  End If
+End Function
 
 ' ===== Launch ================================================================
 ' Set up error checking, suppress alerts, check references before calling that
@@ -53,39 +101,13 @@ End Enum
 ' `DisplayAlerts = False`, and be sure ALL msgbox return correct default.
 
 Public Sub Launch(FilePath As String, Optional LogPath As String)
+  On Error GoTo LaunchError
 
-  ' Note, none of these will trap for compile errors!!
-  On Error GoTo LaunchError   ' Suppresses run-time errors, passes to label
-  StartTime = Timer
-  Application.DisplayAlerts = wdAlertsNone
-  Application.ScreenUpdating = False
-
-' Find a more universal way to do this later. For now, must fix w/o genUtils
-  If InStr(FilePath, "/") > 0 Then
-    FilePath = VBA.Replace(FilePath, "/", Application.PathSeparator)
-  End If
-  If InStr(LogPath, "/") > 0 Then
-    LogPath = VBA.Replace(LogPath, "/", Application.PathSeparator)
-  End If
-'  Debug.Print FilePath
-'  Debug.Print LogPath
-  
-  ' set global variable for path to write alert messages to, returns False if
-  ' FilePath doesn't exist or point to a real file.
-  If SetOutputPaths(FilePath, LogPath) = False Then
-    Err.Raise err_PathInvalid
-  End If
-  SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print "Output paths set: " & SecondsElapsed
-
-  ' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
-  ' IN THIS PROCEDURE! If ref is missing, will throw compile error.
-  If IsRefMissing = True Then
-    Err.Raise err_RefMissing
+' Call startup function
+  If ValidatorStartup(FilePath, LogPath) = False Then
+    Err.Raise ValidatorError.err_StartupFail
   End If
 
-  SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print "References OK: " & SecondsElapsed
 ' ===================================================
 ' Once we're certain genUtils is available, pass to Main validator procedure
 ' and use that function for handling errors.
@@ -99,16 +121,57 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
     Debug.Print "Main() = False"
   End If
   
-Cleanup:
-' Project actually ends with `ValidatorCleanup` but have these here in case.
-  Application.DisplayAlerts = wdAlertsAll
-  Application.ScreenUpdating = True
-  Application.ScreenRefresh
-  On Error GoTo 0
+  Call ValidatorCleanup
+  
   Exit Sub
 
 LaunchError:
   Err.Source = strValidator & "Launch"
+  If Err.Number = ValidatorError.err_StartupFail Then
+    Err.Description = strValidator & "ValidatorStartup failed to complete."
+  End If
+  Call WriteAlert
+End Sub
+
+' ===== ValidatorStartup ======================================================
+' Checks and such to run before we can call anything in genUtils project. File
+' and log paths by ref because we might change them.
+
+Private Function ValidatorStartup(ByRef StartupFilePath As String, ByRef _
+  StartupLogPath As String) As Boolean
+  On Error GoTo ValidatorStartupError
+  ValidatorStartup = False
+  StartTime = Timer
+  Application.DisplayAlerts = wdAlertsNone
+  Application.ScreenUpdating = False
+
+' Fix path separators in file path names
+  Dim strFilePath As String
+  Dim strLogPath As String
+  strFilePath = FilePathCleanup(StartupFilePath)
+  strLogPath = FilePathCleanup(StartupLogPath)
+  
+' set global variable for path to write alert messages to, returns False if
+' FilePath doesn't exist or point to a real file.
+  If SetOutputPaths(strFilePath, strLogPath) = False Then
+    Err.Raise err_PathInvalid
+  End If
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print "Output paths set: " & SecondsElapsed
+
+' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
+' IN THIS PROCEDURE! If ref is missing, will throw compile error.
+  If IsRefMissing = True Then
+    Err.Raise err_RefMissing
+  End If
+
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print "References OK: " & SecondsElapsed
+  ValidatorStartup = True
+  Exit Function
+  
+ValidatorStartupError:
+  Err.Source = strValidator & "ValidatorStartup"
   ' Have to assume here error may occur before we can access general error
   ' checker, so do everything in this module.
   Select Case Err.Number
@@ -121,8 +184,29 @@ LaunchError:
   ' Can't call primary error checker -- it's in the ref!
   ' Err object persists when new procedure is called, don't need to pass as arg
   Call WriteAlert
-End Sub
+End Function
 
+
+' ===== FilePathCleanup =======================================================
+' Ensures path separators are correct for a file path or directory. Do not use
+' genUtils procedures, need to check this before checking references. At some
+' point figure out how to include OSX paths?
+
+Private Function FilePathCleanup(ByRef FullFilePath As String) As String
+  On Error GoTo FilePathCleanupError
+  Dim strReturn As String
+  strReturn = FullFilePath
+  If InStr(strReturn, "/") > 0 Then
+    strReturn = VBA.Replace(strReturn, "/", Application.PathSeparator)
+  End If
+'  Debug.Print strReturn
+  FilePathCleanup = strReturn
+  Exit Function
+  
+FilePathCleanupError:
+  Err.Source = strValidator & "FilePathCleanup"
+  Call WriteAlert
+End Function
 
 ' ===== CheckRef ==============================================================
 ' Checks if required projects are referenced and sets them, if possible. File
