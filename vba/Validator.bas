@@ -58,10 +58,10 @@ End Enum
 Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
   As String
   On Error GoTo IsbnSearchError
-  strProcError = strValidator & "IsbnSearch"
+  strProcName = strValidator & "IsbnSearch"
   
 ' Startup checks for references, etc.
-  If ValidatorStartup(FilePath, LogPath) = False Then
+  If ValidatorStartup(FilePath, LogFile) = False Then
     Err.Raise ValidatorError.err_StartupFail
   End If
 
@@ -74,9 +74,9 @@ Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
   End If
   
   IsbnSearch = strIsbn
-  
+  Debug.Print IsbnSearch
 ' Various cleanup stuff, including `End` all code execution.
-  Call ValidatorExit(RunCleanup:=True)
+  Call ValidatorExit(RunCleanup:=True, EndMacro:=False)
   
   Exit Function
 
@@ -101,7 +101,7 @@ End Function
 
 Public Sub Launch(FilePath As String, Optional LogPath As String)
   On Error GoTo LaunchError
-  strProcError = strValidator & "Launch"
+  strProcName = strValidator & "Launch"
 ' Startup checks for references, etc.
   If ValidatorStartup(FilePath, LogPath) = False Then
     Err.Raise ValidatorError.err_StartupFail
@@ -177,7 +177,7 @@ ValidatorStartupError:
       Err.Description = "VBA reference missing."
     Case err_PathInvalid
       Err.Description = "The string passed for the `FilePath` argument, " & _
-        Chr(34) & FilePath & Chr(34) & ", does not point to a valid file."
+        Chr(34) & StartupFilePath & Chr(34) & ", does not point to a valid file."
   End Select
   Call ValidatorExit(RunCleanup:=False)
 End Function
@@ -186,9 +186,11 @@ End Function
 ' Always run last. In fact, it ends ALL macro execution so by definition it'll
 ' be last! If Err object is not 0, will write an ALERT. `RunCleanup` param
 ' should be set to False if called from a procedure that runs before we
-' have checked if refs are set.
+' have checked if refs are set. `EndMacro` should be set to False if you
+' want code execution to return to the calling procedure.
 
-Public Sub ValidatorExit(Optional RunCleanup As Boolean = True)
+Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
+  EndMacro As Boolean = True)
 ' Global variable counter in case error throw before we reset On Error
 ' More than 1 is an error, but letting it run a few times to capture more data
   lngCleanupCount = lngCleanupCount + 1
@@ -250,9 +252,11 @@ ValidatorExitError:
   SecondsElapsed = Round(Timer - StartTime, 2)
   Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
 
-  On Error GoTo 0
-' Stops ALL code execution (might be called to cleanup after error).
-  End
+  If EndMacro = True Then
+    On Error GoTo 0
+  ' Stops ALL code execution (might be called to cleanup after error).
+    End
+  End If
 End Sub
 
 ' ===== FilePathCleanup =======================================================
@@ -458,21 +462,20 @@ Private Function IsbnMain(FilePath As String) As String
 
 ' Create dictionary object to receive from IsbnCheck function
   Dim dictIsbn As genUtils.Dictionary
-  Set dictIsbn = New Dictionary
   Set dictIsbn = IsbnCheck(AddFromJson:=False)
   
 ' If ISBNs were found, they will be in the "list" element
   If dictIsbn.Exists("list") = True Then
   ' Reduce array elements to a comma-delimited string
-    IsbnSearch = genUtils.Reduce(dictIsbn.Item("list"), ",")
+    IsbnMain = genUtils.Reduce(dictIsbn.Item("list"), ",")
   Else
-    IsbnSearch = vbNullString
+    IsbnMain = vbNullString
   End If
 
   Exit Function
   
 IsbnMainError:
-  Err.Source = strReports & "IsbnMain"
+  Err.Source = strValidator & "IsbnMain"
   If ErrorChecker(Err, FilePath) = False Then
     Resume
   Else
@@ -761,12 +764,41 @@ ReturnDictError:
 
 End Sub
 
+' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+'          FOR TESTING
+' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 Private Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
+  Dim strFile As String
+  strFile = "Leigh3_STYLED_InText_978-0-312-38912-3"
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\Auster_UNSTYLED_InText_978-1-62779-446-6.docx", _
-  "C:\Users\erica.warren\Desktop\validator\LOG_Auster_UNSTYLED_InText_978-1-62779-446-6.log")
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\" & strFile & ".docx", _
+  "C:\Users\erica.warren\Desktop\validator\LOG_" & strFile & ".log")
+  Exit Sub
+
+TestError:
+  Debug.Print Err.Number & ": " & Err.Description
+End Sub
+
+
+Private Sub IsbnTest()
+'' to simulate being called by ps1
+  On Error GoTo TestError
+  Dim strFile As String
+  strFile = "Leigh3_STYLED_InText_978-0-312-38912-3"
+
+  Dim strReturnedIsbn As String
+  strReturnedIsbn = Validator.IsbnSearch("C:\Users\erica.warren\Desktop\validator\" & strFile & ".docx", _
+  "C:\Users\erica.warren\Desktop\validator\LOG_" & strFile & ".log")
+  
+  If strReturnedIsbn = vbNullString Then
+    Debug.Print "No Isbn found"
+  Else
+    Debug.Print "Found Isbns: " & strReturnedIsbn
+  End If
+  
   Exit Sub
 
 TestError:
