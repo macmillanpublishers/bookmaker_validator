@@ -30,6 +30,8 @@ Private strAlertPath As String
 Private strJsonPath As String
 ' Ditto but for log file
 Private strLogPath As String
+' Name of originally called procedure, to write to logs
+Private strProcName As String
 
 Private StartTime As Double
 Private SecondsElapsed As Double
@@ -43,55 +45,52 @@ Public Enum ValidatorError
   err_PathInvalid = 30003
   err_NoPassKey = 30004
   err_StartupFail = 30005
+  err_ValidatorMainFail = 30006
+  err_IsbnMainFail = 30007
 End Enum
 
 ' ===== IsbnSearch ============================================================
-' Implementation of IsbnCheck that returns a string, for Powershell call.
+' Searches doc for ISBN, called from Powershell.
 
 ' PUBLIC because needs to be called independently from powershell if file name
 ' doesn't include ISBN. Optional FilePath is for passing doc path from PS.
 
-' Don't actually need to log anything with LogFile param, but powershell expects
-' to pass that argument so we'll make it optional.
-
 Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
   As String
   On Error GoTo IsbnSearchError
+  strProcError = strValidator & "IsbnSearch"
   
-' Make sure relevant file exists, is open
-  If genUtils.GeneralHelpers.IsOpen(FilePath) = False Then
-    Documents.Open FilePath
+' Startup checks for references, etc.
+  If ValidatorStartup(FilePath, LogPath) = False Then
+    Err.Raise ValidatorError.err_StartupFail
   End If
 
-' Set reference to correct document
-  Set activeDoc = Documents(FilePath)
-
-' Create dictionary object to receive from IsbnCheck function
-  Dim dictIsbn As genUtils.Dictionary
-  Set dictIsbn = New Dictionary
-  Set dictIsbn = IsbnCheck(AddFromJson:=False)
+' Main procedure, assumes ref to genUtils project intact
+  Dim strIsbn As String
+  strIsbn = IsbnMain(FilePath)
   
-' If ISBNs were found, they will be in the "list" element
-  If dictIsbn.Exists("list") = True Then
-  ' Reduce array elements to a comma-delimited string
-    IsbnSearch = genUtils.Reduce(dictIsbn.Item("list"), ",")
-  Else
-    IsbnSearch = vbNullString
+  If strIsbn = vbNullString Then
+    Err.Raise ValidatorError.err_IsbnMainFail
   End If
   
-  activeDoc.Close wdDoNotSaveChanges
-  Set activeDoc = Nothing
+  IsbnSearch = strIsbn
+  
+' Various cleanup stuff, including `End` all code execution.
+  Call ValidatorExit(RunCleanup:=True)
   
   Exit Function
-  
+
 IsbnSearchError:
-  Err.Source = strReports & "IsbnSearch"
-  If ErrorChecker(Err, FilePath) = False Then
-    Resume
-  Else
-    Call genUtils.Reports.ReportsTerminate
-  End If
+  Err.Source = strValidator & "IsbnSearch"
+  Select Case Err.Number
+    Case ValidatorError.err_StartupFail
+      Err.Description = strValidator & "ValidatorStartup failed to complete."
+    Case ValidatorError.err_IsbnMainFail
+      Err.Description = strValidator & "IsbnMain failed to complete."
+  End Select
+  Call ValidatorExit(RunCleanup:=False)
 End Function
+
 
 ' ===== Launch ================================================================
 ' Set up error checking, suppress alerts, check references before calling that
@@ -102,35 +101,34 @@ End Function
 
 Public Sub Launch(FilePath As String, Optional LogPath As String)
   On Error GoTo LaunchError
-
-' Call startup function
+  strProcError = strValidator & "Launch"
+' Startup checks for references, etc.
   If ValidatorStartup(FilePath, LogPath) = False Then
     Err.Raise ValidatorError.err_StartupFail
   End If
 
-' ===================================================
-' Once we're certain genUtils is available, pass to Main validator procedure
-' and use that function for handling errors.
-' ===================================================
-  If Main(FilePath) = True Then
+' Main procedure, assumes ref to genUtils project intact
+  If ValidatorMain(FilePath) = True Then
     SecondsElapsed = Round(Timer - StartTime, 2)
     Debug.Print "`Main` function complete: " & SecondsElapsed
-    Call ValidatorCleanup
   Else
-    ' ?
-    Debug.Print "Main() = False"
+    Err.Raise ValidatorError.err_ValidatorMainFail
   End If
-  
-  Call ValidatorCleanup
+
+' Various cleanup stuff, including `End` all code execution.
+  Call ValidatorExit(RunCleanup:=True)
   
   Exit Sub
 
 LaunchError:
   Err.Source = strValidator & "Launch"
-  If Err.Number = ValidatorError.err_StartupFail Then
-    Err.Description = strValidator & "ValidatorStartup failed to complete."
-  End If
-  Call WriteAlert
+  Select Case Err.Number
+    Case ValidatorError.err_StartupFail
+      Err.Description = strValidator & "ValidatorStartup failed to complete."
+    Case ValidatorError.err_ValidatorMainFail
+      Err.Description = strValidator & "ValidatorMain failed to complete."
+  End Select
+  Call ValidatorExit(RunCleanup:=False)
 End Sub
 
 ' ===== ValidatorStartup ======================================================
@@ -172,8 +170,8 @@ Private Function ValidatorStartup(ByRef StartupFilePath As String, ByRef _
   
 ValidatorStartupError:
   Err.Source = strValidator & "ValidatorStartup"
-  ' Have to assume here error may occur before we can access general error
-  ' checker, so do everything in this module.
+' Have to assume here error may occur before we can access general error
+' checker, so do everything in this module.
   Select Case Err.Number
     Case err_RefMissing
       Err.Description = "VBA reference missing."
@@ -181,11 +179,81 @@ ValidatorStartupError:
       Err.Description = "The string passed for the `FilePath` argument, " & _
         Chr(34) & FilePath & Chr(34) & ", does not point to a valid file."
   End Select
-  ' Can't call primary error checker -- it's in the ref!
-  ' Err object persists when new procedure is called, don't need to pass as arg
-  Call WriteAlert
+  Call ValidatorExit(RunCleanup:=False)
 End Function
 
+' ===== ValidatorExit ======================================================
+' Always run last. In fact, it ends ALL macro execution so by definition it'll
+' be last! If Err object is not 0, will write an ALERT. `RunCleanup` param
+' should be set to False if called from a procedure that runs before we
+' have checked if refs are set.
+
+Public Sub ValidatorExit(Optional RunCleanup As Boolean = True)
+' Global variable counter in case error throw before we reset On Error
+' More than 1 is an error, but letting it run a few times to capture more data
+  lngCleanupCount = lngCleanupCount + 1
+  If lngCleanupCount > 3 Then GoTo ValidatorExitError
+
+' NOTE!! Must get Err object values before setting new On Error statement
+' Did macro complete correctly?
+  Dim blnCompleted As Boolean
+  If Err.Number = 0 Then
+    blnCompleted = True
+  Else
+    blnCompleted = False
+    Call WriteAlert(False)
+  End If
+
+' Now we can reset On Error (which includes Err.Clear)
+  On Error GoTo ValidatorExitError
+  
+' Do we know if doc is styled?
+  Dim blnStyled As Boolean
+  If RunCleanup = True Then
+    blnStyled = ValidatorCleanup(blnCompleted)
+    Call JsonToLog
+  Else
+    blnStyled = False
+  End If
+
+' Only save doc if macro completed w/o error AND correctly styled
+  Dim saveValue As WdSaveOptions
+  If blnCompleted = True And blnStyled = True Then
+    saveValue = wdSaveChanges
+  Else
+    saveValue = wdDoNotSaveChanges
+  End If
+  
+' Close all open documents
+  Dim objDoc As Document
+  Dim strExt As String
+  For Each objDoc In Documents
+  ' don't close any templates, might be running code.
+    strExt = VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), "."))
+    If strExt <> ".dotm" Then
+      objDoc.Close saveValue
+    End If
+  Next objDoc
+  
+' DON'T `Exit Sub` before this - we want it to `End` no matter what.
+ValidatorExitError:
+  If Err.Number <> 0 Then
+    Err.Source = strValidator & "ValidatorExit"
+    Call WriteAlert(False)
+  End If
+  
+  Application.DisplayAlerts = wdAlertsAll
+  Application.ScreenUpdating = True
+  Application.ScreenRefresh
+
+' Timer End
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
+
+  On Error GoTo 0
+' Stops ALL code execution (might be called to cleanup after error).
+  End
+End Sub
 
 ' ===== FilePathCleanup =======================================================
 ' Ensures path separators are correct for a file path or directory. Do not use
@@ -205,7 +273,7 @@ Private Function FilePathCleanup(ByRef FullFilePath As String) As String
   
 FilePathCleanupError:
   Err.Source = strValidator & "FilePathCleanup"
-  Call WriteAlert
+  Call ValidatorExit(RunCleanup:=False)
 End Function
 
 ' ===== CheckRef ==============================================================
@@ -256,17 +324,16 @@ Private Function IsRefMissing() As Boolean
 
 IsRefMissingError:
   Err.Source = strValidator & "IsRefMissing"
-  ' Can't call primary error checker -- it's in the ref!
-  Call WriteAlert
+  Call ValidatorExit(RunCleanup:=False)
 End Function
 
 
-' ===== SetAlertPath ==========================================================
+' ===== SetOutputPaths ========================================================
 ' Set local path to write Alerts (i.e., unhandled errors). Must declare private
 ' global variable up top! On server, tries to write to same path as the file
 ' passed to Launch, if fails defaults to `validator_tmp`.
 
-' Also setting path to `style_check.json here, since in same dir.
+' Also setting path to style_check.json here, since in same dir.
 
 Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   Boolean
@@ -326,7 +393,7 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   
 SetOutputPathsError:
   Err.Source = strValidator & "SetOutputPaths"
-  Call WriteAlert
+  Call ValidatorExit(RunCleanup:=False)
 End Function
 
 
@@ -369,16 +436,57 @@ Private Sub WriteAlert(Optional blnEnd As Boolean = True)
   End If
 End Sub
 
+
+
 ' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 '     PROCEDURES BELOW CAN REFERENCE `genUtils`
 ' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+' ===== IsbnMain ==============================================================
+' Implementation of IsbnCheck that returns a string.
+
+Private Function IsbnMain(FilePath As String) As String
+  On Error GoTo IsbnMainError
+  
+' Make sure relevant file exists, is open
+  If genUtils.GeneralHelpers.IsOpen(FilePath) = False Then
+    Documents.Open FilePath
+  End If
+
+' Set reference to correct document
+  Set activeDoc = Documents(FilePath)
+
+' Create dictionary object to receive from IsbnCheck function
+  Dim dictIsbn As genUtils.Dictionary
+  Set dictIsbn = New Dictionary
+  Set dictIsbn = IsbnCheck(AddFromJson:=False)
+  
+' If ISBNs were found, they will be in the "list" element
+  If dictIsbn.Exists("list") = True Then
+  ' Reduce array elements to a comma-delimited string
+    IsbnSearch = genUtils.Reduce(dictIsbn.Item("list"), ",")
+  Else
+    IsbnSearch = vbNullString
+  End If
+
+  Exit Function
+  
+IsbnMainError:
+  Err.Source = strReports & "IsbnMain"
+  If ErrorChecker(Err, FilePath) = False Then
+    Resume
+  Else
+    Call ValidatorExit
+  End If
+End Function
+
 
 ' ===== Main ==================================================================
 ' Once we know we've got the correct references set up, we can build our macro.
 ' DocPath exists and is a Word file already validated.
 
-Private Function Main(DocPath As String) As Boolean
-  On Error GoTo MainError
+Private Function ValidatorMain(DocPath As String) As Boolean
+  On Error GoTo ValidatorMainError
   ' Set up variables to store test results
   Dim strKey As String
   Dim blnPass As Boolean
@@ -401,6 +509,8 @@ Private Function Main(DocPath As String) As Boolean
 ' *****************************************************************************
 
 ' ----- ISBN VALIDATION -------------------------------------------------------
+' Check ISBN first, because it can fail to find an ISBN in the body text but
+' still run successfully in Bookmaker if ISBN is in file name.
   strKey = "isbn"
   Set dictTests = genUtils.Reports.IsbnCheck
   Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
@@ -409,7 +519,6 @@ Private Function Main(DocPath As String) As Boolean
   strKey = "styled"
   Set dictTests = genUtils.Reports.StyleCheck()
   Call ReturnDict(strKey, dictTests)
-
 
 
 ' *****************************************************************************
@@ -450,22 +559,22 @@ Private Function Main(DocPath As String) As Boolean
   
   Set dictTests = Nothing
   
-  Main = True
+  ValidatorMain = True
   Exit Function
-MainError:
-  Err.Source = strValidator & "Main"
+ValidatorMainError:
+  Err.Source = strValidator & "ValidatorMain"
   Select Case Err.Number
     Case ValidatorError.err_TestsFailed
       Err.Description = "The test dictionary for `" & strKey & "` returned empty."
-      Call ValidatorCleanup
+      Call ValidatorExit
     Case ValidatorError.err_NoPassKey
       Err.Description = strKey & " dictionary has no `pass` key."
-      Call ValidatorCleanup
+      Call ValidatorExit
     Case Else
       If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
         Resume
       Else
-        Call ValidatorCleanup
+        Call ValidatorExit
       End If
   End Select
   
@@ -473,95 +582,43 @@ End Function
 
 
 ' ===== ValidatorCleanup ======================================================
-' Always run last. In fact, it ends ALL macro execution so by definition it'll
-' be last! If Err object is not 0, will write an ALERT. Only call AFTER you
-' know we've set the `strAlertPath` and `strLogPath` variables.
+' Cleanup items that we need genUtils ref for. Returns if doc is styled or not.
 
-' Also should only be run after we know ref to genUtils is set.
-
-Public Sub ValidatorCleanup()
-
-' Global variable counter in case error throw before we reset On Error
-' More than 1 is an error, but letting it run a few times to capture more data
-  lngCleanupCount = lngCleanupCount + 1
-  If lngCleanupCount > 3 Then GoTo ValidatorCleanupError
-
-' NOTE!! Must get Err object values before setting new On Error statement
-  Dim blnCompleted As Boolean
-
-  If Err.Number = 0 Then
-    blnCompleted = True
-  Else
-    blnCompleted = False
-    Call WriteAlert(False)
-  End If
-
-' Now we can reset On Error (which includes Err.Clear)
+Private Function ValidatorCleanup(CompleteSuccess As Boolean) As Boolean
   On Error GoTo ValidatorCleanupError
-  
-  Dim dictJson As genUtils.Dictionary
-  Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
 
-' Write our final element to `style_check.json` file
-  Call genUtils.AddToJson(strJsonPath, "completed", blnCompleted)
-
-' Only save doc if macro completed w/o error AND correctly styled
-' If errored before checking styles, item won't exist
-  Dim blnStyled As Boolean
-  If dictJson("styled").Exists("pass") = True Then
-    blnStyled = dictJson("styled")("pass")
-  End If
-
-  Dim saveValue As WdSaveOptions
-  If blnCompleted = True And blnStyled = True Then
-    saveValue = wdSaveChanges
-  Else
-    saveValue = wdDoNotSaveChanges
-  End If
-  
-' Close all open documents
-  Dim objDoc As Document
-  Dim strExt As String
-  For Each objDoc In Documents
-  ' don't close any templates, might be running code.
-    strExt = VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), "."))
-    If strExt <> ".dotm" Then
-      objDoc.Close saveValue
-    End If
-  Next objDoc
-  
-  ' just to keep things tidy
-  genUtils.zz_clearFind
-
-' Determine how many seconds code took to run
-  SecondsElapsed = Round(Timer - StartTime, 2)
-  Call genUtils.AddToJson(strJsonPath, "elaspedTime", SecondsElapsed)
-
-' Write log entry from JSON values
-' Should always be there (see previous line)
-  If genUtils.IsItThere(strJsonPath) = True Then
-    Call JsonToLog
-  End If
-  
-' DON'T `Exit Sub` before this - we want it to `End` no matter what.
-ValidatorCleanupError:
-' ============================================================================
-' ----------------------Timer End-------------------------------------------
-' Determine how many seconds code took to run
-  SecondsElapsed = Round(Timer - StartTime, 2)
-    
-' Notify user in seconds
-  Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
-' ============================================================================
+' just to keep things tidy
   If Not activeDoc Is Nothing Then
     Set activeDoc = Nothing
   End If
-  Application.DisplayAlerts = wdAlertsAll
-  Application.ScreenUpdating = True
-  Application.ScreenRefresh
-  On Error GoTo 0
-  End   ' Stops ALL code execution.
-End Sub
+  
+  genUtils.zz_clearFind
+  
+' Write our final element to `style_check.json` file
+  Call genUtils.AddToJson(strJsonPath, "completed", CompleteSuccess)
+  
+' Read style_check.json into dictionary in order to access styled info
+  Dim dictJson As genUtils.Dictionary
+  Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
+
+' Determine if doc is styled or not. If errored before checking styles, item
+' won't exist.
+  ValidatorCleanup = False
+  If Not dictJson Is Nothing Then
+    If dictJson.Exists("styled") = True Then
+      If dictJson("styled").Exists("pass") = True Then
+        ValidatorCleanup = dictJson("styled")("pass")
+      End If
+    End If
+  End If
+  Exit Function
+
+ValidatorCleanupError:
+  Err.Source = strValidator & "ValidatorCleanup"
+' This gets called from ValidatorExit, so skip here and just write alert.
+  Call WriteAlert
+
+End Function
 
 
 ' ===== JsonToLog =============================================================
@@ -569,74 +626,84 @@ End Sub
 
 Public Sub JsonToLog()
   On Error GoTo JsonToLogError
-  Dim jsonDict As genUtils.Dictionary
-  Set jsonDict = genUtils.ReadJson(strJsonPath)
-  
-  Dim strLog As String  ' string to write to log
-' Following Matt's formatting for other scripts
-  strLog = Format(Now, "yyyy-mm-dd hh:mm:ss AMPM") & "   : " & strValidator _
-    & "Launch -- results:" & vbNewLine
-  
-' Loop through `style_check.json` and write to log. Can add more detailed info
-' in the future.
+' Determine how many seconds code took to run
+  SecondsElapsed = Round(Timer - StartTime, 2)
+  Call genUtils.AddToJson(strJsonPath, "elaspedTime", SecondsElapsed)
 
-' Also don't stress now, but in future could write more generic dict-to-json
-' function by breaking into multiple functions that call each other:
-' Value is an array (return all items in comma-delineated string - REDUCE!)
-' Value is an object (call this function again!)
-' Value is neither (thus, number, string, boolean) - just write to string.
-  Dim strKey1 As Variant
-  Dim strKey2 As Variant
-  Dim colValues As Collection
-  Dim A As Long
+' Write log entry from JSON values
+' Should always be there (see previous line)
+  If genUtils.IsItThere(strJsonPath) = True Then
+
+  Dim jsonDict As genUtils.Dictionary
+    Set jsonDict = genUtils.ReadJson(strJsonPath)
+    
+    Dim strLog As String  ' string to write to log
+  ' Following Matt's formatting for other scripts
+    strLog = Format(Now, "yyyy-mm-dd hh:mm:ss AMPM") & "   : " & strProcName _
+       & " -- results:" & vbNewLine
+    
+  ' Loop through `style_check.json` and write to log. Can add more detailed info
+  ' in the future.
   
-' Anyway, loop through json data and build string to write to log
-  With jsonDict
-    For Each strKey1 In .Keys
-      strLog = strLog & strKey1 & ": "
-    ' Value may be another dictionary/object
-      If VBA.IsObject(.Item(strKey1)) = True Then
-        strLog = strLog & vbNewLine
-      ' loop through THIS dictionary
-        For Each strKey2 In .Item(strKey1).Keys
-          strLog = strLog & vbTab & strKey2 & ": "
-        ' Value at this level may be a Collection (how Dictionary class returns
-        ' an array from JSON)
-          If strKey2 = "list" Then
-            If VBA.IsObject(.Item(strKey1).Item(strKey2)) = True Then
-              strLog = strLog & vbNewLine & vbTab & vbTab
-              Set colValues = .Item(strKey1).Item(strKey2)
-            ' Loop through collection, write values
-              For A = 1 To colValues.Count
-                If A <> 1 Then
-                  ' add comma and space between values
-                  strLog = strLog & ", "
-                End If
-                strLog = strLog & colValues(A)
-              Next A
-            End If
-          Else
-          ' Pretty sure it's something we can convert to string directly
-            strLog = strLog & .Item(strKey1).Item(strKey2)
-          End If
+  ' Also don't stress now, but in future could write more generic dict-to-json
+  ' function by breaking into multiple functions that call each other:
+  ' Value is an array (return all items in comma-delineated string - REDUCE!)
+  ' Value is an object (call this function again!)
+  ' Value is neither (thus, number, string, boolean) - just write to string.
+    Dim strKey1 As Variant
+    Dim strKey2 As Variant
+    Dim colValues As Collection
+    Dim A As Long
+    
+  ' Anyway, loop through json data and build string to write to log
+    With jsonDict
+      For Each strKey1 In .Keys
+        strLog = strLog & strKey1 & ": "
+      ' Value may be another dictionary/object
+        If VBA.IsObject(.Item(strKey1)) = True Then
           strLog = strLog & vbNewLine
-        Next strKey2
-      Else
-        strLog = strLog & .Item(strKey1) & vbNewLine
-      End If
-'      strLog = strLog & vbNewLine
-    Next strKey1
-  End With
-  strLog = strLog & vbNewLine
-'  Debug.Print strLog
-  
-' Write string to log file, which should have been set earlier!
-'  Debug.Print strLogPath
-  Call genUtils.AppendTextFile(strLogPath, strLog)
+        ' loop through THIS dictionary
+          For Each strKey2 In .Item(strKey1).Keys
+            strLog = strLog & vbTab & strKey2 & ": "
+          ' Value at this level may be a Collection (how Dictionary class returns
+          ' an array from JSON)
+            If strKey2 = "list" Then
+              If VBA.IsObject(.Item(strKey1).Item(strKey2)) = True Then
+                strLog = strLog & vbNewLine & vbTab & vbTab
+                Set colValues = .Item(strKey1).Item(strKey2)
+              ' Loop through collection, write values
+                For A = 1 To colValues.Count
+                  If A <> 1 Then
+                    ' add comma and space between values
+                    strLog = strLog & ", "
+                  End If
+                  strLog = strLog & colValues(A)
+                Next A
+              End If
+            Else
+            ' Pretty sure it's something we can convert to string directly
+              strLog = strLog & .Item(strKey1).Item(strKey2)
+            End If
+            strLog = strLog & vbNewLine
+          Next strKey2
+        Else
+          strLog = strLog & .Item(strKey1) & vbNewLine
+        End If
+  '      strLog = strLog & vbNewLine
+      Next strKey1
+    End With
+    strLog = strLog & vbNewLine
+  '  Debug.Print strLog
+    
+  ' Write string to log file, which should have been set earlier!
+  '  Debug.Print strLogPath
+    Call genUtils.AppendTextFile(strLogPath, strLog)
+  End If
   
   Exit Sub
 
 JsonToLogError:
+' Call WriteAlert not ValidatorCleanup, because called from ValidatorCleanup
   Err.Source = strValidator & "JsonToLog"
   Call WriteAlert(blnEnd:=True)
   
@@ -662,7 +729,7 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary, _
         Call genUtils.AddToJson(strJsonPath, "completed", False)
         If QuitIfFailed = True Then
         ' ValidatorCleanup will end code execution
-          Call ValidatorCleanup
+          Call ValidatorExit
         End If
       End If
     Else
@@ -680,15 +747,15 @@ ReturnDictError:
   Select Case Err.Number
     Case ValidatorError.err_TestsFailed
       Err.Description = "The test dictionary for `" & SectionKey & "` returned empty."
-      Call ValidatorCleanup
+      Call ValidatorExit
     Case ValidatorError.err_NoPassKey
       Err.Description = SectionKey & " dictionary has no `pass` key."
-      Call ValidatorCleanup
+      Call ValidatorExit
     Case Else
       If genUtils.GeneralHelpers.ErrorChecker(Err) = False Then
         Resume
       Else
-        Call ValidatorCleanup
+        Call ValidatorExit
       End If
   End Select
 
