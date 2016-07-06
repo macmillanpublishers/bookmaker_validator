@@ -32,15 +32,15 @@ bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::
 project_done_dir = File.join(bookmaker_project_dir,'done')
 done_isbn_dir = File.join(project_done_dir, Metadata.pisbn)
 
-# these are all relative to the found tmpdir 
+# these are all relative to the found tmpdir
 tmp_dir = File.join(working_dir, "#{lookup_isbn}_to_bookmaker-#{index}")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
-stylecheck_file = File.join(tmp_dir,'style_check.json') 
+stylecheck_file = File.join(tmp_dir,'style_check.json')
 contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json')
 working_file, validator_infile_basename = '',''
 Find.find(tmp_dir) { |file|
-if file !~ /_DONE-#{index}#{extension}$/ && extension =~ /.doc($|x$)/
+if file !~ /_DONE-#{index}#{extension}$/ && File.extname(file) =~ /.doc($|x$)/
 	if file =~ /_workingfile#{extension}$/
 		working_file = file
 	else
@@ -84,7 +84,7 @@ errFile = File.join(et_project_dir, "ERROR_RUNNING_#{validator_infile_basename}#
 # if File.file?(bookinfo_file)
 # 	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
 # 	alt_isbns = bookinfo_hash['alt_isbns']
-# end	
+# end
 
 # #find done_isbn_dir if bookmaker is using an alt isbn
 # if !Dir.exist?(done_isbn_dir)
@@ -102,8 +102,8 @@ errFile = File.join(et_project_dir, "ERROR_RUNNING_#{validator_infile_basename}#
 # 		logger.info {"found done/isbn/dir: \"#{done_isbn_dir}\""}
 # 	else
 # 		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
-# 	end	
-# end	
+# 	end
+# end
 
 #find our epubs
 if Dir.exist?(done_isbn_dir)
@@ -112,7 +112,7 @@ if Dir.exist?(done_isbn_dir)
 			epub_firstpass = file
 		elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
 			epub = file
-		end	
+		end
 	}
 end
 
@@ -122,18 +122,18 @@ FileUtils.mkdir_p outfolder
 #presumes epub is named properly, moves a copy to coresource
 if !File.file?(epub) && !File.file?(epub_firstpass)
 	epub_found = false
-elsif File.file?(epub_firstpass) 
+elsif File.file?(epub_firstpass)
 	if !File.file?(testing_value_file)
 		FileUtils.cp epub_firstpass, coresource_dir
 		logger.info {"copied epub_firstpass to coresource_dir"}
-	end	
+	end
 	FileUtils.cp epub_firstpass, outfolder
 	logger.info {"copied epub_firstpass to validator outfolder"}
 elsif File.file?(epub)
 	File.rename(epub, epub_firstpass)
 	if !File.file?(testing_value_file)
 		FileUtils.cp epub_firstpass, coresource_dir
-		logger.info {"copied epub_firstpass to coresource_dir"}	
+		logger.info {"copied epub_firstpass to coresource_dir"}
 	end
 	logger.info {"renamed epub to epub_firstpass, copied to coresource_dir"}
 	FileUtils.cp epub_firstpass, outfolder
@@ -142,7 +142,7 @@ end
 
 #let's move the original to outbox!
 logger.info {"moving original file to outfolder.."}
-FileUtils.mv validator_infile, outfolder	
+FileUtils.mv validator_infile, outfolder
 
 #deal with errors & warnings!
 if File.file?(status_file)
@@ -151,32 +151,31 @@ if File.file?(status_file)
 		text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
 		Mcmlln::Tools.overwriteFile(err_notice, text)
 		logger.info {"errors found, writing err_notice"}
-	end	
+	end
 	if !status_hash['warnings'].empty? && status_hash['errors'].empty?
 		text = status_hash['warnings']
 		Mcmlln::Tools.overwriteFile(warn_notice, text)
 		logger.info {"warnings found, writing warn_notice"}
-	end	
+	end
 else
 	logger.info {"status.json not present or unavailable!?"}
-end	
+end
 
 #update permalog
 if File.file?(permalog)
 	permalog_hash = Mcmlln::Tools.readjson(permalog)
 	permalog_hash[index]['bookmaker_ran'] = true
-	permalog_hash[index]['epub_found'] = true	
+	permalog_hash[index]['epub_found'] = true
 	if !epub_found
 		permalog_hash[index]['epub_found'] = false
 	end
 	#write to json permalog!
 	finaljson = JSON.pretty_generate(permalog_hash)
 	File.open(permalog, 'w+:UTF-8') { |f| f.puts finaljson }
-end	
+end
 
 
 #cleanup
 if Dir.exists?(tmp_dir)	then FileUtils.rm_rf tmp_dir end
 if File.file?(errFile) then FileUtils.rm errFile end
 if File.file?(inprogress_file) then FileUtils.rm inprogress_file end
-

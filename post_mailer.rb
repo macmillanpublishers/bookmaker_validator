@@ -33,15 +33,15 @@ bookmaker_project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::
 project_done_dir = File.join(bookmaker_project_dir,'done')
 done_isbn_dir = File.join(project_done_dir, Metadata.pisbn)
 
-# these are all relative to the found tmpdir 
+# these are all relative to the found tmpdir
 tmp_dir = File.join(working_dir, "#{lookup_isbn}_to_bookmaker-#{index}")
 bookinfo_file = File.join(tmp_dir,'book_info.json')
-stylecheck_file = File.join(tmp_dir,'style_check.json') 
+stylecheck_file = File.join(tmp_dir,'style_check.json')
 contacts_file = File.join(tmp_dir,'contacts.json')
 status_file = File.join(tmp_dir,'status_info.json')
 working_file, validator_infile_basename = '',''
 Find.find(tmp_dir) { |file|
-if file !~ /_DONE-#{index}#{extension}$/ && extension =~ /.doc($|x$)/
+if file !~ /_DONE-#{index}#{extension}$/ && File.extname(file) =~ /.doc($|x$)/
 	if file =~ /_workingfile#{extension}$/
 		working_file = file
 	else
@@ -86,7 +86,7 @@ if File.file?(bookinfo_file)
 else
 	send_ok = false
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
-end	
+end
 
 
 # #find done_isbn_dir if bookmaker is using an alt isbn
@@ -106,8 +106,8 @@ end
 # 	else
 # 		logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
 # 		send_ok = false
-# 	end	
-# end	
+# 	end
+# end
 
 #find our epubs, check for error files in bookmaker
 logger.info {"Verifying epub present..."}
@@ -117,7 +117,7 @@ if Dir.exist?(done_isbn_dir)
 			epub_firstpass = file
 		elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
 			epub = file
-		end	
+		end
 	}
 	if epub.empty? && epub_firstpass.empty?
 		send_ok = false
@@ -131,11 +131,11 @@ if Dir.exist?(done_isbn_dir)
 			errtxt_files << file
 			send_ok = false
 		end
-	}	
+	}
 else
 	logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
 	send_ok = false
-end	
+end
 
 
 logger.info {"Reading in jsons from validator run"}
@@ -151,7 +151,7 @@ if File.file?(contacts_file)
 else
 	send_ok = false
 	logger.info {"contacts_file.json not present or unavailable, unable to send mails"}
-end	
+end
 
 #get info from status.json, define status/errors & status/warnings
 if File.file?(status_file)
@@ -163,11 +163,11 @@ if File.file?(status_file)
 		status_hash['errors'] = errors
 		Vldtr::Tools.write_json(status_hash,status_file)
 		send_ok = false
-	end	
+	end
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
-end	
+end
 
 
 #send a success notification email!
@@ -176,15 +176,15 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	unless File.file?(testing_value_file)	
-		#conditional to addressees are complicated: 
+	unless File.file?(testing_value_file)
+		#conditional to addressees are complicated:
 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
-		if pm_mail =~ /@/ 
-			cc_mails << pm_mail 
+		if pm_mail =~ /@/
+			cc_mails << pm_mail
 			to_address = "#{to_address}, #{pm_name} <#{pm_mail}>"
 		end
 		if pe_mail =~ /@/ && pe_mail != pm_mail
-			cc_mails << pe_mail 
+			cc_mails << pe_mail
 			to_address = "#{to_address}, #{pe_name} <#{pe_mail}>"
 		end
 		if pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail =~ /@/
@@ -194,13 +194,13 @@ if send_ok
 			to_address = cc_address
 			to_mail = cc_mails
 			cc_mails, cc_address = '', ''
-		else	
+		else
 			cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
 			to_mail = submitter_mail
-		end	
+		end
 		subject = "#{bookmaker_project_name} successfully processed #{filename_split}"
 		body = bot_success_txt.gsub(/FILENAME_NORMALIZED/,working_file).gsub(/PROJECT_NAME/,bookmaker_project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-		
+
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
@@ -211,14 +211,14 @@ Subject: #{subject}
 MESSAGE_END
 
 		Vldtr::Tools.sendmail(message, to_mail, cc_mails)
-		logger.info {"Sending success message for validator to PE/PM"}	 		
-	end	
+		logger.info {"Sending success message for validator to PE/PM"}
+	end
 else
 
 	message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
 To: From: Workflows <workflows@macmillan.com>
-Subject: validator_posts checks FAILED for #{filename_normalized} 
+Subject: validator_posts checks FAILED for #{filename_normalized}
 
 Either epub creation failed or other error detected during #{thisscript}
 No notification email was sent to PE/PMs/submitter.
@@ -227,10 +227,9 @@ No notification email was sent to PE/PMs/submitter.
 #{errors}
 #{warnings}
 MESSAGE_END_B
-	
+
 	unless File.file?(testing_value_file)
 		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
 		logger.info {"send_ok is FALSE, something's wrong"}
-	end	
-end	
-
+	end
+end
