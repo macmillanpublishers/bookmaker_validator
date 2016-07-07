@@ -74,7 +74,7 @@ Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
   End If
   
   IsbnSearch = strIsbn
-  Debug.Print IsbnSearch
+
 ' Various cleanup stuff, including `End` all code execution.
   Call ValidatorExit(RunCleanup:=True, EndMacro:=False)
   
@@ -464,6 +464,11 @@ Private Function IsbnMain(FilePath As String) As String
   Dim dictIsbn As genUtils.Dictionary
   Set dictIsbn = IsbnCheck(AddFromJson:=False)
   
+' Write results to JSON file
+  If Not dictIsbn Is Nothing Then
+    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictIsbn)
+  End If
+
 ' If ISBNs were found, they will be in the "list" element
   If dictIsbn.Exists("list") = True Then
   ' Reduce array elements to a comma-delimited string
@@ -772,7 +777,7 @@ Private Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strFile As String
-  strFile = "Leigh3_STYLED_InText_978-0-312-38912-3"
+  strFile = "Black_UNSTYLED_InText_5-25-2016"
 
   Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\" & strFile & ".docx", _
   "C:\Users\erica.warren\Desktop\validator\LOG_" & strFile & ".log")
@@ -787,7 +792,7 @@ Private Sub IsbnTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strFile As String
-  strFile = "Leigh3_STYLED_InText_978-0-312-38912-3"
+  strFile = "Black_UNSTYLED_InText_5-25-2016"
 
   Dim strReturnedIsbn As String
   strReturnedIsbn = Validator.IsbnSearch("C:\Users\erica.warren\Desktop\validator\" & strFile & ".docx", _
