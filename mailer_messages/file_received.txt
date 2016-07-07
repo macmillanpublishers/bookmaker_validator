@@ -1,3 +1,5 @@
+Subject: File: PROJECT_NAME is processing "FILENAME_NORMALIZED"
+
 A copy of your file "FILENAME_NORMALIZED" is now being processed by PROJECT_NAME.
 
 You will receive another email once the process has finished.  It may take up to 30 minutes.
