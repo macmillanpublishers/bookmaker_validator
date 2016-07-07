@@ -68,10 +68,12 @@ Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
 ' Main procedure, assumes ref to genUtils project intact
   Dim strIsbn As String
   strIsbn = IsbnMain(FilePath)
-  
-  If strIsbn = vbNullString Then
-    Err.Raise ValidatorError.err_IsbnMainFail
-  End If
+
+'' Returned false doesn't necessarily mean a problem happened. Maybe just didn't
+'' find anything:
+'  If strIsbn = vbNullString Then
+'    Err.Raise ValidatorError.err_IsbnMainFail
+'  End If
   
   IsbnSearch = strIsbn
 
@@ -463,10 +465,13 @@ Private Function IsbnMain(FilePath As String) As String
 ' Create dictionary object to receive from IsbnCheck function
   Dim dictIsbn As genUtils.Dictionary
   Set dictIsbn = IsbnCheck(AddFromJson:=False)
-  
-' Write results to JSON file
+
   If Not dictIsbn Is Nothing Then
-    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictIsbn)
+  ' JsonToLog function expects this format
+    Dim dictOutput As genUtils.Dictionary
+    Set dictOutput = genUtils.ClassHelpers.NewDictionary
+    dictOutput.Add "isbn", dictIsbn
+    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictOutput)
   End If
 
 ' If ISBNs were found, they will be in the "list" element
@@ -736,6 +741,8 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary, _
       ' Write our final element to `style_check.json` file
         Call genUtils.AddToJson(strJsonPath, "completed", False)
         If QuitIfFailed = True Then
+          SecondsElapsed = Round(Timer - StartTime, 2)
+          Debug.Print SectionKey & " complete: " & SecondsElapsed
         ' ValidatorCleanup will end code execution
           Call ValidatorExit
         End If
@@ -791,19 +798,48 @@ End Sub
 Private Sub IsbnTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
-  Dim strFile As String
-  strFile = "Black_UNSTYLED_InText_5-25-2016"
-
+  Dim strDir As String: strDir = "C:\Users\erica.warren\Desktop\validator\"
+  Dim strLog As String
+  Dim strThisFile As String
   Dim strReturnedIsbn As String
-  strReturnedIsbn = Validator.IsbnSearch("C:\Users\erica.warren\Desktop\validator\" & strFile & ".docx", _
-  "C:\Users\erica.warren\Desktop\validator\LOG_" & strFile & ".log")
+  Dim A As Long
   
+'  Dim strFile(1 To 8) As String
+'  strFile(1) = "Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
+'  strFile(2) = "Auster_UNSTYLED_InText_978-1-62779-446-6"
+'  strFile(3) = "Black_UNSTYLED_InText_5-25-2016"
+'  strFile(4) = "Brennan_STYLED_InText_2016-May-17"
+'  strFile(5) = "Jahn_STYLED_NotInText_2016-May-04"
+'  strFile(6) = "Leigh3_STYLED_InText_978-0-312-38912-3"
+'  strFile(7) = "Newell_UNSTYLED_NotInText_6-29-16"
+'  strFile(8) = "Tomasky_UNSTYLED_NotInText_9781627796767_2016-5-19"
+'
+'  For A = LBound(strFile) To UBound(strFile)
+'    Debug.Print vbNewLine & strFile(A)
+'    strLog = strDir & strFile(A) & ".log"
+'    strThisFile = strDir & strFile(A) & ".docx"
+'    strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
+'
+'    If strReturnedIsbn = vbNullString Then
+'      Debug.Print "No Isbn found"
+'    Else
+'      Debug.Print "Found Isbns: " & strReturnedIsbn
+'    End If
+'  Next A
+  
+  
+  Dim strFile As String
+  strFile = "Tomasky_UNSTYLED_NotInText_9781627796767_2016-5-19"
+  strLog = strDir & strFile & ".log"
+  strThisFile = strDir & strFile & ".docx"
+  strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
+
   If strReturnedIsbn = vbNullString Then
     Debug.Print "No Isbn found"
   Else
     Debug.Print "Found Isbns: " & strReturnedIsbn
   End If
-  
+
   Exit Sub
 
 TestError:
