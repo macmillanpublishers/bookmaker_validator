@@ -1,45 +1,23 @@
 require 'fileutils'
 require 'open3'
 require 'process'
-require 'json'
+
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
+require_relative './val_header.rb'
 
-#--------------------- HEADER - main declarations
-unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-input_file = File.expand_path(unescapeargv)
-input_file = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
-filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
-filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
-basename_normalized = File.basename(filename_normalized, ".*")
-extension = File.extname(filename_normalized)
-project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
-project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
-inbox = File.join(project_dir, 'IN')
-outbox = File.join(project_dir, 'OUT')
-working_dir = File.join('S:', 'validator_tmp')
-tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.expand_path(File.dirname(__FILE__))
-testing_value_file = File.join("C:", "staging.txt")
-#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
-bookinfo_file = File.join(tmp_dir,'book_info.json')
-thisscript = File.basename($0,'.rb')
 
-# ---------------------- LOGGING VARIABLES
-timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-logfolder = File.join(working_dir, 'logs')
-logfile = File.join(logfolder, "#{basename_normalized}_log.txt") 
-deploy_logfolder = File.join('S:','resources','logs')
-process_logfolder = File.join(deploy_logfolder,'processLogs')
-json_logfile = File.join(deploy_logfolder,"#{filename_normalized}_out-err_validator-posts_#{timestamp}.json")
-human_logfile = File.join(deploy_logfolder,"#{filename_normalized}_out-err_validator-posts_#{timestamp}.txt")
-p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-posts-plog_#{timestamp}.txt")
 
-# ---------------------- LOCAL VARIABLES
-ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
-process_watcher = File.join(validator_dir,'process_watcher.rb')
-post_mailer = File.join(validator_dir,'post_mailer.rb')
-post_cleanup = File.join(validator_dir,'post_cleanup.rb')
+# ---------------------- LOCAL DECLARATIONS
+log_suffix = "POSTS_#{Time.now.strftime('%Y-%m-%d_%H-%M-%S')}"
+json_logfile = Val::Logs.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
+human_logfile = Val::Logs.human_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
+p_logfile = Val::Logs.p_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
+
+process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
+post_mailer = File.join(Val::Paths.scripts_dir,'post_mailer.rb')
+post_cleanup = File.join(Val::Paths.scripts_dir,'post_cleanup.rb')
+
 
 
 #---------------------  FUNCTIONS & message template
@@ -64,9 +42,9 @@ end
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: ALERT: #{project_name} process crashed
+Subject: ALERT: #{Val::Paths.project_name} process crashed
 
-#{thisscript}.rb has crashed during #{project_name} run.
+#{Val::Resources.thisscript}.rb has crashed during #{Val::Paths.project_name} run.
 
 Please see the following logfiles for assistance in troubleshooting:
 #{logfile}
@@ -85,14 +63,14 @@ Vldtr::Tools.write_json(output_hash, json_logfile)
 #--------------------- RUN
 #launch process-watcher
 log_time(output_hash,'process_watcher','start time',json_logfile)
-pid = spawn("#{ruby_exe} #{process_watcher} \'#{input_file}\' #{timestamp}",[:out, :err]=>[p_logfile, "a"])		
+pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix}",[:out, :err]=>[p_logfile, "a"])		
 Process.detach(pid)
 #log_time(output_hash,'process_watcher','completion time',json_logfile)
 
 #the rest of the validator:
 begin
-	run_script("#{ruby_exe} #{post_mailer} \'#{input_file}\'", output_hash, "post_mailer", json_logfile)
-	run_script("#{ruby_exe} #{post_cleanup} \'#{input_file}\'", output_hash, "post_cleanup", json_logfile)
+	run_script("#{Val::Resources.ruby_exe} #{post_mailer} \'#{Val::Doc.input_file}\'", output_hash, "post_mailer", json_logfile)
+	run_script("#{Val::Resources.ruby_exe} #{post_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "post_cleanup", json_logfile)
 	#mark the process done for process watcher
 	output_hash['completed'] = true
 rescue Exception => e  
@@ -102,7 +80,7 @@ rescue Exception => e
 	#Process.kill(pid)
 	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
 	#https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
-	unless File.file?(testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 		puts "sent alertmail"
 	end

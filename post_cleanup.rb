@@ -7,15 +7,11 @@ require_relative './validator_tools.rb'
 require_relative './val_header.rb'
 
 
-
 # ---------------------- LOCAL DECLARATIONS
-Vldtr::Logs.log_setup(Val::Posts.logfile_name)
-logger = Vldtr::Logs.logger
+Val::Logs.log_setup(Val::Posts.logfile_name)
+logger = Val::Logs.logger
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
-timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
-permalog = File.join(Val::Logs.logfolder,'validator_history_report.json')
-permalogtxt = File.join(Val::Logs.logfolder,'validator_history_report.txt')
 outfolder = File.join(Val::Posts.et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE-#{Val::Posts.index}$/,'')
 warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
 err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
@@ -48,7 +44,7 @@ FileUtils.mkdir_p outfolder
 if !File.file?(epub) && !File.file?(epub_firstpass)
 	epub_found = false
 elsif File.file?(epub_firstpass)
-	if !File.file?(Val::AbsolutePaths.testing_value_file) && !testing
+	if !File.file?(Val::Paths.testing_value_file) && !testing
 		FileUtils.cp epub_firstpass, coresource_dir
 		logger.info {"copied epub_firstpass to coresource_dir"}
 	end
@@ -56,7 +52,7 @@ elsif File.file?(epub_firstpass)
 	logger.info {"copied epub_firstpass to validator outfolder"}
 elsif File.file?(epub)
 	File.rename(epub, epub_firstpass)
-	if !File.file?(Val::AbsolutePaths.testing_value_file) && !testing
+	if !File.file?(Val::Paths.testing_value_file) && !testing
 		FileUtils.cp epub_firstpass, coresource_dir
 		logger.info {"copied epub_firstpass to coresource_dir"}
 	end
@@ -67,7 +63,8 @@ end
 
 #let's move the original to outbox!
 logger.info {"moving original file to outfolder.."}
-FileUtils.mv validator_infile, outfolder
+Mcmlln::Tools.moveFile(validator_infile, outfolder)
+
 
 #deal with errors & warnings!
 if File.file?(Val::Posts.status_file)
@@ -86,16 +83,16 @@ else
 	logger.info {"status.json not present or unavailable!?"}
 end
 
-#update permalog
-if File.file?(permalog)
-	permalog_hash = Mcmlln::Tools.readjson(permalog)
-	permalog_hash[Val::Posts.index]['bookmaker_ran'] = true
-	permalog_hash[Val::Posts.index]['epub_found'] = true
+#update Val::Logs.permalog
+if File.file?(Val::Logs.permalog)
+	Val::Logs.permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
+	Val::Logs.permalog_hash[Val::Posts.index]['bookmaker_ran'] = true
+	Val::Logs.permalog_hash[Val::Posts.index]['epub_found'] = true
 	if !epub_found
-		permalog_hash[Val::Posts.index]['epub_found'] = false
+		Val::Logs.permalog_hash[Val::Posts.index]['epub_found'] = false
 	end
-	#write to json permalog!
-    Vldtr::Tools.write_json(permalog_hash,permalog)
+	#write to json Val::Logs.permalog!
+    Vldtr::Tools.write_json(Val::Logs.permalog_hash,Val::Logs.permalog)
 end
 
 

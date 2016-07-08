@@ -9,8 +9,8 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Vldtr::Logs.log_setup(Val::Posts.logfile_name)
-logger = Vldtr::Logs.logger
+Val::Logs.log_setup(Val::Posts.logfile_name)
+logger = Val::Logs.logger
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
@@ -109,7 +109,7 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	unless File.file?(Val::AbsolutePaths.testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		#conditional to addressees are complicated:
 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
 		if pm_mail =~ /@/
@@ -158,7 +158,7 @@ No notification email was sent to PE/PMs/submitter.
 #{warnings}
 MESSAGE_END_B
 
-	unless File.file?(Val::AbsolutePaths.testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
 		logger.info {"send_ok is FALSE, something's wrong"}
 	end

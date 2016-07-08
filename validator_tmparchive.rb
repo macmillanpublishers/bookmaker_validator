@@ -9,8 +9,8 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Vldtr::Logs.log_setup()
-logger = Vldtr::Logs.logger
+Val::Logs.log_setup()
+logger = Val::Logs.logger
 
 dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split)
 generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt')
@@ -135,7 +135,7 @@ CC: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
 
-	unless File.file?(Val::AbsolutePaths.testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
 	end
 else
@@ -148,7 +148,7 @@ Subject: ERROR: dropbox api lookup failure
 Dropbox api lookup failed for file: #{Val::Doc.filename_split}. (found email address: \"#{user_email}\")
 MESSAGE_B_END
 
-	unless File.file?(Val::AbsolutePaths.testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
 	end
 end
@@ -163,7 +163,7 @@ if Val::Doc.extension !~ /.doc($|x$)/
     }
 else
     #if its a .doc(x) lets go ahead and make a working copy
-    FileUtils.cp Val::Doc.input_file, Val::Files.working_file
+    Mcmlln::Tools.copyFile(Val::Doc.input_file, Val::Files.working_file)
 end
 
 

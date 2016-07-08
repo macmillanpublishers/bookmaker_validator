@@ -1,3 +1,5 @@
+Subject: Request for First-pass epub for FILENAME_SPLIT
+
 Hello Westchester,
 
 Please generate a First-pass epub for file "FILENAME_NORMALIZED".  See below for details pertaining to this title:
