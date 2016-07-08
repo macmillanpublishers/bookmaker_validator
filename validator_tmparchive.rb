@@ -13,8 +13,8 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 
 dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split)
-generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt')
-macro_name = "Validator.IsbnSearch"
+generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt'))
+macro_name = "Reports.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
 
 root_metadata = ''
@@ -169,7 +169,7 @@ end
 
 #try lookup on filename isbn
 if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/
-    filename_isbn = filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+    filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
     if Vldtr::Tools.checkisbn(filename_isbn)
         status_hash['filename_isbn']['checkdigit'] = true
@@ -215,7 +215,7 @@ if (!status_hash['isbn_lookup_ok'] || Val::Doc.filename_normalized !~ /9(7(8|9)|
         logger.info {"either 0 (or >10) good isbns found in status_hash['isbnstring'] :( "}
     else
         logger.info {"#{unique_isbns.length} good isbns found in isbnstring; looking them up @ data warehouse: #{unique_isbns}"}
-        #now we lookup work ids for each isbn... 
+        #now we lookup work ids for each isbn...
         unique_isbns.each { |j|
             thissql = exactSearchSingleKey(j, "EDITION_EAN")
             myhash = runQuery(thissql)

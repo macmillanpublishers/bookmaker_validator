@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'logger'
+require 'find'
 
 #require_relative 'utilities/mcmlln-tools.rb'
 
@@ -27,29 +28,29 @@ module Val
 		def self.extension
 			@@extension
 		end
-	end	
-	class Paths 
-		@@testing_value_file = File.join("C:", "staging.txt")
+	end
+	class Paths
+		@@testing_value_file = File.join("C:", "staging.txts")
 		def self.testing_value_file
 			@@testing_value_file
-		end				
+		end
 		@@working_dir = File.join('S:', 'validator_tmp')
 		def self.working_dir
 			@@working_dir
-		end	
+		end
 		@@scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts', 'bookmaker_validator')
 		def self.scripts_dir
 			@@scripts_dir
-		end		
+		end
 		@@server_dropbox_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
 		def self.server_dropbox_path
 			@@server_dropbox_path
-		end	
-		@@project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
+		end
+		@@project_dir = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 		def self.project_dir
 			@@project_dir
 		end
-		@@project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
+		@@project_name = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
 		def self.project_name
 			@@project_name
 		end
@@ -57,25 +58,16 @@ module Val
 		def self.tmp_dir
 			@@tmp_dir
 		end
-		@@mailer_dir = File.join(scripts_dir,'mailer_messages')		
+		@@mailer_dir = File.join(scripts_dir,'mailer_messages')
 		def self.mailer_dir
 			@@mailer_dir
 		end
-		@@bot_egalleys_dir = ''
-		if File.file?(testing_value_file)
-			bot_egalleys_dir = File.join(server_dropbox_path,'bookmaker_bot_stg','bookmaker_egalley')
-		else
-			bot_egalleys_dir = File.join(server_dropbox_path,'bookmaker_bot','bookmaker_egalley')
-		end
-		def self.bot_egalleys_dir
-			@@bot_egalleys_dir
-		end	
-	end	
+	end
 	class Files
 		@@working_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
 		def self.working_file
 			@@working_file
-		end	
+		end
 		@@bookinfo_file = File.join(Paths.tmp_dir,'book_info.json')
 		def self.bookinfo_file
 			@@bookinfo_file
@@ -83,23 +75,23 @@ module Val
 		@@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
 		def self.stylecheck_file
 			@@stylecheck_file
-		end	
+		end
 		@@contacts_file = File.join(Paths.tmp_dir,'contacts.json')
 		def self.contacts_file
 			@@contacts_file
-		end	
-		@@status_file = File.join(Paths.tmp_dir,'status_info.json') 
+		end
+		@@status_file = File.join(Paths.tmp_dir,'status_info.json')
 		def self.status_file
 			@@status_file
-		end	
-		@@inprogress_file = File.join(Paths.inbox,"#{Doc.filename_normalized}_IN_PROGRESS.txt")
+		end
+		@@inprogress_file = File.join(Paths.project_dir,"#{Doc.filename_normalized}_IN_PROGRESS.txt")
 		def self.inprogress_file
 			@@inprogress_file
-		end	
+		end
 		@@errFile = File.join(Paths.project_dir, "ERROR_RUNNING_#{Doc.filename_normalized}.txt")
 		def self.errFile
 			@@errFile
-		end	
+		end
 	end
 	class Resources
 		@@thisscript = File.basename($0,'.rb')
@@ -109,7 +101,7 @@ module Val
 		@@run_macro = File.join(Paths.scripts_dir,'run_macro.ps1')
 		def self.run_macro
 			@@run_macro
-		end	
+		end
 		@@powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
 		def self.powershell_exe
 			@@powershell_exe
@@ -117,64 +109,71 @@ module Val
 		@@ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
 		def self.ruby_exe
 			@@ruby_exe
-		end	
+		end
 		@@authkeys_repo = File.join(Paths.scripts_dir,'..','bookmaker_authkeys')
 		def self.authkeys_repo
 			@@authkeys_repo
-		end	
-		def mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-   			mailtext.gsub(/FILENAME_NORMALIZED/,Files.working_file).gsub(/FILENAME_SPLIT/,Doc.filename_split).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
-		end	
+		end
+		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
+   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_split).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+				updated_txt
+		end
 	end
 	class Logs
 		#@@this_dir = File.expand_path(File.dirname(__FILE__))
 		@@logfolder = File.join(Paths.working_dir, 'logs')		#defaults for logging
-		@@logfilename = "#{Doc.basename_normalized}_log.txt"	
+		def self.logfolder
+			@@logfolder
+		end
+		@@logfilename = "#{Doc.basename_normalized}_log.txt"
+		def self.logfilename
+			@@logfilename
+		end
 		def self.log_setup(file=@@logfilename,folder=@@logfolder)		#can be overwritten in function call
 			logfile = File.join(folder,file)
 			@@logger = Logger.new(logfile)
 			def self.logger
 				@@logger
-			end	
+			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
 			  "#{datetime}: #{Resources.thisscript} -- #{msg}\n"
-			end		
+			end
 		end
-		@@permalog = File.join(logfolder,'validator_history_report.json')
+		@@permalog = File.join(@@logfolder,'validator_history_report.json')
 		def self.permalog
 			@@permalog
-		end	
+		end
 		@@deploy_logfolder = File.join('S:','resources','logs')
 		def self.deploy_logfolder
 			@@deploy_logfolder
-		end	
+		end
 		@@process_logfolder = File.join(deploy_logfolder,'processLogs')
 		def self.process_logfolder
 			@@process_logfolder
-		end	
+		end
 		@@json_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 		def self.json_logfile
 			@@json_logfile
-		end		
+		end
 		@@human_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
 		def self.human_logfile
 			@@human_logfile
-		end	
+		end
 		@@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
 		def self.p_logfile
 			@@p_logfile
-		end	
-	end		
+		end
+	end
 	class Posts
 		@lookup_isbn = Doc.basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
 		@@index = Doc.basename_normalized.split('-').last
 		def self.index
 			@@index
-		end	
+		end
 		@@tmp_dir = File.join(Paths.working_dir, "#{@lookup_isbn}_to_bookmaker-#{@@index}")
 		def self.tmp_dir
 			@@tmp_dir
-		end	
+		end
 		@@bookinfo_file = File.join(tmp_dir,'book_info.json')
 		def self.bookinfo_file
 			@@bookinfo_file
@@ -182,39 +181,32 @@ module Val
 		@@contacts_file = File.join(tmp_dir,'contacts.json')
 		def self.contacts_file
 			@@contacts_file
-		end	
-		@@status_file = File.join(tmp_dir,'status_info.json') 
+		end
+		@@status_file = File.join(tmp_dir,'status_info.json')
 		def self.status_file
 			@@status_file
-		end			
-		@@working_file, @@val_infile_name = '',''	
-		Find.find(tmp_dir) { |file|
-		if file !~ /_DONE-#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
-			if file =~ /_workingfile#{Doc.extension}$/
-				@@working_file = file
-			else
-				@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
+		end
+		@@working_file, @@val_infile_name, @@logfile_name = '','',Logs.logfilename
+		if Dir.exists?(tmp_dir)
+			Find.find(tmp_dir) { |file|
+			if file !~ /_DONE-#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
+				if file =~ /_workingfile#{Doc.extension}$/
+					@@working_file = file
+				else
+					@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
+				end
+			end
+			}
+			def self.working_file
+				@@working_file
+			end
+			def self.val_infile_name
+				@@val_infile_name
+			end
+			@@logfile_name = File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt')
+			def self.logfile_name
+				@@logfile_name
 			end
 		end
-		}
-		def self.working_file
-			@@working_file
-		end
-		def self.val_infile_name
-			@@val_infile_name
-		end
-		@@et_project_dir = ''
-		if File.file?(Paths.testing_value_file)
-			@@et_project_dir = File.join(Paths.server_dropbox_path,'egalley_transmittal_stg')
-		else
-			@@et_project_dir = File.join(Paths.server_dropbox_path,'egalley_transmittal')
-		end
-		def self.et_project_dir
-			@@et_project_dir
-		end	
-		@@logfile_name = File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt')
-		def self.logfile_name
-			@@logfile_name
-		end	
-	end	
+	end
 end

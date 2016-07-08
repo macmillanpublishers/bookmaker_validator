@@ -12,11 +12,6 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 
 pe_pm_file = File.join(Val::Paths.scripts_dir,'staff_email.json')
-errlog = false
-no_pm = false
-no_pe = false
-stylecheck_complete = false
-stylecheck_styled = false
 stylecheck_isbns = []
 cc_emails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
@@ -41,18 +36,15 @@ end
 if File.file?(Val::Files.stylecheck_file)
 	stylecheck_hash = Mcmlln::Tools.readjson(Val::Files.stylecheck_file)
   #get status on run from stylecheck items:
-	if !stylecheck_complete
+	if stylecheck_hash['completed'].nil?
 		status_hash['validator_macro_complete'] = false
-		logger.info {"stylecheck not complete accirdign to sylecheck.json, flagging for mailer"}
+		logger.info {"stylecheck.json present, but 'complete' value not present, looks like macro crashed"}
 	else
-  	stylecheck_complete = stylecheck_hash['completed']
-  	stylecheck_styled = stylecheck_hash['styled']['pass']
+		#set vars for status.json fro stylecheck.json
+  	status_hash['validator_macro_complete'] = stylecheck_hash['completed']
+  	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
   	stylecheck_isbns = stylecheck_hash['isbn']['list']
-  	logger.info {"retrieved from style_check.json- styled:\"#{stylecheck_styled}\", complete:\"#{stylecheck_complete}\", isbns:\"#{stylecheck_isbns}\""}
-  	if !stylecheck_styled
-  		status_hash['document_styled'] = false
-  		logger.info {"document not styled according to stylecheck.json, flagging for mailer"}
-  	end
+  	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\", isbns:\"#{stylecheck_isbns}\""}
   end
 else
 	logger.info {"style_check.json not present or unavailable"}
@@ -150,16 +142,14 @@ end
 if Dir.exist?(Val::Paths.tmp_dir)
 	Find.find(Val::Paths.tmp_dir) { |file|
 		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file
-			logger.info {"error log found in tmpdir: #{file}"}
-			logger.info {"file: #{file}"}
-			errlog = true
+			logger.info {"error log found in tmpdir: file: #{file}"}
 			status_hash['validator_macro_complete'] = false
 		end
 	}
 end
 
 #if file is ready for bookmaker to run, tag it in status.json so the deploy.rb can scoop it up
-if File.file?(Val::Files.bookinfo_file) && !errlog && stylecheck_complete && stylecheck_styled
+if File.file?(Val::Files.bookinfo_file) && status_hash['validator_macro_complete'] && status_hash['document_styled']
 	status_hash['bookmaker_ready'] = true
 end
 

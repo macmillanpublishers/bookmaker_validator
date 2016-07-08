@@ -9,6 +9,7 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
+std_logfile = "#{Val::Logs.logfolder}/#{Val::Paths.logfile_name}"
 log_suffix = "POSTS_#{Time.now.strftime('%Y-%m-%d_%H-%M-%S')}"
 json_logfile = Val::Logs.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
 human_logfile = Val::Logs.human_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
@@ -25,20 +26,20 @@ def log_time(currenthash,scriptname,txt,jsonlog)
 	timestamp_colon = Time.now.strftime('%y%m%d_%H:%M:%S')
 	time_hash = { "#{scriptname} #{txt}" => timestamp_colon }
 	Vldtr::Tools.update_json(time_hash,currenthash,jsonlog)
-end	
+end
 def run_script(command,hash,scriptname,jsonlog)
-	log_time(hash,scriptname,'start time',jsonlog)	
+	log_time(hash,scriptname,'start time',jsonlog)
 	alloutput = ''
 	Open3.popen2e(command) do |stdin, stdouterr, wait_thr|
 	stdin.close
 	stdouterr.each { |line|
 		alloutput << line
 		}
-	end	
+	end
 	outputhash={ "#{scriptname}" => alloutput }
 	Vldtr::Tools.update_json(outputhash, hash, jsonlog)
-	log_time(hash,scriptname,'completion time',jsonlog)	
-end	
+	log_time(hash,scriptname,'completion time',jsonlog)
+end
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
@@ -47,7 +48,7 @@ Subject: ALERT: #{Val::Paths.project_name} process crashed
 #{Val::Resources.thisscript}.rb has crashed during #{Val::Paths.project_name} run.
 
 Please see the following logfiles for assistance in troubleshooting:
-#{logfile}
+#{std_logfile}
 #{human_logfile}
 #{p_logfile}
 
@@ -55,7 +56,7 @@ MESSAGE_END
 
 
 #--------------------- LOGGING
-#create jsonlogfile 
+#create jsonlogfile
 output_hash = { 'completed' => false }
 Vldtr::Tools.write_json(output_hash, json_logfile)
 
@@ -63,7 +64,7 @@ Vldtr::Tools.write_json(output_hash, json_logfile)
 #--------------------- RUN
 #launch process-watcher
 log_time(output_hash,'process_watcher','start time',json_logfile)
-pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix}",[:out, :err]=>[p_logfile, "a"])		
+pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix}",[:out, :err]=>[p_logfile, "a"])
 Process.detach(pid)
 #log_time(output_hash,'process_watcher','completion time',json_logfile)
 
@@ -73,9 +74,9 @@ begin
 	run_script("#{Val::Resources.ruby_exe} #{post_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "post_cleanup", json_logfile)
 	#mark the process done for process watcher
 	output_hash['completed'] = true
-rescue Exception => e  
+rescue Exception => e
 	p e   #puts e.inspect
-	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"	
+	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"
 	output_hash['validator_rescue_err'] = e
 	#Process.kill(pid)
 	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
@@ -92,10 +93,3 @@ ensure
 	humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}
 	File.open(human_logfile, 'w+:UTF-8') { |f| f.puts humanreadie }
 end
-
-
-
-
-
-
-

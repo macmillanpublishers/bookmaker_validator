@@ -18,12 +18,19 @@ err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Valida
 validator_infile = File.join(Val::Posts.et_project_dir,'IN',Val::Posts.val_infile_name)
 errFile = File.join(Val::Posts.et_project_dir, "ERROR_RUNNING_#{Val::Posts.val_infile_name}#{Val::Doc.extension}.txt")
 
-testing = false			#an easy toggle for turning off coresource drop in separate from editing staging.txt value
-coresource_dir = 'O:'
+testing = true			#an easy toggle for turning off coresource drop in separate from editing staging.txt value
+et_project_dir = ''
+coresource_dir = ''
+if File.file?(Val::Paths.testing_value_file) || testing == true
+	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal_stg')
+	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
+	FileUtils.mkdir_p coresource_dir
+else
+	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal')
+	coresource_dir = 'O:'
+end
 epub_found = true
 epub, epub_firstpass = '', ''
-
-
 
 #--------------------- RUN
 #find our epubs
@@ -44,7 +51,7 @@ FileUtils.mkdir_p outfolder
 if !File.file?(epub) && !File.file?(epub_firstpass)
 	epub_found = false
 elsif File.file?(epub_firstpass)
-	if !File.file?(Val::Paths.testing_value_file) && !testing
+	if !File.file?(Val::Paths.testing_value_file)
 		FileUtils.cp epub_firstpass, coresource_dir
 		logger.info {"copied epub_firstpass to coresource_dir"}
 	end
@@ -52,7 +59,7 @@ elsif File.file?(epub_firstpass)
 	logger.info {"copied epub_firstpass to validator outfolder"}
 elsif File.file?(epub)
 	File.rename(epub, epub_firstpass)
-	if !File.file?(Val::Paths.testing_value_file) && !testing
+	if !File.file?(Val::Paths.testing_value_file)
 		FileUtils.cp epub_firstpass, coresource_dir
 		logger.info {"copied epub_firstpass to coresource_dir"}
 	end

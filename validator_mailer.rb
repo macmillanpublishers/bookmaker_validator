@@ -22,6 +22,11 @@ WC_mail = 'matthew.retzer@macmillan.com'
 
 
 #--------------------- RUN
+#note in logs if we're on staging server:
+if File.file?(Val::Paths.testing_value_file)
+	logger.info {"looks like we're on staging, won't be sending mails"}
+end
+
 #get info from status.json, define status/errors & status/warnings
 if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
@@ -30,7 +35,7 @@ if File.file?(Val::Files.status_file)
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
-end	
+end
 
 #get info from contacts.json
 if File.file?(Val::Files.contacts_file)
@@ -44,7 +49,7 @@ if File.file?(Val::Files.contacts_file)
 else
 	send_ok = false
 	logger.info {"Val::Files.contacts_file.json not present or unavailable, unable to send mails"}
-end	
+end
 
 #get info from bookinfo.json
 if File.file?(Val::Files.bookinfo_file)
@@ -60,7 +65,7 @@ if File.file?(Val::Files.bookinfo_file)
 	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 else
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
-end	
+end
 
 
 #Prepare warning/error text
@@ -68,11 +73,11 @@ warnings = "WARNINGS:\n"
 if !status_hash['api_ok']
 	#warning-api
 	warnings = "#{warnings}- Dropbox api cannot determine file submitter.\n"
-end	
+end
 if status_hash['filename_isbn']['isbn'].empty?
 	#warning-no_filename_isbn
 	warnings = "#{warnings}- No ISBN was included in the filename.\n"
-end	
+end
 if !status_hash['filename_isbn']["checkdigit"]
 	#warning-filename_isbn_checkdigit_fail
 	warnings = "#{warnings}- The ISBN included in the filename is not valid (#{status_hash['filename_isbn']['isbn']}): the checkdigit does not match. \n"
@@ -94,7 +99,7 @@ if !status_hash['pm_lookup'] && File.file?(Val::Files.bookinfo_file)
 	warnings = "#{warnings}- Error looking up Production Manager email for this title. Found PM_name/email: \'#{bookinfo_pmname}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
 if !status_hash['pe_lookup'] && File.file?(Val::Files.bookinfo_file)
-	warnings = "#{warnings}- Error looking up Production Editor email for this title. Found PE_name/email: \'#{bookinfo_pename}\'/\'#{contacts_hash['production_editor_email']}\' \n"	
+	warnings = "#{warnings}- Error looking up Production Editor email for this title. Found PE_name/email: \'#{bookinfo_pename}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
 if !status_hash['document_styled']
 	warnings = "#{warnings}- Document not styled with Macmillan styles.\n"
@@ -119,12 +124,12 @@ if !status_hash['validator_macro_complete']
 end
 if !status_hash['docfile']
 	#reset warnings & errors for a simpler message
-	warnings, errors = '',"ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"	
+	warnings, errors = '',"ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
 	errors = "#{errors}- The submitted document \"#{Val::Doc.filename_normalized}\" was not a .doc or .docx\n"
 end
-if errors == "ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"	
+if errors == "ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
 	errors = ''
-end	
+end
 
 
 #send submitter an error notification
@@ -139,25 +144,25 @@ From: Workflows <workflows@macmillan.com>
 #{cc_address}
 #{body}
 MESSAGE_END
-		
+
 		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails)
-		logger.info {"sent message to submitter re: fatal ERRORS encountered"}	 		
-	end	
+		logger.info {"sent message to submitter re: fatal ERRORS encountered"}
+	end
 end
 
-	
+
 if errors.empty? && !status_hash['document_styled'] && send_ok
 	unless File.file?(Val::Paths.testing_value_file)
 		#send email to westchester requesting firstpassepub cc: submitter, pe/pm
 		to_address = "#{to_address}, #{WC_name} <#{WC_mail}>"
-		if pm_mail =~ /@/ 
-			cc_mails << pm_mail 
-			cc_mails_b << pm_mail 
+		if pm_mail =~ /@/
+			cc_mails << pm_mail
+			cc_mails_b << pm_mail
 			cc_address = "#{cc_address}, #{pm_name} <#{pm_mail}>"
 		end
 		if pe_mail =~ /@/ && pe_mail != pm_mail
 			cc_mails << pe_mail
-			cc_mails_b << pe_mail	
+			cc_mails_b << pe_mail
 			cc_address = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 		end
 		cc_mails << submitter_mail
@@ -170,7 +175,7 @@ From: Workflows <workflows@macmillan.com>
 #{cc_address}
 #{body}
 MESSAGE_END_A
-		
+
 		Vldtr::Tools.sendmail(message_a, WC_mail, cc_mails)
 		logger.info {"sent message to westchester requesting firstpassepub for unstyled doc"}
 
@@ -181,17 +186,17 @@ MESSAGE_END_A
 		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, bookinfo)
 		#remove unstyled warning from body:
 		body = body.gsub(/- Document not styled with Macmillan styles.\n/,'')
-		
+
 message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
 #{to_address}
 #{cc_address}
 #{body}
 MESSAGE_END_B
-		
+
 		Vldtr::Tools.sendmail(message_b, submitter_mail, cc_mails_b)
-		logger.info {"sent message to submitter cc pe/pm notifying them of request to westchester for 1stpassepub"}	 		
-	end	
+		logger.info {"sent message to submitter cc pe/pm notifying them of request to westchester for 1stpassepub"}
+	end
 end
 
 
@@ -200,7 +205,7 @@ if errors.empty? && status_hash['document_styled'] && send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
 	end
-end	
+end
 
 
 #add errors/warnings to status.json for cleanup
