@@ -138,14 +138,11 @@ if status_hash['bookmaker_ready']
   	done_file = done_file.gsub(/#{Val::Doc.extension}$/,"_DONE-#{index}#{Val::Doc.extension}")
   	Mcmlln::Tools.copyFile(working_file_updated, done_file)
     Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
-		puts "#{done_file} is df"
-		puts "#{bookmaker_bot_IN} is bbi"
-
 		#rename working file to keep it distinct from infile
 		new_workingfile = working_file_updated.gsub(/#{Val::Doc.extension}$/,"_workingfile#{Val::Doc.extension}")
 		File.rename(working_file_updated, new_workingfile)
 		#make a copy of infile so we have a reference to it for posts
-	    Mcmlln::Tools.copyFile(Val::Doc.input_file, Val::Paths.tmp_dir)
+	  Mcmlln::Tools.copyFile(Val::Doc.input_file, tmp_dir_new)
 	else
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end
