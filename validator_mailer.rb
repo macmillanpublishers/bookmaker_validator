@@ -17,8 +17,8 @@ cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 to_address = 'To: '
-WC_name = 'Matt Retzer'
-WC_mail = 'matthew.retzer@macmillan.com'
+WC_name = 'Workflows'
+WC_mail = 'workflows@macmillan.com'
 
 
 #--------------------- RUN
