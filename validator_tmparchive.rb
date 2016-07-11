@@ -16,6 +16,7 @@ dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filena
 generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt'))
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
+logfile_for_macro = File.join(Val::Logs.logfolder, Val::Logs.logfilename)#.gsub(/ /,'" "')   #gsub(/(\(|\))/,'^\1') #trying backtick to escape parens in powershell command
 
 root_metadata = ''
 contacts_hash = {}
@@ -189,7 +190,7 @@ if (!status_hash['isbn_lookup_ok'] || Val::Doc.filename_normalized !~ /9(7(8|9)|
     logger.info {"\"#{Val::Doc.basename_normalized}\" is a .doc or .docx with bad or missing isbn_num in title, checking manuscript"}
     #get isbns from Manuscript via macro
 	status_hash['docisbn_check'] = true
-    Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{logfile}\'\"") do |stdin, stdouterr, wait_thr|
+    Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{logfile_for_macro}\'\"") do |stdin, stdouterr, wait_thr|
     stdin.close
     stdouterr.each { |line|
       status_hash['isbnstring'] << line

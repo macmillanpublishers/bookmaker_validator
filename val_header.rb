@@ -95,14 +95,14 @@ module Val
 	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
-		def self.testing			# it's only called in validator_cleanup & posts_cleanup
+		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing
 		end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript
 		end
-		@@run_macro = File.join(Paths.server_dropbox_path,'run_macro.ps1')
+		@@run_macro = File.join(Paths.scripts_dir,'run_macro.ps1')
 		def self.run_macro
 			@@run_macro
 		end
@@ -151,7 +151,7 @@ module Val
 		def self.deploy_logfolder
 			@@deploy_logfolder
 		end
-		@@process_logfolder = File.join(@@dropbox_logfolder, 'processLogs')
+		@@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
 		def self.process_logfolder
 			@@process_logfolder
 		end
