@@ -1,3 +1,5 @@
+Subject: Error running PROJECT_NAME on "FILENAME_SPLIT"
+
 An error occurred while attempting to run PROJECT_NAME on your file FILENAME_NORMALIZED."	
 
 Your original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.

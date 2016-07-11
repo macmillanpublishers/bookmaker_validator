@@ -1,3 +1,5 @@
+Subject: PROJECT_NAME successfully processed "FILENAME_SPLIT"
+
 The file, "FILENAME_NORMALIZED", has been successfully processed by egalley_transmittal.  
 
 Epubs generated from your manuscript can be found in the following folder:

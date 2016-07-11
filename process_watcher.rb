@@ -1,32 +1,19 @@
 require 'fileutils'
-require 'json'
-require 'net/smtp'
+
+require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
+require_relative './val_header.rb'
 
-#--------------------- HEADER - main declarations
-unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-input_file = File.expand_path(unescapeargv)
-input_file = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
-filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
-filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
-project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
-project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
-timestamp = ARGV[1]
-logfolder = File.join('S:','resources','logs')
-process_logfolder = File.join(logfolder,'processLogs')
-json_logfile = File.join(logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.json")
-human_logfile = File.join(logfolder,"#{filename_normalized}_out-err_validator_#{timestamp}.txt")
-p_logfile = File.join(process_logfolder,"#{filename_normalized}-validator-plog_#{timestamp}.txt")
-validator_dir = File.join('S:','resources','bookmaker_scripts','bookmaker_validator')
-testing_value_file = File.join("C:", "staging.txt")
-#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
-thisscript = File.basename($0,'.rb')
 
-#------ local var names
+#--------------------- LOCAL DECLARATIONS
+log_suffix = ARGV[1]
+json_logfile = Val::Logs.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
+human_logfile = Val::Logs.human_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
+
 json_exist = true
 deploy_complete = true
+#For testing: can deliberately hang  ps1 script by commenting out line in open3 call: ("stdin.close")
 sleeptime=600
-#sleeptime = 2		For testing. can also deliberately hang the ps1 script by commenting out line 48 in deploy.rb ("stdin.close")
 sleepmin=sleeptime/60
 
 
@@ -35,10 +22,7 @@ sleep(sleeptime)
 
 #load info from json_logfile
 if File.file?(json_logfile)
-	file = File.open(json_logfile, "r:utf-8")
-	content = file.read
-	file.close
-	jsonlog_hash = JSON.parse(content)
+	jsonlog_hash = Mcmlln::Tools.readjson(json_logfile)
 	deploy_complete = jsonlog_hash['completed']
 else 
 	json_exist = false
@@ -50,16 +34,16 @@ if !json_exist
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: #{project_name} ERROR for #{filename_normalized}
+Subject: #{Val::Paths.project_name} ERROR for #{Val::Doc.filename_normalized}
 
-#{project_name}'s process watcher waited #{sleepmin} and checked for logs from the deploy.rb file..
+#{Val::Paths.project_name}'s process watcher waited #{sleepmin} and checked for logs from the deploy.rb file..
 
 No json log is found. 
 (should be at: #{json_logfile})
 MESSAGE_END
 
 	#now sending
-	unless File.file?(testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')		
 	end
 end	
@@ -78,14 +62,14 @@ if json_exist && !deploy_complete
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: #{project_name} ERROR for #{filename_normalized}
+Subject: #{Val::Paths.project_name} ERROR for #{Val::Doc.filename_normalized}
 MIME-Version: 1.0
 Content-Type: multipart/mixed; boundary=#{marker}
 --#{marker}
 Content-Type: text/plain
 Content-Transfer-Encoding:8bit
 
-#{project_name}'s process watcher waited #{sleepmin} minutes and found this run of #{project_name}'s Deploy.rb not yet complete.
+#{Val::Paths.project_name}'s process watcher waited #{sleepmin} minutes and found this run of #{Val::Paths.project_name}'s Deploy.rb not yet complete.
 Please see attached logfile.
 
 --#{marker}
@@ -99,7 +83,7 @@ Content-Disposition: attachment; filename="#{attachment}"
 MESSAGE_END
 
 	#now sending
-	unless File.file?(testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')	
 	end
 end	

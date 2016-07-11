@@ -6,7 +6,7 @@ module Vldtr
   class Tools
 
 	def self.write_json(hash, json)
-	    finaljson = JSON.generate(hash)
+	    finaljson = JSON.pretty_generate(hash)
 	    File.open(json, 'w+:UTF-8') { |f| f.puts finaljson }
 	end
 

@@ -1,70 +1,27 @@
-ENV["NLS_LANG"] = "AMERICAN_AMERICA.WE8MSWIN1252"
-
 require 'fileutils'
-require 'json'
-require 'net/smtp'
-require 'logger'
 require 'find'
-require 'oci8'
-require 'to_xml'
+
 require_relative '../utilities/oraclequery.rb'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
+require_relative './val_header.rb'
 
-# ---------------------- VARIABLES (HEADER)
-unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-input_file = File.expand_path(unescapeargv)
-input_file = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
-filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
-input_file_normalized = input_file.gsub(/ /, "")
-filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
-basename_normalized = File.basename(filename_normalized, ".*")
-extension = File.extname(filename_normalized)
-project_dir = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
-project_name = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].pop
-inbox = File.join(project_dir, 'IN')
-outbox = File.join(project_dir, 'OUT')
-working_dir = File.join('S:', 'validator_tmp')
-tmp_dir=File.join(working_dir, basename_normalized)
-validator_dir = File.expand_path(File.dirname(__FILE__))
-mailer_dir = File.join(validator_dir,'mailer_messages')
-working_file = File.join(tmp_dir, filename_normalized)
-bookinfo_file = File.join(tmp_dir,'book_info.json')
-stylecheck_file = File.join(tmp_dir,'style_check.json')
-contacts_file = File.join(tmp_dir,'contacts.json')
-status_file = File.join(tmp_dir,'status_info.json')
-testing_value_file = File.join("C:", "staging.txt")
-#testing_value_file = File.join("C:", "stagasdsading.txt")   #for testing mailer on staging server
-errFile = File.join(project_dir, "ERROR_RUNNING_#{filename_normalized}.txt")
-thisscript = File.basename($0,'.rb')
 
-# ---------------------- LOGGING
-logfolder = File.join(working_dir, 'logs')
-logfile = File.join(logfolder, "#{basename_normalized}_log.txt")
-logger = Logger.new(logfile)
-logger.formatter = proc do |severity, datetime, progname, msg|
-  "#{datetime}: #{thisscript} -- #{msg}\n"
-end
+# ---------------------- LOCAL DECLARATIONS
+Val::Logs.log_setup()
+logger = Val::Logs.logger
 
-# ---------------------- LOCAL VARIABLES
-pe_pm_file = File.join(validator_dir,'staff_email.json')
-errlog = false
-no_pm = false
-no_pe = false
-stylecheck_complete = false
-stylecheck_styled = false
+pe_pm_file = File.join(Val::Paths.scripts_dir,'staff_email.json')
 stylecheck_isbns = []
 cc_emails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 
 
-#is ituseful to add ccemails to contacts hash?  Should workflows be included?  even if bookinfo.json is not present? (cuz right now is not)
-
 
 #--------------------- RUN
 #get info from status.json, set local vars for status_hash (Had several of these values set as empty but then they eval as true in some if statements)
-if File.file?(status_file)
-	status_hash = Mcmlln::Tools.readjson(status_file)
+if File.file?(Val::Files.status_file)
+	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
 	status_hash['validator_macro_complete'] = false
 	status_hash['document_styled'] = false
 	status_hash['pe_lookup'] = true
@@ -76,21 +33,18 @@ end
 
 
 #get info from style_check.json
-if File.file?(stylecheck_file)
-	stylecheck_hash = Mcmlln::Tools.readjson(stylecheck_file)
-  #get status on run from syle)check items:
-	if !stylecheck_complete
+if File.file?(Val::Files.stylecheck_file)
+	stylecheck_hash = Mcmlln::Tools.readjson(Val::Files.stylecheck_file)
+  #get status on run from stylecheck items:
+	if stylecheck_hash['completed'].nil?
 		status_hash['validator_macro_complete'] = false
-		logger.info {"stylecheck not complete accirdign to sylecheck.json, flagging for mailer"}
+		logger.info {"stylecheck.json present, but 'complete' value not present, looks like macro crashed"}
 	else
-  	stylecheck_complete = stylecheck_hash['completed']
-  	stylecheck_styled = stylecheck_hash['styled']['pass']
+		#set vars for status.json fro stylecheck.json
+  	status_hash['validator_macro_complete'] = stylecheck_hash['completed']
+  	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
   	stylecheck_isbns = stylecheck_hash['isbn']['list']
-  	logger.info {"retrieved from style_check.json- styled:\"#{stylecheck_styled}\", complete:\"#{stylecheck_complete}\", isbns:\"#{stylecheck_isbns}\""}
-  	if !stylecheck_styled
-  		status_hash['document_styled'] = false
-  		logger.info {"document not styled according to stylecheck.json, flagging for mailer"}
-  	end
+  	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\", isbns:\"#{stylecheck_isbns}\""}
   end
 else
 	logger.info {"style_check.json not present or unavailable"}
@@ -98,10 +52,9 @@ else
 end
 
 
-#get info from bookinfo.json, do pe & pm lookups
-#(& setting up handling for cc's)
-if File.file?(bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(bookinfo_file)
+#get info from bookinfo.json, do pe & pm lookups (& setting up handling for cc's)
+if File.file?(Val::Files.bookinfo_file)
+	bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
 	pm_name = bookinfo_hash['production_manager']
 	pe_name = bookinfo_hash['production_editor']
 	logger.info {"retrieved from book_info.json- pe_name:\"#{pe_name}\", pm_name:\"#{pm_name}\""}
@@ -115,8 +68,8 @@ if File.file?(bookinfo_file)
 	pe_pm_hash = Mcmlln::Tools.readjson(pe_pm_file)
 
 	#read in out contacts.json so we can update it with pe/pm:
-	if File.file?(contacts_file)
-		contacts_hash = Mcmlln::Tools.readjson(contacts_file)
+	if File.file?(Val::Files.contacts_file)
+		contacts_hash = Mcmlln::Tools.readjson(Val::Files.contacts_file)
 	else
 		contacts_hash = {}
 		logger.info {"contacts json not found?"}
@@ -149,8 +102,8 @@ if File.file?(bookinfo_file)
 		status_hash['pe_lookup'] = false
 	end
 	#add pe/pm emails (if found) to submitter_file
-	if status_hash['pm_lookup'] || status_hash['pe_lookup'] && File.file?(contacts_file)
-		Vldtr::Tools.write_json(contacts_hash, contacts_file)
+	if status_hash['pm_lookup'] || status_hash['pe_lookup'] && File.file?(Val::Files.contacts_file)
+		Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
 	end
 else
 	logger.info {"no book_info.json found, unable to retrieve pe/pm emails"}
@@ -159,7 +112,7 @@ end
 
 
 #crosscheck document isbns via work_id
-if File.file?(bookinfo_file) && File.file?(stylecheck_file) && File.file?(status_file)
+if File.file?(Val::Files.bookinfo_file) && File.file?(Val::Files.stylecheck_file) && File.file?(Val::Files.status_file)
 	stylecheck_isbns.each { |sc_isbn|
 		sc_isbn = sc_isbn.to_s.gsub(/-/,'')
 		if sc_isbn != bookinfo_hash['isbn']
@@ -185,36 +138,34 @@ if File.file?(bookinfo_file) && File.file?(stylecheck_file) && File.file?(status
 end
 
 
-#check for alert or other unplanned items in tmp_dir:
-if Dir.exist?(tmp_dir)
-	Find.find(tmp_dir) { |file|
-		if file != stylecheck_file && file != bookinfo_file && file != working_file && file != contacts_file && file != tmp_dir && file != status_file
-			logger.info {"error log found in tmpdir: #{file}"}
-			logger.info {"file: #{file}"}
-			errlog = true
+#check for alert or other unplanned items in Val::Paths.tmp_dir:
+if Dir.exist?(Val::Paths.tmp_dir)
+	Find.find(Val::Paths.tmp_dir) { |file|
+		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file
+			logger.info {"error log found in tmpdir: file: #{file}"}
 			status_hash['validator_macro_complete'] = false
 		end
 	}
 end
 
 #if file is ready for bookmaker to run, tag it in status.json so the deploy.rb can scoop it up
-if File.file?(bookinfo_file) && !errlog && stylecheck_complete && stylecheck_styled
+if File.file?(Val::Files.bookinfo_file) && status_hash['validator_macro_complete'] && status_hash['document_styled']
 	status_hash['bookmaker_ready'] = true
 end
 
 
 #update status file with new news!
-Vldtr::Tools.write_json(status_hash, status_file)
+Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
 
 
 #emailing workflows if pe/pm lookups failed
-if (File.file?(bookinfo_file) && (!status_hash['pm_lookup'] || !status_hash['pm_lookup']))
+if (File.file?(Val::Files.bookinfo_file) && (!status_hash['pm_lookup'] || !status_hash['pm_lookup']))
 	logger.info {"pe or pm lookup failed"}
 
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: "Lookup failed: #{project_name} on #{filename_split}"
+Subject: "Lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
 
 PE or PM lookup failed for bookmaker_validator:
 
@@ -225,9 +176,8 @@ PM email (lookup against our static json): #{pm_mail}
 MESSAGE_END
 
 	#now sending
-	unless File.file?(testing_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
 		logger.info {"sent email re failed lookup, now exiting validator_checker"}
 	end
-
 end
