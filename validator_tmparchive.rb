@@ -14,7 +14,7 @@ logger = Val::Logs.logger
 
 dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split)
 generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt'))
-macro_name = "Reports.IsbnSearch"
+macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
 
 root_metadata = ''
