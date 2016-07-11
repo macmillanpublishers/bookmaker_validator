@@ -16,7 +16,7 @@ dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filena
 generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt'))
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
-logfile_for_macro = File.join(Val::Logs.logfolder, Val::Logs.logfilename)#.gsub(/ /,'" "')   #gsub(/(\(|\))/,'^\1') #trying backtick to escape parens in powershell command
+logfile_for_macro = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
 
 root_metadata = ''
 contacts_hash = {}
