@@ -11,17 +11,8 @@ require_relative './val_header.rb'
 Val::Logs.log_setup(Val::Posts.logfile_name)
 logger = Val::Logs.logger
 
-done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
-outfolder = File.join(Val::Posts.et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE-#{Val::Posts.index}$/,'')
-warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
-err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
-validator_infile = File.join(Val::Posts.et_project_dir,'IN',Val::Posts.val_infile_name)
-errFile = File.join(Val::Posts.et_project_dir, "ERROR_RUNNING_#{Val::Posts.val_infile_name}#{Val::Doc.extension}.txt")
-
-testing = true			#an easy toggle for turning off coresource drop in separate from editing staging.txt value
-et_project_dir = ''
-coresource_dir = ''
-if File.file?(Val::Paths.testing_value_file) || testing == true
+et_project_dir, coresource_dir  = '', ''		#'et' for egalley_transmittal :)
+if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
 	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal_stg')
 	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
 	FileUtils.mkdir_p coresource_dir
@@ -29,8 +20,16 @@ else
 	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal')
 	coresource_dir = 'O:'
 end
+done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
+outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE-#{Val::Posts.index}$/,'')
+warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
+err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
+validator_infile = File.join(et_project_dir,'IN',Val::Posts.val_infile_name)
+errFile = File.join(et_project_dir, "ERROR_RUNNING_#{Val::Posts.val_infile_name}#{Val::Doc.extension}.txt")
+
 epub_found = true
 epub, epub_firstpass = '', ''
+
 
 #--------------------- RUN
 #find our epubs
@@ -92,14 +91,14 @@ end
 
 #update Val::Logs.permalog
 if File.file?(Val::Logs.permalog)
-	Val::Logs.permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
-	Val::Logs.permalog_hash[Val::Posts.index]['bookmaker_ran'] = true
-	Val::Logs.permalog_hash[Val::Posts.index]['epub_found'] = true
+	permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
+	permalog_hash[Val::Posts.index]['bookmaker_ran'] = true
+	permalog_hash[Val::Posts.index]['epub_found'] = true
 	if !epub_found
-		Val::Logs.permalog_hash[Val::Posts.index]['epub_found'] = false
+		permalog_hash[Val::Posts.index]['epub_found'] = false
 	end
 	#write to json Val::Logs.permalog!
-    Vldtr::Tools.write_json(Val::Logs.permalog_hash,Val::Logs.permalog)
+    Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 end
 
 

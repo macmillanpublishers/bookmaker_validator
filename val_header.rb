@@ -30,7 +30,7 @@ module Val
 		end
 	end
 	class Paths
-		@@testing_value_file = File.join("C:", "staging.txts")
+		@@testing_value_file = File.join("C:", "staging.txt")
 		def self.testing_value_file
 			@@testing_value_file
 		end
@@ -94,6 +94,10 @@ module Val
 		end
 	end
 	class Resources
+		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
+		def self.testing			# it's only called in validator_cleanup & posts_cleanup
+			@@testing
+		end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript

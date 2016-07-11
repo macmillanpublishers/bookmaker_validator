@@ -14,9 +14,8 @@ outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalize
 err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
 warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
 
-testing = true			#an easy toggle for turning off coresource drop in separate from editing staging.txt value
 bookmaker_bot_IN = ''
-if File.file?(Val::Paths.testing_value_file) || testing == true
+if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
 	bookmaker_bot_IN = File.join(Val::Paths.server_dropbox_path,'bookmaker_bot_stg','bookmaker_egalley','convert')
 else
 	bookmaker_bot_IN = File.join(Val::Paths.server_dropbox_path,'bookmaker_bot','bookmaker_egalley','convert')

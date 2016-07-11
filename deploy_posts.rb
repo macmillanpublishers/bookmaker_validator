@@ -9,7 +9,7 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-std_logfile = "#{Val::Logs.logfolder}/#{Val::Paths.logfile_name}"
+std_logfile = "#{Val::Logs.logfolder}/#{Val::Posts.logfile_name}"
 log_suffix = "POSTS_#{Time.now.strftime('%Y-%m-%d_%H-%M-%S')}"
 json_logfile = Val::Logs.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
 human_logfile = Val::Logs.human_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
