@@ -2,8 +2,6 @@ require 'fileutils'
 require 'logger'
 require 'find'
 
-#require_relative 'utilities/mcmlln-tools.rb'
-
 module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
