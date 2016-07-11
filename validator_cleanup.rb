@@ -93,7 +93,7 @@ if !status_hash['errors'].empty?
 	#save the Val::Paths.tmp_dir for review
 	if Dir.exists?(Val::Paths.tmp_dir)
 		FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
-		FileUtils.mv "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder
+		FileUtils.cp_r "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder
 		logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
 	else
 		logger.info {"no tmpdir exists, this was probably not a .doc file"}

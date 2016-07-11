@@ -95,7 +95,7 @@ module Val
 	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
-		def self.testing			# it's only called in validator_cleanup & posts_cleanup
+		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing
 		end
 		@@thisscript = File.basename($0,'.rb')
@@ -124,8 +124,8 @@ module Val
 		end
 	end
 	class Logs
-		#@@this_dir = File.expand_path(File.dirname(__FILE__))
-		@@logfolder = File.join(Paths.working_dir, 'logs')		#defaults for logging
+		@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
+		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
 		def self.logfolder
 			@@logfolder
 		end
@@ -133,7 +133,7 @@ module Val
 		def self.logfilename
 			@@logfilename
 		end
-		def self.log_setup(file=@@logfilename,folder=@@logfolder)		#can be overwritten in function call
+		def self.log_setup(file=logfilename,folder=logfolder)		#can be overwritten in function call
 			logfile = File.join(folder,file)
 			@@logger = Logger.new(logfile)
 			def self.logger
@@ -143,15 +143,15 @@ module Val
 			  "#{datetime}: #{Resources.thisscript} -- #{msg}\n"
 			end
 		end
-		@@permalog = File.join(@@logfolder,'validator_history_report.json')
+		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
 		def self.permalog
 			@@permalog
 		end
-		@@deploy_logfolder = File.join('S:','resources','logs')
+		@@deploy_logfolder = File.join(@@dropbox_logfolder, 'std_out-err_logs')
 		def self.deploy_logfolder
 			@@deploy_logfolder
 		end
-		@@process_logfolder = File.join(deploy_logfolder,'processLogs')
+		@@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
 		def self.process_logfolder
 			@@process_logfolder
 		end
