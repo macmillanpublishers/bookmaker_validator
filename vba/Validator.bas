@@ -528,9 +528,11 @@ Private Function ValidatorMain(DocPath As String) As Boolean
 ' ----- ISBN VALIDATION -------------------------------------------------------
 ' Check ISBN first, because it can fail to find an ISBN in the body text but
 ' still run successfully in Bookmaker if ISBN is in file name.
-  strKey = "isbn"
-  Set dictTests = genUtils.Reports.IsbnCheck
-  Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
+
+' Actually don't check here, run separate IsbnSearch before calling validator
+'  strKey = "isbn"
+'  Set dictTests = genUtils.Reports.IsbnCheck
+'  Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
 
 ' ----- OVERALL STYLE CHECKS --------------------------------------------------
   strKey = "styled"
@@ -790,10 +792,22 @@ Private Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strFile As String
-  strFile = "Black_UNSTYLED_InText_5-25-2016"
+'  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
+'  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
+  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
+'  strFile = "04Brennan_STYLED_InText_2016-May-17"
+'  strFile = "05Jahn_STYLED_NotInText_2016-May-04"
+'  strFile = "06Black_UNSTYLED_InText_5-25-2016"
+'  strFile = "08Newell_UNSTYLED_NotInText_6-29-16"
+'  strFile = "09Chaput_UNSTYLED_inText_styles-added"
+'  strFile = "10Dietrich_STYLED_InText2_match"
+'  strFile = "11Klages_STYLED_InText2_noMatch"
+'  strFile = "12Pomfret_UNSTYLED_InText2_match"
+'  strFile = "13Segre_UNSTYLED_InText2_noMatch"
+'  strFile = "14Meadows_less-than-half"
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator\" & strFile & ".docx", _
-  "C:\Users\erica.warren\Desktop\validator\LOG_" & strFile & ".txt")
+  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator_test\" & strFile & ".docx", _
+  "C:\Users\erica.warren\Desktop\validator_test\LOG_" & strFile & ".txt")
   Exit Sub
 
 TestError:
@@ -810,21 +824,20 @@ Private Sub IsbnTest()
   Dim strReturnedIsbn As String
   Dim A As Long
   
-  Dim strFile(1 To 14) As String
+  Dim strFile(1 To 13) As String
   strFile(1) = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
   strFile(2) = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
   strFile(3) = "03Leigh_STYLED_InText_978-0-312-38912-3"
   strFile(4) = "04Brennan_STYLED_InText_2016-May-17"
   strFile(5) = "05Jahn_STYLED_NotInText_2016-May-04"
   strFile(6) = "06Black_UNSTYLED_InText_5-25-2016"
-  strFile(7) = "07Tomasky_UNSTYLED_NotInText_9781627796767_2016-5-19"
-  strFile(8) = "08Newell_UNSTYLED_NotInText_6-29-16"
-  strFile(9) = "09Chaput_UNSTYLED_inText_styles-added"
-  strFile(10) = "10Dietrich_STYLED_InText2_match"
-  strFile(11) = "11Klages_STYLED_InText2_noMatch"
-  strFile(12) = "12Pomfret_UNSTYLED_InText2_match"
-  strFile(13) = "13Segre_UNSTYLED_InText2_noMatch"
-  strFile(14) = "14Meadows_less-than-half"
+  strFile(7) = "08Newell_UNSTYLED_NotInText_6-29-16"
+  strFile(8) = "09Chaput_UNSTYLED_inText_styles-added"
+  strFile(9) = "10Dietrich_STYLED_InText2_match"
+  strFile(10) = "11Klages_STYLED_InText2_noMatch"
+  strFile(11) = "12Pomfret_UNSTYLED_InText2_match"
+  strFile(12) = "13Segre_UNSTYLED_InText2_noMatch"
+  strFile(13) = "14Meadows_less-than-half"
 
   For A = 1 To UBound(strFile)
     Debug.Print A & ": " & strFile(A)
