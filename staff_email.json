@@ -1,625 +1,1222 @@
 [
   {
-    "firstName": "Melinda",
-    "lastName": "Ackell",
-    "email": "melinda.ackell@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Edward",
-    "lastName": "Allen",
-    "email": "edward.allen@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Scott",
-    "lastName": "Auerbach",
-    "email": "Scott.Auerbach@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Starr",
-    "lastName": "Baer",
-    "email": "Elizabeth.Baer@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Danielle",
-    "lastName": "Ballantyne",
-    "email": "Danielle.Ballantyne@tor.com",
-    "role": "PE",
-    "Notes": "not in Biblio Contact list 6-7-16"
-  },
-  {
-    "firstName": "Kolt",
-    "lastName": "Beringer",
-    "email": "Kolt.Beringer@picadorusa.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Molly",
-    "lastName": "Bloom",
-    "email": "Molly.Bloom@hholt.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Alan",
-    "lastName": "Bradshaw",
-    "email": "Alan.Bradshaw@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Caitlin",
-    "lastName": "Buckley",
-    "email": "Caitlin.Buckley@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "David",
-    "lastName": "Burr",
-    "email": "david.burr@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Elizabeth",
-    "lastName": "Catalano",
-    "email": "elizabeth.catalano@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Donna",
-    "lastName": "Cherry",
-    "email": "donna.cherry@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Katharine",
-    "lastName": "Cicatelli-Kuc",
-    "email": "katharine.cicatelli-kuc@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Olivia",
-    "lastName": "Croom",
-    "email": "Olivia.Croom@hholt.com",
-    "role": "PE",
-    "Notes": "not in Biblio Contact list 6-7-16"
-  },
-  {
-    "firstName": "Elizabeth",
-    "lastName": "Curione",
-    "email": "elizabeth.curione@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Lisa",
-    "lastName": "Davis",
-    "email": "lisa.davis@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Meg",
-    "lastName": "Drislane",
-    "email": "meg.drislane@stmartins.com",
-    "role": "PE",
-    "Notes": "in AD, Margaret"
-  },
-  {
-    "firstName": "Frieda",
-    "lastName": "Duggan",
-    "email": "frieda.duggan@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Alexei",
-    "lastName": "Esikoff",
-    "email": "Alexei.Esikoff@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Michelle",
-    "lastName": "Foytek",
-    "email": "michelle.foytek.contractor@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jill",
-    "lastName": "Freshney",
-    "email": "Jill.Freshney@RoaringBrookPress.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Rafal",
-    "lastName": "Gibek",
-    "email": "rafal.gibek@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Susan",
-    "lastName": "Goldfarb",
-    "email": "Susan.Goldfarb@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Christopher",
-    "lastName": "Gonzalez",
-    "email": "Christopher.Gonzalez@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Meryl",
-    "lastName": "Gross",
-    "email": "Meryl.Gross@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jennifer",
-    "lastName": "Healey",
-    "email": "jennifer.healey@hholt.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Debra",
-    "lastName": "Helfand",
-    "email": "Debra.Helfand@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Laurie",
-    "lastName": "Henderson",
-    "email": "laurie.henderson@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Lauren",
-    "lastName": "Hougen",
-    "email": "Lauren.Hougen@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Nicholas",
-    "lastName": "Ishaq",
-    "email": "Nicholas.Ishaq@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Hayley",
-    "lastName": "Jozwiak",
-    "email": "Hayley.Jozwiak@roaringbrookpress.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jessica",
-    "lastName": "Katz",
-    "email": "Jessica.Katz@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Megan",
-    "lastName": "Kiddoo",
-    "email": "Megan.Kiddoo@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jeff",
-    "lastName": "LaSala",
-    "email": "Jeff.LaSala@tor.com",
-    "role": "PE",
-    "Notes": "not in Biblio Contact list 6-7-16"
-  },
-  {
-    "firstName": "Amelie",
-    "lastName": "Littell",
-    "email": "amelie.littell@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "David",
-    "lastName": "Lott",
-    "email": "David.Lott@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Chrisinda",
-    "lastName": "Lynch",
-    "email": "chrisinda.lynch@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Eric",
-    "lastName": "Meyer",
-    "email": "eric.meyer@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Perry",
-    "lastName": "Minella",
-    "email": "Perry.Minella@roaringbrookpress.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "John",
-    "lastName": "Morrone",
-    "email": "John.Morrone@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Chris",
-    "lastName": "O'Connell",
-    "email": "chris.o'connell@hholt.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jeremy",
-    "lastName": "Pink",
-    "email": "Jeremy.Pink@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Karla",
-    "lastName": "Reganold",
-    "email": "Karla.Reganold@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Matthew",
-    "lastName": "Retzer",
-    "email": "matthew.retzer@macmillan.com",
-    "role": "PE",
-    "Notes": "for testing purposes"
-  },
-  {
-    "firstName": "John",
-    "lastName": "Rounds",
-    "email": "john.rounds@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Kenn",
-    "lastName": "Russell",
-    "email": "kenn.russell@hholt.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jennifer",
-    "lastName": "Sale",
-    "email": "Jennifer.Sale@fsgbooks.com",
-    "role": "PE",
-    "Notes": "not in Biblio Contact list 6-7-16"
-  },
-  {
-    "firstName": "Melanie",
-    "lastName": "Sanders",
-    "email": "Melanie.Sanders@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Valerie",
-    "lastName": "Scialabba",
-    "email": "Valerie.Scialabba@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Ken",
-    "lastName": "Silver",
-    "email": "Ken.Silver@stmartins.com",
-    "role": "PE",
-    "Notes": "in AD, Kenneth"
-  },
-  {
-    "firstName": "Kevin",
-    "lastName": "Sweeney",
-    "email": "Kevin.Sweeney@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jocelyn",
-    "lastName": "Tiller",
-    "email": "Jocelyn.Tiller@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Amy",
-    "lastName": "Vreeland",
-    "email": "amy.vreeland@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Victoria",
-    "lastName": "Wallis",
-    "email": "Victoria.Wallis@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Emily",
-    "lastName": "Walters",
-    "email": "Emily.Walters@stmartins.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Nathan",
-    "lastName": "Weaver",
-    "email": "Nathan.Weaver@tor.com",
-    "role": "PE",
-    "Notes": "not in Biblio Contact list 6-7-16"
-  },
-  {
-    "firstName": "Rachel",
-    "lastName": "Weinick",
-    "email": "rachel.weinick@fsgbooks.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Lenni",
-    "lastName": "Wolff",
-    "email": "Lenni.Wolff.Contractor@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Ilana",
-    "lastName": "Worrell",
-    "email": "ilana.worrell@macmillan.com",
-    "role": "PE",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Allene",
-    "lastName": "Cassagnol",
-    "email": "allene.cassagnol@macmillan.com",
-    "role": "PM",
-    "Notes": "_"
+    "firstName": "Abby",
+    "lastName": "Kagan",
+    "email": "abby.kagan@fsgbooks.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Designer/Dir Adult Trade",
+    "dept": "13000150 FSG Production"
   },
   {
     "firstName": "Adriana",
     "lastName": "Coada",
     "email": "adriana.coada@stmartins.com",
     "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Raymond",
-    "lastName": "Colon",
-    "email": "raymond.colon@macmillan.com",
-    "role": "PM",
-    "Notes": "_"
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
   },
   {
     "firstName": "Adrienne",
     "lastName": "Davis",
-    "email": "raymond.colon@macmillan.com",
+    "email": "Adrienne.Davis@fsgbooks.com",
     "role": "PM",
-    "Notes": "_"
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Production Associate (NE)",
+    "dept": "52000150 SMP Production"
   },
   {
-    "firstName": "Eva",
-    "lastName": "Diaz",
-    "email": "eva.diaz@hholt.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Janna",
-    "lastName": "Dokos",
-    "email": "janna.dokos@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Susan",
-    "lastName": "Doran",
-    "email": "susan.doran@macmillan.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Nina",
-    "lastName": "Frieman",
-    "email": "nina.frieman@fsgbooks.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Joy",
-    "lastName": "Gannon",
-    "email": "joy.gannon@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Eric",
-    "lastName": "Gladstone",
-    "email": "eric.gladstone@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Karl",
-    "lastName": "Gold",
-    "email": "karl.gold@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Lisa",
-    "lastName": "Goris",
-    "email": "lisa.goris@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Susan",
-    "lastName": "Joseph",
-    "email": "susan.joseph@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jim",
-    "lastName": "Kapp",
-    "email": "jim.kapp@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Stefany",
-    "lastName": "Lopez",
-    "email": "stefany.lopez@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Cheryl",
-    "lastName": "Mamaril",
-    "email": "cheryl.mamaril@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Michael",
-    "lastName": "Messineo",
-    "email": "michael.messineo@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Thomas",
-    "lastName": "Nau",
-    "email": "thomas.nau@macmillan.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "John",
-    "lastName": "Nora",
-    "email": "john.nora@macmillan.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Yolanda",
-    "lastName": "Pluguez",
-    "email": "yolanda.pluguez@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Jason",
-    "lastName": "Reigal",
-    "email": "jason.reigal@hholt.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Peter",
-    "lastName": "Richardson",
-    "email": "peter.richardson@fsgbooks.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Lena",
-    "lastName": "Shekhter",
-    "email": "lena.shekhter@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Theresa",
-    "lastName": "Sparacio",
-    "email": "theresa.sparacio@macmillan.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Vincent",
-    "lastName": "Stanley",
-    "email": "vincent.stanley@stmartins.com",
-    "role": "PM",
-    "Notes": "_"
-  },
-  {
-    "firstName": "Cathy",
-    "lastName": "Turiano",
-    "email": "cathy.turiano@stmartins.com",
-    "role": "PM",
-    "Notes": "in AD, last name is Patullo"
+    "firstName": "Alan",
+    "lastName": "Bradshaw",
+    "email": "Alan.Bradshaw@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "Palgrave",
+    "jobTitle": "Mng Edit&Dir Special Proj",
+    "dept": "SMP Production"
   },
   {
     "firstName": "Alexa",
     "lastName": "Villanueva",
     "email": "alexa.villanueva@macmillan.com",
     "role": "PM",
-    "Notes": "_"
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Alexei",
+    "lastName": "Esikoff",
+    "email": "Alexei.Esikoff@macmillan.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Managing Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Allene",
+    "lastName": "Cassagnol",
+    "email": "allene.cassagnol@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Amanda",
+    "lastName": "Veloso",
+    "email": "Amanda.Veloso@macmillan.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Production Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Amelie",
+    "lastName": "Littell",
+    "email": "amelie.littell@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Exec Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Amy",
+    "lastName": "Vreeland",
+    "email": "amy.vreeland@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Copy Chief",
+    "dept": "13000106 FSG Edit Prod"
+  },
+  {
+    "firstName": "Andrew",
+    "lastName": "Arnold",
+    "email": "Andrew.Arnold@roaringbrookpress.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Designer",
+    "dept": "37112152 FSG BYR Design"
+  },
+  {
+    "firstName": "Anna",
+    "lastName": "Gorovoy",
+    "email": "Anna.Gorovoy@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Anne",
+    "lastName": "Diebel",
+    "email": "Anne.Diebel@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Creative Director",
+    "dept": "37112152 FSG BYR Design"
+  },
+  {
+    "firstName": "April",
+    "lastName": "Ward",
+    "email": "April.Ward@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Art Director",
+    "dept": "3140151 Feiwel and Friends Art"
+  },
+  {
+    "firstName": "Caitlin",
+    "lastName": "Buckley",
+    "email": "Caitlin.Buckley@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "Director of Ebook Production",
+    "dept": "Macmillan Publishers Ebook Production"
+  },
+  {
+    "firstName": "Cathy",
+    "lastName": "Turiano",
+    "email": "cathy.turiano@stmartins.com",
+    "role": "PM",
+    "Notes": "in AD, last name is Patullo",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Cheryl",
+    "lastName": "Mamaril",
+    "email": "cheryl.mamaril@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Chris",
+    "lastName": "O'Connell",
+    "email": "chris.o'connell@hholt.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Sr Production Editor",
+    "dept": "Holt Adult Editorial"
+  },
+  {
+    "firstName": "Chrisinda",
+    "lastName": "Lynch",
+    "email": "chrisinda.lynch@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Asst to Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Christopher",
+    "lastName": "Gonzalez",
+    "email": "Christopher.Gonzalez@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "eBook QA Associate",
+    "dept": "Macmillan Publishers Ebook Production"
+  },
+  {
+    "firstName": "Danielle",
+    "lastName": "Ceccolini",
+    "email": "Danielle.Ceccolini@firstsecondbooks.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Designer",
+    "dept": "35133100 1st Second Editorial"
+  },
+  {
+    "firstName": "Danielle",
+    "lastName": "Ballantyne",
+    "email": "Danielle.Ballantyne@tor.com",
+    "role": "PE",
+    "Notes": "not in Biblio Contact list 6-7-16",
+    "division": "Tor",
+    "jobTitle": "Asst. to Managing Editor",
+    "dept": "Tor MM Production"
+  },
+  {
+    "firstName": "David",
+    "lastName": "Burr",
+    "email": "david.burr@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "David",
+    "lastName": "Lott",
+    "email": "David.Lott@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Debbie",
+    "lastName": "Cobb",
+    "email": "Debbie.Cobb@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Art Dept Coordinator",
+    "dept": "36101151 Henry Holt BYR Art and Design"
+  },
+  {
+    "firstName": "Debra",
+    "lastName": "Helfand",
+    "email": "Debra.Helfand@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Executive Managing Editor",
+    "dept": "13000106 FSG Edit Prod"
+  },
+  {
+    "firstName": "Donna",
+    "lastName": "Noetzel",
+    "email": "Donna.Noetzel@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Interior Senior Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Donna",
+    "lastName": "Cherry",
+    "email": "donna.cherry@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "Palgrave",
+    "jobTitle": "Sr Production Editor",
+    "dept": "SMP Production"
+  },
+  {
+    "firstName": "Eileen",
+    "lastName": "Gilshian",
+    "email": "Eileen.Gilshian@hholt.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Production Designer",
+    "dept": "37112152 FSG BYR Design"
+  },
+  {
+    "firstName": "Elizabeth",
+    "lastName": "Clark",
+    "email": "elizabeth.clark@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Associate Art Director",
+    "dept": "37112152 FSG BYR Design"
+  },
+  {
+    "firstName": "Elizabeth",
+    "lastName": "Dresner",
+    "email": "Elizabeth.Dresner@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Designer",
+    "dept": "3140151 Feiwel and Friends Art"
+  },
+  {
+    "firstName": "Elizabeth",
+    "lastName": "Catalano",
+    "email": "elizabeth.catalano@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Elizabeth",
+    "lastName": "Curione",
+    "email": "elizabeth.curione@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Ellen",
+    "lastName": "Duda",
+    "email": "Ellen.Duda@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Designer",
+    "dept": "79101151 Imprint Art"
+  },
+  {
+    "firstName": "Emily",
+    "lastName": "Walters",
+    "email": "Emily.Walters@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Assoc Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Eric",
+    "lastName": "Meyer",
+    "email": "eric.meyer@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Eric",
+    "lastName": "Gladstone",
+    "email": "eric.gladstone@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
   },
   {
     "firstName": "Erica",
     "lastName": "Warren",
     "email": "erica.warren@macmillan.com",
     "role": "PM",
-    "Notes": "for testing purposes"
+    "Notes": "for testing purposes",
+    "division": "Workflow",
+    "jobTitle": "Sr. Content Workflow Spec",
+    "dept": "75903636 Macmillan Publishers Digital Workflow"
   },
   {
-    "firstName": "Kim",
-    "lastName": "Waymer",
-    "email": "kim.waymer@macmillan.com",
+    "firstName": "Eva",
+    "lastName": "Diaz",
+    "email": "eva.diaz@hholt.com",
     "role": "PM",
-    "Notes": "_"
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Frieda",
+    "lastName": "Duggan",
+    "email": "frieda.duggan@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Production Editor",
+    "dept": "13000106 FSG Edit Prod"
+  },
+  {
+    "firstName": "Greg",
+    "lastName": "Collins",
+    "email": "Greg.Collins@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Hayley",
+    "lastName": "Jozwiak",
+    "email": "Hayley.Jozwiak@roaringbrookpress.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Assistant Managing Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Heather",
+    "lastName": "Saunders",
+    "email": "Heather.Saunders@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Ilana",
+    "lastName": "Worrell",
+    "email": "ilana.worrell@macmillan.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Production Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "James",
+    "lastName": "Sinclair",
+    "email": "James.Sinclair@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Design Dir, Interiors",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Janna",
+    "lastName": "Dokos",
+    "email": "janna.dokos@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Associate (NE)",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Jason",
+    "lastName": "Reigal",
+    "email": "jason.reigal@hholt.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Jeff",
+    "lastName": "LaSala",
+    "email": "Jeff.LaSala@tor.com",
+    "role": "PE",
+    "Notes": "not in Biblio Contact list 6-7-16",
+    "division": "Tor",
+    "jobTitle": "Production Editorial Coor",
+    "dept": "Tor MM Production"
+  },
+  {
+    "firstName": "Jennifer",
+    "lastName": "Healey",
+    "email": "jennifer.healey@hholt.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Managing Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Jennifer",
+    "lastName": "Sale",
+    "email": "Jennifer.Sale@fsgbooks.com",
+    "role": "PE",
+    "Notes": "not in Biblio Contact list 6-7-16",
+    "division": "MCPG",
+    "jobTitle": "Production Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Jeremy",
+    "lastName": "Pink",
+    "email": "Jeremy.Pink@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Jessica",
+    "lastName": "Katz",
+    "email": "Jessica.Katz@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
   },
   {
     "firstName": "Jie",
     "lastName": "Yang",
     "email": "jie.yang@macmillan.com",
     "role": "PM",
-    "Notes": "_"
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Jill",
+    "lastName": "Freshney",
+    "email": "Jill.Freshney@RoaringBrookPress.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Exec Managing Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Jim",
+    "lastName": "Kapp",
+    "email": "jim.kapp@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Assoc Dir of Production",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Jocelyn",
+    "lastName": "Tiller",
+    "email": "Jocelyn.Tiller@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "Digital Production Mgr",
+    "dept": "Macmillan Publishers Ebook Production"
+  },
+  {
+    "firstName": "John",
+    "lastName": "Morrone",
+    "email": "John.Morrone@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "John",
+    "lastName": "Rounds",
+    "email": "john.rounds@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MM",
+    "jobTitle": "Executive Managing Editor",
+    "dept": "52102602 SMP MM General"
+  },
+  {
+    "firstName": "John",
+    "lastName": "Nora",
+    "email": "john.nora@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Jonathan",
+    "lastName": "Bennett",
+    "email": "Jonathan.Bennett@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Jonathan",
+    "lastName": "Lippincott",
+    "email": "jonathan.lippincott@fsgbooks.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Design Manager",
+    "dept": "13000150 FSG Production"
+  },
+  {
+    "firstName": "Joy",
+    "lastName": "Gannon",
+    "email": "joy.gannon@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "MM",
+    "jobTitle": "Assoc Director/MM Prod",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Karl",
+    "lastName": "Gold",
+    "email": "karl.gold@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Karla",
+    "lastName": "Reganold",
+    "email": "Karla.Reganold@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Copy Chief",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Kathleen",
+    "lastName": "Breitenfeld",
+    "email": "Kathleen.Breitenfeld.contractor@macmillanusa.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Contractor",
+    "dept": "CN03140100 Feiwel and Friends Editorial"
+  },
+  {
+    "firstName": "Kathryn",
+    "lastName": "Parise",
+    "email": "kathryn.parise@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Associate Art Director",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Kelly",
+    "lastName": "Too",
+    "email": "Kelly.Too@hholt.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Sr Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Ken",
+    "lastName": "Silver",
+    "email": "Ken.Silver@stmartins.com",
+    "role": "PE",
+    "Notes": "in AD, Kenneth",
+    "division": "SMP",
+    "jobTitle": "Sr Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Kenn",
+    "lastName": "Russell",
+    "email": "kenn.russell@hholt.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Executive Managing Editor",
+    "dept": "Holt Adult Editorial"
+  },
+  {
+    "firstName": "Kevin",
+    "lastName": "Sweeney",
+    "email": "Kevin.Sweeney@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Kim",
+    "lastName": "Waymer",
+    "email": "kim.waymer@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Kolt",
+    "lastName": "Beringer",
+    "email": "Kolt.Beringer@picadorusa.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "Picador",
+    "jobTitle": "Managing Editor",
+    "dept": "Picador Editorial"
+  },
+  {
+    "firstName": "Kristie",
+    "lastName": "Radwilowicz",
+    "email": "Kristie.Radwilowicz@fsgbooks.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Associate Designer",
+    "dept": "37112152 FSG BYR Design"
+  },
+  {
+    "firstName": "Lauren",
+    "lastName": "Hougen",
+    "email": "Lauren.Hougen@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Assoc Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Laurie",
+    "lastName": "Henderson",
+    "email": "laurie.henderson@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MM",
+    "jobTitle": "Managing Editor",
+    "dept": "52102602 SMP MM General"
+  },
+  {
+    "firstName": "Lena",
+    "lastName": "Shekhter",
+    "email": "lena.shekhter@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Lisa",
+    "lastName": "Davis",
+    "email": "lisa.davis@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Lisa",
+    "lastName": "Goris",
+    "email": "lisa.goris@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Matthew",
+    "lastName": "Retzer",
+    "email": "matthew.retzer@macmillan.com",
+    "role": "PE",
+    "Notes": "for testing purposes",
+    "division": "Workflow",
+    "jobTitle": "Developer",
+    "dept": "75903636 Macmillan Publishers Digital Workflow"
+  },
+  {
+    "firstName": "Meg",
+    "lastName": "Drislane",
+    "email": "meg.drislane@stmartins.com",
+    "role": "PE",
+    "Notes": "in AD, Margaret",
+    "division": "SMP",
+    "jobTitle": "Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Megan",
+    "lastName": "Kiddoo",
+    "email": "Megan.Kiddoo@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Melanie",
+    "lastName": "Sanders",
+    "email": "Melanie.Sanders@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Melinda",
+    "lastName": "Ackell",
+    "email": "melinda.ackell@macmillan.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Production Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Meryl",
+    "lastName": "Levavi",
+    "email": "Meryl.Levavi@hholt.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Director, Design",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Meryl",
+    "lastName": "Gross",
+    "email": "Meryl.Gross@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Michael",
+    "lastName": "Messineo",
+    "email": "michael.messineo@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr. Purchasing Mgr",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Michelle",
+    "lastName": "Mcmillian",
+    "email": "Michelle.McMillian@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Associate Art Director",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Michelle",
+    "lastName": "Foytek",
+    "email": "michelle.foytek.contractor@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "Contractor",
+    "dept": "Macmillan Publishers Ebook Production"
+  },
+  {
+    "firstName": "Molly",
+    "lastName": "Bloom",
+    "email": "Molly.Bloom@hholt.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "Holt",
+    "jobTitle": "Production Editor",
+    "dept": "Holt Adult Editorial"
+  },
+  {
+    "firstName": "Nancy",
+    "lastName": "Elgin",
+    "email": "nancy.elgin@macmillan.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Production Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Natalie",
+    "lastName": "Sousa",
+    "email": "Natalie.Sousa@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Creative Director",
+    "dept": "79101151 Imprint Art"
+  },
+  {
+    "firstName": "Nathan",
+    "lastName": "Weaver",
+    "email": "Nathan.Weaver@tor.com",
+    "role": "PE",
+    "Notes": "not in Biblio Contact list 6-7-16",
+    "division": "Tor",
+    "jobTitle": "Managing Editor",
+    "dept": "Tor MM Production"
+  },
+  {
+    "firstName": "Nicholas",
+    "lastName": "Ishaq",
+    "email": "Nicholas.Ishaq@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "Digital Prod Coordinator",
+    "dept": "Macmillan Publishers Ebook Production"
+  },
+  {
+    "firstName": "Nina",
+    "lastName": "Frieman",
+    "email": "nina.frieman@fsgbooks.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Olivia",
+    "lastName": "Croom",
+    "email": "Olivia.Croom@hholt.com",
+    "role": "PE",
+    "Notes": "not in Biblio Contact list 6-7-16",
+    "division": "Holt",
+    "jobTitle": "Asst to Exec Mgng Editor",
+    "dept": "Holt Adult Editorial"
+  },
+  {
+    "firstName": "Omar",
+    "lastName": "Chapa",
+    "email": "Omar.Chapa@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Patrick",
+    "lastName": "Collins",
+    "email": "Patrick.Collins@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Creative Director",
+    "dept": "36101151 Henry Holt BYR Art and Design"
+  },
+  {
+    "firstName": "Perry",
+    "lastName": "Minella",
+    "email": "Perry.Minella@roaringbrookpress.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Asst. to Managing Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Peter",
+    "lastName": "Richardson",
+    "email": "peter.richardson@fsgbooks.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Assoc Dir of Production",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Rachel",
+    "lastName": "Weinick",
+    "email": "rachel.weinick@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Asc Prd Ed/Asst to Mg Ed",
+    "dept": "13000106 FSG Edit Prod"
+  },
+  {
+    "firstName": "Rafal",
+    "lastName": "Gibek",
+    "email": "rafal.gibek@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Assoc Managing Editor",
+    "dept": "52100157 SMP Prod Mgng Ed"
+  },
+  {
+    "firstName": "Raymond",
+    "lastName": "Colon",
+    "email": "raymond.colon@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Rebecca",
+    "lastName": "Syracuse",
+    "email": "Rebecca.Syracuse@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Junior Designer",
+    "dept": "3140151 Feiwel and Friends Art"
+  },
+  {
+    "firstName": "Rich",
+    "lastName": "Deas",
+    "email": "Rich.Deas@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Creative Director",
+    "dept": "3140151 Feiwel and Friends Art"
+  },
+  {
+    "firstName": "Roberta",
+    "lastName": "Pressel",
+    "email": "Roberta.Pressel@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Sr Designer",
+    "dept": "37112152 FSG BYR Design"
+  },
+  {
+    "firstName": "Scott",
+    "lastName": "Auerbach",
+    "email": "Scott.Auerbach@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Sr Production Editor",
+    "dept": "13000106 FSG Edit Prod"
+  },
+  {
+    "firstName": "Starr",
+    "lastName": "Baer",
+    "email": "Elizabeth.Baer@macmillan.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Production Editor",
+    "dept": "35101106 Managing Ed Grp"
+  },
+  {
+    "firstName": "Stefany",
+    "lastName": "Lopez",
+    "email": "stefany.lopez@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Assistant",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Steven",
+    "lastName": "Seighman",
+    "email": "Steven.Seighman@stmartins.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Designer",
+    "dept": "52100152 SMP Production-Design "
+  },
+  {
+    "firstName": "Susan",
+    "lastName": "Goldfarb",
+    "email": "Susan.Goldfarb@fsgbooks.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "FSG",
+    "jobTitle": "Sr Production Editor",
+    "dept": "13000106 FSG Edit Prod"
+  },
+  {
+    "firstName": "Susan",
+    "lastName": "Doran",
+    "email": "susan.doran@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Assoc Dir of Production",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Susan",
+    "lastName": "Joseph",
+    "email": "susan.joseph@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Director of Production",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Theresa",
+    "lastName": "Sparacio",
+    "email": "theresa.sparacio@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Production Supervisor",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Thomas",
+    "lastName": "Nau",
+    "email": "thomas.nau@macmillan.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Managing Dir. of Prod.",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Twisne",
+    "lastName": "Fan",
+    "email": "Twisne.Fan@stmartins.com",
+    "role": "Exec",
+    "Notes": "Head of production",
+    "division": "SMP",
+    "jobTitle": "VP, Trade Manuf. & Prod",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Valerie",
+    "lastName": "Scialabba",
+    "email": "Valerie.Scialabba@stmartins.com",
+    "role": "PE",
+    "Notes": "_",
+    "division": "MM",
+    "jobTitle": "Assistant Managing Editor",
+    "dept": "52102602 SMP MM General"
+  },
+  {
+    "firstName": "Victoria",
+    "lastName": "Wallis",
+    "email": "Victoria.Wallis@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "Digital Managing Editor",
+    "dept": "Macmillan Publishers Ebook Production"
+  },
+  {
+    "firstName": "Vincent",
+    "lastName": "Stanley",
+    "email": "vincent.stanley@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "SMP",
+    "jobTitle": "Sr Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Yolanda",
+    "lastName": "Pluguez",
+    "email": "yolanda.pluguez@stmartins.com",
+    "role": "PM",
+    "Notes": "_",
+    "division": "MM",
+    "jobTitle": "Production Manager",
+    "dept": "52000150 SMP Production"
+  },
+  {
+    "firstName": "Eileen",
+    "lastName": "Savage",
+    "email": "Eileen.Savage@macmillan.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "MCPG",
+    "jobTitle": "Designer",
+    "dept": "3140151 Feiwel and Friends Art"
+  },
+  {
+    "firstName": "Jamie",
+    "lastName": "Stafford-Hill",
+    "email": "Jamie.Stafford-Hill@tor.com",
+    "role": "Design",
+    "Notes": "_",
+    "division": "Tor",
+    "jobTitle": "Sr Designer",
+    "dept": "53102150 Tor Production"
+  },
+  {
+    "firstName": "Patrick",
+    "lastName": "Woodruff",
+    "email": "Patrick.Woodruff@macmillan.com",
+    "role": "Ebooks",
+    "Notes": "_",
+    "division": "Ebooks",
+    "jobTitle": "Assoc Digital Prod Mgr",
+    "dept": "Macmillan Publishers Ebook Production"
   }
 ]
