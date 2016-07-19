@@ -39,32 +39,28 @@ status_hash['isbn_match_ok'] = true     #renamed from ['pisbns_match']
 #status_hash['pisbns'] = []    #deleted
 alt_isbn_array = []
 
-docisbns
-docisbn_match
-docisbn_
-
 
 #---------------------  FUNCTIONS
 #this function quick verifies an isbn: checkdigit, ean lookup.
-def testisbn(isbn, whichisbn)
+def testisbn(isbn, whichisbn, status_hash)
     lookup, loginfo = false, ''
     if Vldtr::Tools.checkisbn(isbn)
-        if whichisbn == filename_isbn then status_hash['filename_isbn']['checkdigit'] = true end
+        if whichisbn == 'filename_isbn' then status_hash['filename_isbn']['checkdigit'] = true end
         thissql_A = exactSearchSingleKey(isbn, "EDITION_EAN")
         myhash_A = runQuery(thissql_A)
         if myhash_A.nil? or myhash_A.empty? or !myhash_A or myhash_A['book'].nil? or myhash_A['book'].empty? or !myhash_A['book']
             loginfo = "data warehouse lookup on #{whichisbn} \"#{isbn}\" failed, setting status to false"
-            if whichisbn == filename_isbn then status_hash['filename_isbn_lookup_ok'] = false end
-            if whichisbn == docisbn then status_hash['docisbn_lookup_fail'] << isbn end
+            if whichisbn == 'filename_isbn' then status_hash['filename_isbn_lookup_ok'] = false end
+            if whichisbn == 'docisbn' then status_hash['docisbn_lookup_fail'] << isbn end
         else  #isbn checks out
             lookup = true
         end
     else  #checkdigit failed
-        if whichisbn == filename_isbn
+        if whichisbn == 'filename_isbn'
             status_hash['filename_isbn']['checkdigit'] = false
             status_hash['filename_isbn_lookup_ok'] = false
         end
-        if whichisbn == docisbn then status_hash['docisbn_checkdigit_fail'] << isbn end
+        if whichisbn == 'docisbn' then status_hash['docisbn_checkdigit_fail'] << isbn end
         loginfo = "checkdigit failed for #{whichisbn} \"#{isbn}\""
     end
     return loginfo, lookup
@@ -93,41 +89,42 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 		else
   			pe_name = myhash_D['book']['PERSON_REALNAME'][0]
 		end
-        #write to var for logs:
-        title = myhash_F['book']['WORK_COVERTITLE']
-        author = myhash_F['book']['WORK_COVERAUTHOR']
-        imprint = myhash_F['book']['IMPRINT_DISPLAY']
-        product_type = myhash_F['book']['PRODUCTTYPE_DESC']
-        work_id = myhash_F['book']['WORK_ID']
+    #write to var for logs:
+    title = myhash_F['book']['WORK_COVERTITLE']
+    author = myhash_F['book']['WORK_COVERAUTHOR']
+    imprint = myhash_F['book']['IMPRINT_DISPLAY']
+    product_type = myhash_F['book']['PRODUCTTYPE_DESC']
+    work_id = myhash_F['book']['WORK_ID']
 
-        #get alternate isbns:
-        thissql_E = exactSearchSingleKey(work_id, "WORK_ID")
-        editionshash_B = runQuery(thissql_E)
-        editionshash_B.each { |book, hash|
-          hash.each { |k,v|
-            if k == 'EDITION_EAN' then alt_isbn_array << v end
-          }
-        }
+    #get alternate isbns:
+    alt_isbn_array = []
+    thissql_E = exactSearchSingleKey(work_id, "WORK_ID")
+    editionshash_B = runQuery(thissql_E)
+    editionshash_B.each { |book, hash|
+      hash.each { |k,v|
+        if k == 'EDITION_EAN' then alt_isbn_array << v end
+      }
+    }
 
-        #write to hash
-        book_hash = {}
-        book_hash.merge!(production_editor: pe_name)
-        book_hash.merge!(production_manager: pm_name)
-        book_hash.merge!(work_id: work_id)
-        book_hash.merge!(isbn: lookup_isbn)
-        book_hash.merge!(title: title)
-        book_hash.merge!(author: author)
-        book_hash.merge!(product_type: product_type)
-        book_hash.merge!(imprint: imprint)
-        book_hash.merge!(alt_isbns: alt_isbn_array)
+    #write to hash
+    book_hash = {}
+    book_hash.merge!(production_editor: pe_name)
+    book_hash.merge!(production_manager: pm_name)
+    book_hash.merge!(work_id: work_id)
+    book_hash.merge!(isbn: lookup_isbn)
+    book_hash.merge!(title: title)
+    book_hash.merge!(author: author)
+    book_hash.merge!(product_type: product_type)
+    book_hash.merge!(imprint: imprint)
+    book_hash.merge!(alt_isbns: alt_isbn_array)
 
-        #write json:
-        Vldtr::Tools.write_json(book_hash, bookinfo_file)
+    #write json:
+    Vldtr::Tools.write_json(book_hash, bookinfo_file)
 
-        status_hash[hash_lookup_string] = true
+    status_hash[hash_lookup_string] = true
 		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""
-	end
-	loginfo
+
+	  return loginfo, alt_isbn_array
 end
 
 
@@ -207,11 +204,11 @@ end
 if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
-    testlog, testlookup = testisbn(filename_isbn, "filename_isbn")
+    testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
     logger.info {testlog}
     if testlookup == true
         logger.info {"isbn \"#{filename_isbn}\" checked out, proceeding with getting book info"}
-        lookuplog = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
+        lookuplog, alt_isbn_array = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
 		    logger.info {lookuplog}
     end
 end
@@ -235,12 +232,12 @@ if docisbn_array.length < 10 && !docisbn_array.empty?
             if alt_isbn_array.include?(i)   #if it matches a filename isbn already
                 status_hash['docisbns'] << i
             else
-                testlog_b, testlookup_b = testisbn(i, "docisbn")      #quick check the isbn
+                testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
                 logger.info {testlog_b}
                 if testlookup_b == true
                     if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
                         logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
-                        lookuplog_b = getbookinfo(filename_isbn,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
+                        lookuplog_b, alt_isbn_array = getbookinfo(filename_isbn,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
                 		    logger.info {lookuplog}
                         status_hash['docisbns'] << i
                     else            #since an isbn array exists that we don't match, we have a mismatch;
