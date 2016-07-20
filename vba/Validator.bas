@@ -154,7 +154,7 @@ Private Function ValidatorStartup(ByRef StartupFilePath As String, ByRef _
   
 ' set global variable for path to write alert messages to, returns False if
 ' FilePath doesn't exist or point to a real file.
-  If SetOutputPaths(strFilePath, strLogPath) = False Then
+  If SetOutputPaths(strFilePath, strLogPath, "style") = False Then
     Err.Raise err_PathInvalid
   End If
   SecondsElapsed = Round(Timer - StartTime, 2)
@@ -341,10 +341,7 @@ End Function
 ' global variable up top! On server, tries to write to same path as the file
 ' passed to Launch, if fails defaults to `validator_tmp`.
 
-' Also setting path to style_check.json here, since in same dir.
-
-Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
-  Boolean
+Private Function SetOutputPaths(origPath As String, origLogPath As String) As Boolean
   On Error GoTo SetOutputPathsError
   Dim strDir As String
   Dim strFile As String
@@ -386,8 +383,16 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As _
   strAlertPath = strDir & strFile
 '  Debug.Print strAlertPath
 
-  ' ditto global var for style check file
-  strJsonPath = strDir & "style_check.json"
+' Create path to JSON to store test results. Need different names, since the
+' powershell reads them too.
+  Dim strMacroType As String
+  Select Case strProcName
+    Case strValidator & "Launch"
+      strMacroType = "style"
+    Case strValidator & "IsbnSearch"
+      strMacroType = "isbn"
+  End Select
+  strJsonPath = strDir & strMacroType & "_check.json"
   
   ' delete if it exists already (don't want old test results)
   If strJsonPath <> vbNullString And Dir(strJsonPath) <> vbNullString Then
