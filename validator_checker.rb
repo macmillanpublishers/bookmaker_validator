@@ -12,7 +12,6 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 
 pe_pm_file = File.join(Val::Paths.scripts_dir,'staff_email.json')
-stylecheck_isbns = []
 cc_emails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 
@@ -43,8 +42,9 @@ if File.file?(Val::Files.stylecheck_file)
 		#set vars for status.json fro stylecheck.json
   	status_hash['validator_macro_complete'] = stylecheck_hash['completed']
   	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
-  	stylecheck_isbns = stylecheck_hash['isbn']['list']
-  	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\", isbns:\"#{stylecheck_isbns}\""}
+  	#stylecheck_isbns = stylecheck_hash['isbn']['list']
+		#logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\", isbns:\"#{stylecheck_isbns}\""}
+  	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\""}
   end
 else
 	logger.info {"style_check.json not present or unavailable"}
@@ -111,37 +111,37 @@ else
 end
 
 
-#crosscheck document isbns via work_id
-if File.file?(Val::Files.bookinfo_file) && File.file?(Val::Files.stylecheck_file) && File.file?(Val::Files.status_file)
-	stylecheck_isbns.each { |sc_isbn|
-		sc_isbn = sc_isbn.to_s.gsub(/-/,'')
-		if sc_isbn != bookinfo_hash['isbn']
-			if Vldtr::Tools.checkisbn(sc_isbn)
-				thissql = exactSearchSingleKey(sc_isbn, "EDITION_EAN")
-				myhash = runQuery(thissql)
-				if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book']
-					logger.info {"isbn data-warehouse-lookup for manuscript isbn: #{sc_isbn} failed."}
-					status_hash['docisbn_lookup_fail'] << sc_isbn
-				else
-					sc_work_id = myhash['book']['WORK_ID']
-					if sc_work_id != bookinfo_hash['work_id']
-						status_hash['docisbn_match_fail'] << sc_isbn
-						logger.info {"isbn mismatch found with manuscript isbn: #{sc_isbn}."}
-					end
-				end
-			else
-				status_hash['docisbn_checkdigit_fail'] << sc_isbn
-				logger.info {"isbn from manuscript failed checkdigit: #{sc_isbn}"}
-			end
-		end
-	}
-end
+# #crosscheck document isbns via work_id
+# if File.file?(Val::Files.bookinfo_file) && File.file?(Val::Files.stylecheck_file) && File.file?(Val::Files.status_file)
+# 	stylecheck_isbns.each { |sc_isbn|
+# 		sc_isbn = sc_isbn.to_s.gsub(/-/,'')
+# 		if sc_isbn != bookinfo_hash['isbn']
+# 			if Vldtr::Tools.checkisbn(sc_isbn)
+# 				thissql = exactSearchSingleKey(sc_isbn, "EDITION_EAN")
+# 				myhash = runQuery(thissql)
+# 				if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book']
+# 					logger.info {"isbn data-warehouse-lookup for manuscript isbn: #{sc_isbn} failed."}
+# 					status_hash['docisbn_lookup_fail'] << sc_isbn
+# 				else
+# 					sc_work_id = myhash['book']['WORK_ID']
+# 					if sc_work_id != bookinfo_hash['work_id']
+# 						status_hash['docisbn_match_fail'] << sc_isbn
+# 						logger.info {"isbn mismatch found with manuscript isbn: #{sc_isbn}."}
+# 					end
+# 				end
+# 			else
+# 				status_hash['docisbn_checkdigit_fail'] << sc_isbn
+# 				logger.info {"isbn from manuscript failed checkdigit: #{sc_isbn}"}
+# 			end
+# 		end
+# 	}
+# end
 
 
 #check for alert or other unplanned items in Val::Paths.tmp_dir:
 if Dir.exist?(Val::Paths.tmp_dir)
 	Find.find(Val::Paths.tmp_dir) { |file|
-		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file
+		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file && file != Val::Files.isbn_file
 			logger.info {"error log found in tmpdir: file: #{file}"}
 			status_hash['validator_macro_complete'] = false
 		end

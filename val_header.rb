@@ -82,6 +82,10 @@ module Val
 		def self.status_file
 			@@status_file
 		end
+		@@isbn_file = File.join(Paths.tmp_dir,'isbn_check.json')
+		def self.isbn_file
+			@@isbn_file
+		end
 		@@inprogress_file = File.join(Paths.project_dir,"#{Doc.filename_normalized}_IN_PROGRESS.txt")
 		def self.inprogress_file
 			@@inprogress_file
@@ -168,11 +172,11 @@ module Val
 	end
 	class Posts
 		@lookup_isbn = Doc.basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-		@@index = Doc.basename_normalized.split('-').last
+		@@index = Doc.basename_normalized.split('_').last
 		def self.index
 			@@index
 		end
-		@@tmp_dir = File.join(Paths.working_dir, "#{@lookup_isbn}_to_bookmaker-#{@@index}")
+		@@tmp_dir = File.join(Paths.working_dir, "#{@lookup_isbn}_to_bookmaker_#{@@index}")
 		def self.tmp_dir
 			@@tmp_dir
 		end
@@ -191,7 +195,7 @@ module Val
 		@@working_file, @@val_infile_name, @@logfile_name = '','',Logs.logfilename
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
-			if file !~ /_DONE-#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
+			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
 				if file =~ /_workingfile#{Doc.extension}$/
 					@@working_file = file
 				else

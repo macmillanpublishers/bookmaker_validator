@@ -71,6 +71,7 @@ if File.file?(Val::Files.status_file)
 	logger.info {"dumping contents of status.json:"}
 	File.open(logfile, 'a') { |f| f.puts human_status }
 else
+	status_hash = {}
 	status_hash[errors] = "Error occurred, validator failed: no status.json available"
 	logger.info {"status.json not present or unavailable, creating error txt"}
 end
@@ -116,14 +117,14 @@ if status_hash['bookmaker_ready']
 	#change file & folder name to isbn if its available,keep a DONE file with orig filename
 	if !isbn.empty?
 		#rename Val::Paths.tmp_dir so it doesn't get re-used and has index #s
-		tmp_dir_new = File.join(Val::Paths.working_dir,"#{isbn}_to_bookmaker-#{index}")
+		tmp_dir_new = File.join(Val::Paths.working_dir,"#{isbn}_to_bookmaker_#{index}")
 		Mcmlln::Tools.moveFile(Val::Paths.tmp_dir, tmp_dir_new)
 		#update path for working_file
 		working_file_updated = File.join(tmp_dir_new, Val::Doc.filename_normalized)
 		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
-		if working_file_updated =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
-    		isbn_condensed = working_file_updated.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
+    		isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     		if isbn_condensed != isbn
     			done_file = working_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
     			logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
@@ -134,8 +135,8 @@ if status_hash['bookmaker_ready']
     		logger.info {"adding isbn to done_filename because it was missing"}
 			  done_file = working_file_updated.gsub(/#{Val::Doc.extension}$/,"_#{isbn}#{Val::Doc.extension}")
   	end
-  	done_file = done_file.gsub(/#{Val::Doc.extension}$/,"_DONE-#{index}#{Val::Doc.extension}")
-  	Mcmlln::Tools.copyFile(working_file_updated, done_file)
+  	done_file = done_file.gsub(/#{Val::Doc.extension}$/,"_DONE_#{index}#{Val::Doc.extension}")
+		Mcmlln::Tools.copyFile(working_file_updated, done_file)
     Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
 		#rename working file to keep it distinct from infile
 		new_workingfile = working_file_updated.gsub(/#{Val::Doc.extension}$/,"_workingfile#{Val::Doc.extension}")

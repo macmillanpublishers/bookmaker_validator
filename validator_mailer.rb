@@ -82,7 +82,7 @@ if !status_hash['filename_isbn']["checkdigit"]
 	#warning-filename_isbn_checkdigit_fail
 	warnings = "#{warnings}- The ISBN included in the filename is not valid (#{status_hash['filename_isbn']['isbn']}): the checkdigit does not match. \n"
 end
-if !status_hash['isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"]
+if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"]
 	warnings = "#{warnings}- Data-warehouse lookup of the ISBN included in the filename failed (#{status_hash['filename_isbn']['isbn']}).\n"
 end
 if !status_hash['docisbn_checkdigit_fail'].empty?
@@ -110,14 +110,11 @@ end
 
 
 errors = "ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
-if !status_hash['pisbns_match']
-	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['pisbns']}\n"
+if !status_hash['isbn_match_ok']
+	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['docisbns']}\n"
 end
-if status_hash['pisbns'].empty? && !status_hash['isbn_lookup_ok']
-	errors = "#{errors}- No usable ISBN present in the filename or in the manuscript (for title info lookup)\n"
-end
-if !status_hash['pisbn_lookup_ok']
-	errors = "#{errors}- No usable ISBN present in the filename, lookups from ISBN in manuscript (#{status_hash['pisbns']}) failed.\n"
+if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
+	errors = "#{errors}- No usable ISBN present in the filename or in the manuscript.\n"
 end
 if !status_hash['validator_macro_complete']
 	errors = "#{errors}- An error occurred while running #{Val::Paths.project_name}, please contact workflows@macmillan.com.\n"

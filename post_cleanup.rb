@@ -49,20 +49,16 @@ FileUtils.mkdir_p outfolder
 if !File.file?(epub) && !File.file?(epub_firstpass)
 	epub_found = false
 elsif File.file?(epub_firstpass)
-	if !File.file?(Val::Paths.testing_value_file)
-		FileUtils.cp epub_firstpass, coresource_dir
-		logger.info {"copied epub_firstpass to coresource_dir"}
-	end
+	FileUtils.cp epub_firstpass, coresource_dir
+	logger.info {"copied epub_firstpass to coresource_dir"}
 	FileUtils.cp epub_firstpass, outfolder
 	logger.info {"copied epub_firstpass to validator outfolder"}
 elsif File.file?(epub)
-	File.rename(epub, epub_firstpass)
-	if !File.file?(Val::Paths.testing_value_file)
-		FileUtils.cp epub_firstpass, coresource_dir
-		logger.info {"copied epub_firstpass to coresource_dir"}
-	end
+	epub_fp = epub.gsub(/_EPUB.epub$/,'_EPUBfirstpass.epub')
+	File.rename(epub, epub_fp)
+	FileUtils.cp epub_fp, coresource_dir
 	logger.info {"renamed epub to epub_firstpass, copied to coresource_dir"}
-	FileUtils.cp epub_firstpass, outfolder
+	FileUtils.cp epub_fp, outfolder
 	logger.info {"copied epub_firstpass to validator outfolder"}
 end
 
