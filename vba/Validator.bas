@@ -78,7 +78,7 @@ Public Function IsbnSearch(FilePath As String, Optional LogFile As String) _
   
   IsbnSearch = strIsbn
 
-' Various cleanup stuff, including `End` all code execution.
+' Various cleanup stuff, but don't `End` because macro needs to return a value.
   Call ValidatorExit(RunCleanup:=True, EndMacro:=False)
   
   Exit Function
@@ -194,13 +194,13 @@ End Function
 
 Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
   EndMacro As Boolean = True)
-' Global variable counter in case error throw before we reset On Error
+' Global variable counter in case error throw before we reset On Error.
 ' More than 1 is an error, but letting it run a few times to capture more data
   lngCleanupCount = lngCleanupCount + 1
   Debug.Print "ValidatorExit: " & lngCleanupCount
   If lngCleanupCount > 3 Then GoTo ValidatorExitError
 
-' NOTE!! Must get Err object values before setting new On Error statement
+' NOTE!! Must get Err object values before setting new On Error statement.
 ' Did macro complete correctly?
   Dim blnCompleted As Boolean
   If Err.Number = 0 Then
@@ -223,11 +223,11 @@ Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
   End If
 
 ' Only save doc if macro completed w/o error AND correctly styled
-  Dim saveValue As WdSaveOptions
+  Dim saveValue As Boolean
   If blnCompleted = True And blnStyled = True Then
-    saveValue = wdSaveChanges
+    saveValue = True
   Else
-    saveValue = wdDoNotSaveChanges
+    saveValue = False
   End If
   
 ' Close all open documents
@@ -236,8 +236,8 @@ Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
   For Each objDoc In Documents
   ' don't close any templates, might be running code.
     strExt = VBA.Right(objDoc.Name, InStr(StrReverse(objDoc.Name), "."))
-    If strExt <> ".dotm" Then
-      objDoc.Close saveValue
+    If strExt <> ".dotm" And saveValue = True Then
+      objDoc.Save
     End If
   Next objDoc
   
@@ -824,47 +824,47 @@ Private Sub IsbnTest()
   Dim strReturnedIsbn As String
   Dim A As Long
   
-  Dim strFile(1 To 13) As String
-  strFile(1) = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
-  strFile(2) = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
-  strFile(3) = "03Leigh_STYLED_InText_978-0-312-38912-3"
-  strFile(4) = "04Brennan_STYLED_InText_2016-May-17"
-  strFile(5) = "05Jahn_STYLED_NotInText_2016-May-04"
-  strFile(6) = "06Black_UNSTYLED_InText_5-25-2016"
-  strFile(7) = "08Newell_UNSTYLED_NotInText_6-29-16"
-  strFile(8) = "09Chaput_UNSTYLED_inText_styles-added"
-  strFile(9) = "10Dietrich_STYLED_InText2_match"
-  strFile(10) = "11Klages_STYLED_InText2_noMatch"
-  strFile(11) = "12Pomfret_UNSTYLED_InText2_match"
-  strFile(12) = "13Segre_UNSTYLED_InText2_noMatch"
-  strFile(13) = "14Meadows_less-than-half"
-
-  For A = 1 To UBound(strFile)
-    Debug.Print A & ": " & strFile(A)
-    strLog = strDir & strFile(A) & ".txt"
-    strThisFile = strDir & strFile(A) & ".docx"
-    strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
-    lngCleanupCount = 0
-    If strReturnedIsbn = vbNullString Then
-      Debug.Print "No Isbn found"
-    Else
-      Debug.Print "Found Isbns: " & strReturnedIsbn
-    End If
-    Debug.Print "COMPLETED!" & vbNewLine
-  Next A
-  
-  
-'  Dim strFile As String
-'  strFile = "07Tomasky_UNSTYLED_NotInText_9781627796767_2016-5-19"
-'  strLog = strDir & strFile & ".txt"
-'  strThisFile = strDir & strFile & ".docx"
-'  strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
+'  Dim strFile(1 To 13) As String
+'  strFile(1) = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
+'  strFile(2) = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
+'  strFile(3) = "03Leigh_STYLED_InText_978-0-312-38912-3"
+'  strFile(4) = "04Brennan_STYLED_InText_2016-May-17"
+'  strFile(5) = "05Jahn_STYLED_NotInText_2016-May-04"
+'  strFile(6) = "06Black_UNSTYLED_InText_5-25-2016"
+'  strFile(7) = "08Newell_UNSTYLED_NotInText_6-29-16"
+'  strFile(8) = "09Chaput_UNSTYLED_inText_styles-added"
+'  strFile(9) = "10Dietrich_STYLED_InText2_match"
+'  strFile(10) = "11Klages_STYLED_InText2_noMatch"
+'  strFile(11) = "12Pomfret_UNSTYLED_InText2_match"
+'  strFile(12) = "13Segre_UNSTYLED_InText2_noMatch"
+'  strFile(13) = "14Meadows_less-than-half"
 '
-'  If strReturnedIsbn = vbNullString Then
-'    Debug.Print "No Isbn found"
-'  Else
-'    Debug.Print "Found Isbns: " & strReturnedIsbn
-'  End If
+'  For A = 1 To UBound(strFile)
+'    Debug.Print A & ": " & strFile(A)
+'    strLog = strDir & strFile(A) & ".txt"
+'    strThisFile = strDir & strFile(A) & ".docx"
+'    strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
+'    lngCleanupCount = 0
+'    If strReturnedIsbn = vbNullString Then
+'      Debug.Print "No Isbn found"
+'    Else
+'      Debug.Print "Found Isbns: " & strReturnedIsbn
+'    End If
+'    Debug.Print "COMPLETED!" & vbNewLine
+'  Next A
+  
+  
+  Dim strFile As String
+  strFile = "10Dietrich_STYLED_InText2_match"
+  strLog = strDir & strFile & ".txt"
+  strThisFile = strDir & strFile & ".docx"
+  strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
+
+  If strReturnedIsbn = vbNullString Then
+    Debug.Print "No Isbn found"
+  Else
+    Debug.Print "Found Isbns: " & strReturnedIsbn
+  End If
 
   Exit Sub
 
