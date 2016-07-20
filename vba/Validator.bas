@@ -154,7 +154,7 @@ Private Function ValidatorStartup(ByRef StartupFilePath As String, ByRef _
   
 ' set global variable for path to write alert messages to, returns False if
 ' FilePath doesn't exist or point to a real file.
-  If SetOutputPaths(strFilePath, strLogPath, "style") = False Then
+  If SetOutputPaths(strFilePath, strLogPath) = False Then
     Err.Raise err_PathInvalid
   End If
   SecondsElapsed = Round(Timer - StartTime, 2)
@@ -860,7 +860,7 @@ Private Sub IsbnTest()
   
   
   Dim strFile As String
-  strFile = "10Dietrich_STYLED_InText2_match"
+  strFile = "validator-test_orig"
   strLog = strDir & strFile & ".txt"
   strThisFile = strDir & strFile & ".docx"
   strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
