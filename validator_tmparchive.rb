@@ -25,18 +25,14 @@ status_hash['api_ok'] = true
 status_hash['docfile'] = true
 status_hash['filename_isbn'] = {"isbn"=> ''}
 status_hash['filename_isbn']['checkdigit'] = ''
-#status_hash['isbn_lookup_ok'] = true   # renamed
 status_hash['filename_isbn_lookup_ok'] = true
-status_hash['doc_isbn_lookup_ok'] = ''   #renamed from ['pisbn_lookup_ok']
-status_hash['docisbn_string'] = ''    #renamed from isbnstring
-status_hash['docisbns'] = []   #new!  every isbn from file that looks right (no checks)
-#status_hash['doc_isbn_list'] = []      #deleted
-#status_hash['docisbn_check'] = false     # deleted
+status_hash['doc_isbn_lookup_ok'] = ''
+status_hash['docisbn_string'] = ''    
+status_hash['docisbns'] = []
 status_hash['docisbn_checkdigit_fail'] = []
 status_hash['docisbn_lookup_fail'] = []
 status_hash['docisbn_match_fail'] = []
-status_hash['isbn_match_ok'] = true     #renamed from ['pisbns_match']
-#status_hash['pisbns'] = []    #deleted
+status_hash['isbn_match_ok'] = true
 alt_isbn_array = []
 
 
@@ -260,46 +256,6 @@ else
   	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
 end
 
-# #################
-# status_hash['doc_isbn_list'] = status_hash['doc_isbn_list'].uniq
-# unique_isbns = status_hash['doc_isbn_list']
-# if unique_isbns.empty? || unique_isbns.length > 10
-#     logger.info {"either 0 (or >10) good isbns found in status_hash['docisbn_string'] :( "}
-# else
-#     logger.info {"#{unique_isbns.length} good isbns found in isbnstring; looking them up @ data warehouse: #{unique_isbns}"}
-#     #now we lookup work ids for each isbn...
-#     unique_isbns.each { |j|
-#         thissql = exactSearchSingleKey(j, "EDITION_EAN")
-#         myhash = runQuery(thissql)
-#         if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book']
-#             logger.info {"isbn data-warehouse-lookup for manuscript isbn: #{j} failed."}
-# 		status_hash['docisbn_lookup_fail'] << j
-#         else
-#             #and now we go get print isbn for each unique workid...
-#             puts myhash
-#             puts "work id: #{myhash['book']['WORK_ID']}"
-#             thissql_B = exactSearchSingleKey(myhash['book']['WORK_ID'], "WORK_ID")
-#             editionshash = runQuery(thissql_B)
-#             unless editionshash.nil? or editionshash.empty? or !editionshash
-#                 editionshash.each do |k, v|
-#                     # find a print product if it exists
-#                     if v['PRODUCTTYPE_DESC'] and v['PRODUCTTYPE_DESC'] == "Book"
-#                         status_hash['pisbns'] << v['EDITION_EAN']
-#                     end
-#                 end
-#             end
-#         end
-#     }
-#     if status_hash['pisbns'].length > 1
-#         logger.info {"too many pisbns found via doc_isbn lookup: marking pisbn_match false."}
-#         status_hash['isbn_match_ok'] = false
-#     elsif status_hash['pisbns'].length == 1
-#         #perform bookinfo lookup on good pisbn!
-#         logger.info {"found a good pisbn #{status_hash['pisbns'][0]} from doc_isbn workid(s), using that for lookups!"}
-#         lookuplog = getbookinfo(status_hash['pisbns'][0],'pisbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
-# 	logger.info {lookuplog}
-#     end
-# end
 
 if !status_hash['isbn_match_ok']          #fatal mismatch, delete bookinfo file!
     Mcmlln::Tools.deleteFile(Val::Files.bookinfo_file)

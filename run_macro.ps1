@@ -25,7 +25,6 @@ LogWrite "$($TimestampA)      : run_macro -- macro: ""$($macroName)."" Received 
 #--------------------- RUN THE MACRO
 if ($fileext -eq ".doc" -Or $fileext -eq ".docx") {
 	LogWrite "$($TimestampA)      : run_macro -- file is a ""$($fileext)"", commencing run Macro ""$($macroName)""..."
-	#cd $tmpDir   #(not necessary?)
 	$word = new-object -comobject word.application # create a com object interface (word application)
 	$word.visible = $true
 	$doc = $word.documents.open($working_file)
