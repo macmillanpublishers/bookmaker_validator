@@ -224,36 +224,42 @@ Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'
 end
 logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
 
-#parse isbnstring, verify checkdigit, create aray of good isbns
-docisbn_array = status_hash['docisbn_string'].gsub(/-/,'').split(',')
-if docisbn_array.length < 10 && !docisbn_array.empty?
-    docisbn_array.each { |i|
-        if i =~ /97(8|9)[0-9]{10}/
-            if alt_isbn_array.include?(i)   #if it matches a filename isbn already
-                status_hash['docisbns'] << i
-            else
-                testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
-                logger.info {testlog_b}
-                if testlookup_b == true
-                    if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
-                        logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
-                        lookuplog_b, alt_isbn_array = getbookinfo(filename_isbn,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
-                		    logger.info {lookuplog}
-                        status_hash['docisbns'] << i
-                    else            #since an isbn array exists that we don't match, we have a mismatch;
-                        logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
-                        status_hash['docisbn_match_fail'] << i
-                        if !status_hash['filename_isbn_lookup_ok']  #this is a showstopping error if we don't have a filename_isbn
-                            status_hash['isbn_match_ok'] = false
+#get isbns from json, verify checkdigit, create array of good isbns
+if File.file?(Val::Files.isbn_file)
+  	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
+  	docisbn_array = isbn_hash['isbn']['list']
+    if docisbn_array.length < 10 && !docisbn_array.empty?
+        docisbn_array.each { |i|
+            if i =~ /97(8|9)[0-9]{10}/
+                if alt_isbn_array.include?(i)   #if it matches a filename isbn already
+                    status_hash['docisbns'] << i
+                else
+                    testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
+                    logger.info {testlog_b}
+                    if testlookup_b == true
+                        if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
+                            logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
+                            lookuplog_b, alt_isbn_array = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
+                    		    logger.info {lookuplog}
+                            status_hash['docisbns'] << i
+                        else            #since an isbn array exists that we don't match, we have a mismatch;
+                            logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
+                            status_hash['docisbn_match_fail'] << i
+                            if !status_hash['filename_isbn_lookup_ok']  #this is a showstopping error if we don't have a filename_isbn
+                                status_hash['isbn_match_ok'] = false
+                            end
                         end
                     end
                 end
             end
-        end
-    }
+        }
+    else
+        logger.info {"either 0 (or >10) good isbns found in status_hash['docisbn_string'] :( "}
+    end
 else
-    logger.info {"either 0 (or >10) good isbns found in status_hash['docisbn_string'] :( "}
+  	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
 end
+
 # #################
 # status_hash['doc_isbn_list'] = status_hash['doc_isbn_list'].uniq
 # unique_isbns = status_hash['doc_isbn_list']

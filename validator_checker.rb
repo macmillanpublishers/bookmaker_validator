@@ -12,7 +12,6 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 
 pe_pm_file = File.join(Val::Paths.scripts_dir,'staff_email.json')
-#stylecheck_isbns = []
 cc_emails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 
@@ -142,7 +141,7 @@ end
 #check for alert or other unplanned items in Val::Paths.tmp_dir:
 if Dir.exist?(Val::Paths.tmp_dir)
 	Find.find(Val::Paths.tmp_dir) { |file|
-		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file
+		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file && file != Val::Files.isbn_file
 			logger.info {"error log found in tmpdir: file: #{file}"}
 			status_hash['validator_macro_complete'] = false
 		end
