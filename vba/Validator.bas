@@ -119,7 +119,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
   End If
 
 ' Various cleanup stuff, including `End` all code execution.
-  Call ValidatorExit(RunCleanup:=True)
+  Call ValidatorExit(RunCleanup:=True, EndMacro:=False)
   
   Exit Sub
 
