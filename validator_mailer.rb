@@ -64,7 +64,7 @@ if File.file?(Val::Files.bookinfo_file)
 	bookinfo_pmname = bookinfo_hash['production_manager']
 	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 else
-	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
+	logger.info {"bookinfo.json not present or unavailable!"}
 end
 
 
@@ -82,7 +82,7 @@ if !status_hash['filename_isbn']["checkdigit"]
 	#warning-filename_isbn_checkdigit_fail
 	warnings = "#{warnings}- The ISBN included in the filename is not valid (#{status_hash['filename_isbn']['isbn']}): the checkdigit does not match. \n"
 end
-if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"]
+if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"] == true
 	warnings = "#{warnings}- Data-warehouse lookup of the ISBN included in the filename failed (#{status_hash['filename_isbn']['isbn']}).\n"
 end
 if !status_hash['docisbn_checkdigit_fail'].empty?
@@ -92,7 +92,7 @@ end
 if !status_hash['docisbn_lookup_fail'].empty?
 	warnings = "#{warnings}- Data-warehouse lookup of ISBN(s) found in the manuscript failed: #{status_hash['docisbn_lookup_fail'].uniq}\n"
 end
-if !status_hash['docisbn_match_fail'].empty?
+if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
 	warnings = "#{warnings}- ISBN(s) found in manuscript (#{status_hash['docisbn_match_fail'].uniq}) do not match the work-id of lookup ISBN (#{bookinfo_isbn}) and may be incorrect.\n"
 end
 if !status_hash['pm_lookup'] && File.file?(Val::Files.bookinfo_file)
@@ -108,15 +108,18 @@ if warnings == "WARNINGS:\n"
 	warnings = ''
 end
 
-
+nogoodisbn = false
 errors = "ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
 if !status_hash['isbn_match_ok']
-	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['docisbns']}\n"
+	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
 end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
+	nogoodisbn = true
+end
+if nogoodisbn
 	errors = "#{errors}- No usable ISBN present in the filename or in the manuscript.\n"
 end
-if !status_hash['validator_macro_complete']
+if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok']
 	errors = "#{errors}- An error occurred while running #{Val::Paths.project_name}, please contact workflows@macmillan.com.\n"
 end
 if !status_hash['docfile']

@@ -84,34 +84,6 @@ end
 Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 
 
-#deal with errors & warnings!
-if !status_hash['errors'].empty?
-	#create outfolder:
-	FileUtils.mkdir_p outfolder
-	#errors found!  use the text from mailer to write file:
-	text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
-	Mcmlln::Tools.overwriteFile(err_notice, text)
-	#save the Val::Paths.tmp_dir for review
-	if Dir.exists?(Val::Paths.tmp_dir)
-		FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
-		FileUtils.cp_r "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder
-		logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
-	else
-		logger.info {"no tmpdir exists, this was probably not a .doc file"}
-	end
-	#let's move the original to outbox!
-	Mcmlln::Tools.moveFile(Val::Doc.input_file, outfolder)
-end
-if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
-	#create outfolder:
-	FileUtils.mkdir_p outfolder
-	#warnings found!  use the text from mailer to write file:
-	text = status_hash['warnings']
-	Mcmlln::Tools.overwriteFile(warn_notice, text)
-	logger.info {"warnings found, writing warn_notice"}
-end
-
-
 #get ready for bookmaker to run on good docs!
 if status_hash['bookmaker_ready']
 	#change file & folder name to isbn if its available,keep a DONE file with orig filename
@@ -147,6 +119,34 @@ if status_hash['bookmaker_ready']
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end
 else	#if not bookmaker_ready, clean up
+	#create outfolder:
+	FileUtils.mkdir_p outfolder
+
+	#deal with errors & warnings!
+	if !status_hash['errors'].empty?
+		#errors found!  use the text from mailer to write file:
+		text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
+		Mcmlln::Tools.overwriteFile(err_notice, text)
+		#save the Val::Paths.tmp_dir for review
+		if Dir.exists?(Val::Paths.tmp_dir)
+			FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
+			FileUtils.cp_r "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder
+			logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
+		else
+			logger.info {"no tmpdir exists, this was probably not a .doc file"}
+		end
+	end
+	if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
+		#warnings found!  use the text from mailer to write file:
+		text = status_hash['warnings']
+		Mcmlln::Tools.overwriteFile(warn_notice, text)
+		logger.info {"warnings found, writing warn_notice"}
+	end
+
+	#let's move the original to outbox!
+	Mcmlln::Tools.moveFile(Val::Doc.input_file, outfolder)
+	logger.info {"moved the original doc to outfolder, now cleaning up!"}
+	#and delete tmp files
 	if Dir.exists?(Val::Paths.tmp_dir)	then FileUtils.rm_rf Val::Paths.tmp_dir end
 	if File.file?(Val::Files.errFile) then FileUtils.rm Val::Files.errFile end
 	if File.file?(Val::Files.inprogress_file) then FileUtils.rm Val::Files.inprogress_file end
