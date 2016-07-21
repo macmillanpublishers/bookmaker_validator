@@ -20,7 +20,7 @@ else
 	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal')
 end
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
-outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE-#{Val::Posts.index}$/,'')
+outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE_#{Val::Posts.index}$/,'')
 warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
 err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
 validator_infile = File.join(et_project_dir,'IN',Val::Posts.val_infile_name)

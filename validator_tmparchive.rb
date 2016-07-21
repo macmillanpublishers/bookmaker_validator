@@ -27,7 +27,7 @@ status_hash['filename_isbn'] = {"isbn"=> ''}
 status_hash['filename_isbn']['checkdigit'] = ''
 status_hash['filename_isbn_lookup_ok'] = true
 status_hash['doc_isbn_lookup_ok'] = ''
-status_hash['docisbn_string'] = ''    
+status_hash['docisbn_string'] = ''
 status_hash['docisbns'] = []
 status_hash['docisbn_checkdigit_fail'] = []
 status_hash['docisbn_lookup_fail'] = []
@@ -207,6 +207,9 @@ if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,
         lookuplog, alt_isbn_array = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
 		    logger.info {lookuplog}
     end
+else
+    logger.info {"no isbn in filename"}
+    status_hash['filename_isbn_lookup_ok'] = false
 end
 
 
@@ -226,6 +229,7 @@ if File.file?(Val::Files.isbn_file)
   	docisbn_array = isbn_hash['isbn']['list']
     if docisbn_array.length < 10 && !docisbn_array.empty?
         docisbn_array.each { |i|
+            i.gsub!(/-/,'')
             if i =~ /97(8|9)[0-9]{10}/
                 if alt_isbn_array.include?(i)   #if it matches a filename isbn already
                     status_hash['docisbns'] << i
