@@ -142,7 +142,7 @@ module Val
 				@@logger
 			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
-			  "#{datetime}: #{Resources.thisscript} -- #{msg}\n"
+			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
 			end
 		end
 		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
