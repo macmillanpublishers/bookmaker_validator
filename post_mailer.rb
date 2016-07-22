@@ -14,6 +14,7 @@ logger = Val::Logs.logger
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
+epubQA_request_txt = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
 
 epub, epub_firstpass = '', ''
 send_ok = true
@@ -142,6 +143,19 @@ MESSAGE_END
 
 		Vldtr::Tools.sendmail(message, to_mail, cc_mails)
 		logger.info {"Sending success message for validator to PE/PM"}
+
+
+		#sending another email, for Patrick to QA epubs
+		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, bookinfo)
+		
+message_epubQA = = <<MESSAGE_END_C
+From: Workflows <workflows@macmillan.com>
+#{body_b}
+MESSAGE_END_C
+
+		Vldtr::Tools.sendmail(message_epubQA, 'matthew.retzer@macmillan.com', 'workflows@macmillan.com')
+		logger.info {"Sending success message for validator to PE/PM"}
+
 	end
 else
 
