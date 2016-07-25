@@ -21,7 +21,7 @@ validator_mailer = File.join(Val::Paths.scripts_dir,'validator_mailer.rb')
 validator_cleanup = File.join(Val::Paths.scripts_dir,'validator_cleanup.rb')
 macro_name="Validator.Launch"
 
-processwatch_sleep_min = 5
+processwatch_sleep_min = 30
 
 #---------------------  FUNCTIONS & message template
 def log_time(currenthash,scriptname,txt,jsonlog)

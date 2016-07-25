@@ -7,7 +7,7 @@ require_relative './val_header.rb'
 
 #--------------------- LOCAL DECLARATIONS
 log_suffix = ARGV[1]
-sleepmin = ARGV[2]
+sleepmin = ARGV[2].to_i
 sleeptime = sleepmin*60
 #For testing: can deliberately hang  ps1 script by commenting out line in open3 call: ("stdin.close")
 
