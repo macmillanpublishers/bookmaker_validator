@@ -7,14 +7,15 @@ require_relative './val_header.rb'
 
 #--------------------- LOCAL DECLARATIONS
 log_suffix = ARGV[1]
+sleepmin = ARGV[2].to_i
+sleeptime = sleepmin*60
+#For testing: can deliberately hang  ps1 script by commenting out line in open3 call: ("stdin.close")
+
 json_logfile = Val::Logs.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
 human_logfile = Val::Logs.human_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
 
 json_exist = true
 deploy_complete = true
-#For testing: can deliberately hang  ps1 script by commenting out line in open3 call: ("stdin.close")
-sleeptime=600
-sleepmin=sleeptime/60
 
 
 #--------------------- RUN
@@ -24,7 +25,7 @@ sleep(sleeptime)
 if File.file?(json_logfile)
 	jsonlog_hash = Mcmlln::Tools.readjson(json_logfile)
 	deploy_complete = jsonlog_hash['completed']
-else 
+else
 	json_exist = false
 end
 
@@ -38,22 +39,22 @@ Subject: #{Val::Paths.project_name} ERROR for #{Val::Doc.filename_normalized}
 
 #{Val::Paths.project_name}'s process watcher waited #{sleepmin} and checked for logs from the deploy.rb file..
 
-No json log is found. 
+No json log is found.
 (should be at: #{json_logfile})
 MESSAGE_END
 
 	#now sending
 	unless File.file?(Val::Paths.testing_value_file)
-		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')		
+		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 	end
-end	
+end
 
 
 if json_exist && !deploy_complete
 	if !File.file?(human_logfile)
 		humanreadie = jsonlog_hash.map{|k,v| "#{k} = #{v}"}
 		File.open(human_logfile, 'w+:UTF-8') { |f| f.puts humanreadie }
-	end	
+	end
 	attachment = human_logfile
 	# Read a file and encode it into base64 format for attaching
 	filecontent = File.read(attachment)
@@ -84,10 +85,6 @@ MESSAGE_END
 
 	#now sending
 	unless File.file?(Val::Paths.testing_value_file)
-		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')	
+		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 	end
-end	
-
-
-
-
+end
