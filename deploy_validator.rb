@@ -21,6 +21,7 @@ validator_mailer = File.join(Val::Paths.scripts_dir,'validator_mailer.rb')
 validator_cleanup = File.join(Val::Paths.scripts_dir,'validator_cleanup.rb')
 macro_name="Validator.Launch"
 
+processwatch_sleep_min = 5
 
 #---------------------  FUNCTIONS & message template
 def log_time(currenthash,scriptname,txt,jsonlog)
@@ -66,7 +67,7 @@ Vldtr::Tools.write_json(output_hash, json_logfile)
 #--------------------- RUN
 #launch process-watcher
 log_time(output_hash,'process_watcher','start time',json_logfile)
-pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix}",[:out, :err]=>[p_logfile, "a"])
+pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[p_logfile, "a"])
 Process.detach(pid)
 
 #the rest of the validator:

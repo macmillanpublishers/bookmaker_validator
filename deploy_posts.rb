@@ -19,6 +19,7 @@ process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
 post_mailer = File.join(Val::Paths.scripts_dir,'post_mailer.rb')
 post_cleanup = File.join(Val::Paths.scripts_dir,'post_cleanup.rb')
 
+processwatch_sleep_min = 5
 
 
 #---------------------  FUNCTIONS & message template
@@ -64,7 +65,7 @@ Vldtr::Tools.write_json(output_hash, json_logfile)
 #--------------------- RUN
 #launch process-watcher
 log_time(output_hash,'process_watcher','start time',json_logfile)
-pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix}",[:out, :err]=>[p_logfile, "a"])
+pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[p_logfile, "a"])
 Process.detach(pid)
 #log_time(output_hash,'process_watcher','completion time',json_logfile)
 
