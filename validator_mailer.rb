@@ -17,9 +17,13 @@ cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 to_address = 'To: '
-WC_name = 'Matthew Retzer'
-WC_mail = 'matthew.retzer@macmillan.com'
-
+if Val::Resources.pilot == true			#set Westchester contact info based on pilot status
+	WC_name = 'Workflows'
+	WC_mail = 'workflows@macmillan.com'
+else
+	WC_name = 'Matthew Retzer'
+	WC_mail = 'matthew.retzer@macmillan.com'
+end
 
 #--------------------- RUN
 #note in logs if we're on staging server:
@@ -65,6 +69,7 @@ if File.file?(Val::Files.bookinfo_file)
 	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 else
 	logger.info {"bookinfo.json not present or unavailable!"}
+	bookinfo=''
 end
 
 

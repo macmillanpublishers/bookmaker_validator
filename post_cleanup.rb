@@ -14,11 +14,16 @@ logger = Val::Logs.logger
 et_project_dir, coresource_dir  = '', ''		#'et' for egalley_transmittal :)
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
 	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal_stg')
-	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
-	FileUtils.mkdir_p coresource_dir
 else
 	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal')
 end
+if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true || Val::Resources.pilot == true	
+	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
+	FileUtils.mkdir_p coresource_dir
+else
+	coresource_dir = 'O:'
+end
+
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE_#{Val::Posts.index}$/,'')
 warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
