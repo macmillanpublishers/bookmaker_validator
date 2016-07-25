@@ -1,4 +1,4 @@
-To: Matthew Retzer <Matthew.Retzer@macmillan.com>
+To: Patrick Woodruff <Patrick.Woodruff@macmillan.com>
 Cc: Workflows <Workflows@macmillan.com>
 Subject: Please QA ePub for FILENAME_NORMALIZED
 
@@ -8,9 +8,7 @@ An ePub has been automatically generated for file "FILENAME_NORMALIZED". You can
 
 BOOKINFO
 
-Can you please QA this pub to verify everything looks ok?  
+Can you please QA this pub to verify everything looks ok?
 
 Thank you!
 Workflows@macmillan.com
-
-To: Patrick Woodruff <Patrick.Woodruff@macmillan.com>

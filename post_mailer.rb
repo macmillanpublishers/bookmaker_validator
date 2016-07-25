@@ -144,7 +144,6 @@ MESSAGE_END
 		Vldtr::Tools.sendmail(message, to_mail, cc_mails)
 		logger.info {"Sending success message for validator to PE/PM"}
 
-
 		#sending another email, for Patrick to QA epubs
 		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, bookinfo)
 
@@ -153,8 +152,10 @@ From: Workflows <workflows@macmillan.com>
 #{body_b}
 MESSAGE_END_C
 
-		Vldtr::Tools.sendmail(message_epubQA, 'matthew.retzer@macmillan.com', 'workflows@macmillan.com')
-		logger.info {"Sending success message for validator to PE/PM"}
+		unless Val::Resources.testing == true
+			Vldtr::Tools.sendmail(message_epubQA, 'Patrick.Woodruff@macmillan.com', 'workflows@macmillan.com')
+			logger.info {"Sending success message for validator to PE/PM"}
+		end	
 
 	end
 else
