@@ -134,7 +134,12 @@ module Val
 		end
 	end
 	class Logs
-		@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
+		@@dropbox_logfolder = ''
+		if File.file?(Paths.testing_value_file)
+			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
+		else
+			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
+		end	
 		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
 		def self.logfolder
 			@@logfolder
