@@ -113,7 +113,7 @@ Public Sub Launch(FilePath As String, Optional LogPath As String)
 ' Main procedure, assumes ref to genUtils project intact
   If ValidatorMain(FilePath) = True Then
     SecondsElapsed = Round(Timer - StartTime, 2)
-    Debug.Print "`Main` function complete: " & SecondsElapsed
+    DebugPrint "`Main` function complete: " & SecondsElapsed
   Else
     Err.Raise ValidatorError.err_ValidatorMainFail
   End If
@@ -158,7 +158,7 @@ Private Function ValidatorStartup(ByRef StartupFilePath As String, ByRef _
     Err.Raise err_PathInvalid
   End If
   SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print "Output paths set: " & SecondsElapsed
+  DebugPrint "Output paths set: " & SecondsElapsed
 
 ' Verify genUtils.dotm is a reference. DO NOT CALL ANYTHING FROM `genUtils`
 ' IN THIS PROCEDURE! If ref is missing, will throw compile error.
@@ -167,7 +167,7 @@ Private Function ValidatorStartup(ByRef StartupFilePath As String, ByRef _
   End If
 
   SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print "References OK: " & SecondsElapsed
+  DebugPrint "References OK: " & SecondsElapsed
   ValidatorStartup = True
   Exit Function
   
@@ -197,7 +197,7 @@ Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
 ' Global variable counter in case error throw before we reset On Error.
 ' More than 1 is an error, but letting it run a few times to capture more data
   lngCleanupCount = lngCleanupCount + 1
-  Debug.Print "ValidatorExit: " & lngCleanupCount
+  DebugPrint "ValidatorExit: " & lngCleanupCount
   If lngCleanupCount > 3 Then GoTo ValidatorExitError
 
 ' NOTE!! Must get Err object values before setting new On Error statement.
@@ -254,7 +254,7 @@ ValidatorExitError:
 
 ' Timer End
   SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print "This code ran successfully in " & SecondsElapsed & " seconds"
+  DebugPrint "This code ran successfully in " & SecondsElapsed & " seconds"
 
   If EndMacro = True Then
     On Error GoTo 0
@@ -275,7 +275,7 @@ Private Function FilePathCleanup(ByRef FullFilePath As String) As String
   If InStr(strReturn, "/") > 0 Then
     strReturn = VBA.Replace(strReturn, "/", Application.PathSeparator)
   End If
-'  Debug.Print strReturn
+'  DebugPrint strReturn
   FilePathCleanup = strReturn
   Exit Function
   
@@ -302,8 +302,8 @@ Private Function IsRefMissing() As Boolean
 
   ' Loop thru refs to check if broken
   For Each ref In refs
-'      Debug.Print ref.Name
-'      Debug.Print ref.FullPath
+'      DebugPrint ref.Name
+'      DebugPrint ref.FullPath
       ' Can't remove built-in refs
       If ref.IsBroken = True And ref.BuiltIn = False Then
         ' If it's a Project (i.e., VBA doc, not DLL)...
@@ -357,7 +357,7 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As Bo
     lngSep = InStrRev(origPath, Application.PathSeparator)
     strDir = VBA.Left(origPath, lngSep)  ' includes trailing separator
     strFile = VBA.Right(origPath, Len(origPath) - lngSep)
-'    Debug.Print strDir & " | " & strFile
+'    DebugPrint strDir & " | " & strFile
   
   ' If file DOESN'T exist, set defaults
   Else
@@ -376,12 +376,12 @@ Private Function SetOutputPaths(origPath As String, origLogPath As String) As Bo
   
   ' build full alert file name
   strFile = "ALERT_" & strFile & "_" & Format(Date, "yyyy-mm-dd") & ".txt"
-'  Debug.Print strFile
+'  DebugPrint strFile
   
   ' combine path & file name!
   ' this is a global var that WriteAlert function can access directly.
   strAlertPath = strDir & strFile
-'  Debug.Print strAlertPath
+'  DebugPrint strAlertPath
 
 ' Create path to JSON to store test results. Need different names, since the
 ' powershell reads them too.
@@ -434,7 +434,7 @@ Private Sub WriteAlert(Optional blnEnd As Boolean = True)
   Close #FileNum
 
 '  SecondsElapsed = Round(Timer - StartTime, 2)
-'  Debug.Print "WriteAlert: " & strAlert & SecondsElapsed
+'  DebugPrint "WriteAlert: " & strAlert & SecondsElapsed
   
   ' Optional: stops ALL code.
   If blnEnd = True Then
@@ -719,10 +719,10 @@ Public Sub JsonToLog()
       Next strKey1
     End With
     strLog = strLog & vbNewLine
-  '  Debug.Print strLog
+  '  DebugPrint strLog
     
   ' Write string to log file, which should have been set earlier!
-  '  Debug.Print strLogPath
+  '  DebugPrint strLogPath
     Call genUtils.AppendTextFile(strLogPath, strLog)
   End If
   
@@ -755,7 +755,7 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary, _
         Call genUtils.AddToJson(strJsonPath, "completed", False)
         If QuitIfFailed = True Then
           SecondsElapsed = Round(Timer - StartTime, 2)
-          Debug.Print SectionKey & " complete: " & SecondsElapsed
+          DebugPrint SectionKey & " complete: " & SecondsElapsed
         ' ValidatorCleanup will end code execution
           Call ValidatorExit
         End If
@@ -766,7 +766,7 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary, _
   End If
 
   SecondsElapsed = Round(Timer - StartTime, 2)
-  Debug.Print SectionKey & " complete: " & SecondsElapsed
+  DebugPrint SectionKey & " complete: " & SecondsElapsed
   
   Exit Sub
   
@@ -816,7 +816,7 @@ Private Sub ValidatorTest()
   Exit Sub
 
 TestError:
-  Debug.Print Err.Number & ": " & Err.Description
+  DebugPrint Err.Number & ": " & Err.Description
 End Sub
 
 
@@ -845,34 +845,35 @@ Private Sub IsbnTest()
 '  strFile(13) = "14Meadows_less-than-half"
 '
 '  For A = 1 To UBound(strFile)
-'    Debug.Print A & ": " & strFile(A)
+'    DebugPrint A & ": " & strFile(A)
 '    strLog = strDir & strFile(A) & ".txt"
 '    strThisFile = strDir & strFile(A) & ".docx"
 '    strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
 '    lngCleanupCount = 0
 '    If strReturnedIsbn = vbNullString Then
-'      Debug.Print "No Isbn found"
+'      DebugPrint "No Isbn found"
 '    Else
-'      Debug.Print "Found Isbns: " & strReturnedIsbn
+'      DebugPrint "Found Isbns: " & strReturnedIsbn
 '    End If
-'    Debug.Print "COMPLETED!" & vbNewLine
+'    DebugPrint "COMPLETED!" & vbNewLine
 '  Next A
   
   
   Dim strFile As String
+'  strFile = "09Chaput_UNSTYLED_inText_styles-added"
   strFile = "validator-test_orig"
   strLog = strDir & strFile & ".txt"
   strThisFile = strDir & strFile & ".docx"
   strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
 
   If strReturnedIsbn = vbNullString Then
-    Debug.Print "No Isbn found"
+    DebugPrint "No Isbn found"
   Else
-    Debug.Print "Found Isbns: " & strReturnedIsbn
+    DebugPrint "Found Isbns: " & strReturnedIsbn
   End If
 
   Exit Sub
 
 TestError:
-  Debug.Print Err.Number & ": " & Err.Description
+  DebugPrint Err.Number & ": " & Err.Description
 End Sub
