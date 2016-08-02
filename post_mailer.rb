@@ -95,7 +95,7 @@ if File.file?(Val::Posts.status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
 	if !errtxt_files.empty?
-		errors = "ERROR(s):\n-#{Val::Paths.project_name} encountered non-fatal errors: #{errtxt_files}"
+		errors = "ERROR(s):\n- #{alert_hash['errors']['bookmaker_error'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
 		status_hash['errors'] = errors
 		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
 		send_ok = false
