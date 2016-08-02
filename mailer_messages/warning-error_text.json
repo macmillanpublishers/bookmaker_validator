@@ -16,6 +16,7 @@
       "isbn_match_fail": "No usable ISBN in filename, and ISBNs in the manuscript were for different works:",
       "no_good_isbn": "No usable ISBN present in the filename or in the manuscript.",
       "validator_error": "An error occurred while running PROJECT, please contact workflows@macmillan.com.",
-      "not_a_docfile": "The submitted document was not a .doc or .docx:"
+      "not_a_docfile": "The submitted document was not a .doc or .docx:",
+      "bookmaker_error": "PROJECT encountered non-fatal errors:"
     }
 }

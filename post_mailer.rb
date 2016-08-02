@@ -15,9 +15,11 @@ logger = Val::Logs.logger
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 epubQA_request_txt = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
+alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
+alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
 epub, epub_firstpass = '', ''
-send_ok = true
+ok = true
 errtxt_files = []
 cc_mails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
@@ -39,7 +41,7 @@ if File.file?(Val::Posts.bookinfo_file)
 	bookinfo_pmname = bookinfo_hash['production_manager']
 	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\ntitle: \"#{bookinfo_title}\"\nauthor: \'#{bookinfo_author}\'\nimprint: \'#{bookinfo_imprint}\'\nproduct-type: \'#{product_type}\'\n"
 else
-	send_ok = false
+	ok = false
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
 end
 
@@ -54,7 +56,7 @@ if Dir.exist?(done_isbn_dir)
 		end
 	}
 	if epub.empty? && epub_firstpass.empty?
-		send_ok = false
+		ok = false
 		logger.info {"no epub exists! skip to the end :("}
 	end
 	logger.info {"checking for error files in bookmaker..."}
@@ -63,12 +65,12 @@ if Dir.exist?(done_isbn_dir)
 			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
 			file = file.gsub(//,'.txt')
 			errtxt_files << file
-			send_ok = false
+			ok = false
 		end
 	}
 else
 	logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
-	send_ok = false
+	ok = false
 end
 
 
@@ -83,7 +85,7 @@ if File.file?(Val::Posts.contacts_file)
 	pe_name = contacts_hash['production_editor_name']
 	pe_mail = contacts_hash['production_editor_email']
 else
-	send_ok = false
+	ok = false
 	logger.info {"Val::Posts.contacts_file.json not present or unavailable, unable to send mails"}
 end
 
@@ -110,7 +112,7 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	unless File.file?(Val::Paths.testing_value_file)
+	unless File.file?(Val::Paths.ng_value_file)
 		#conditional to addressees are complicated:
 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
 		if pm_mail =~ /@/
@@ -146,7 +148,7 @@ MESSAGE_END
 
 		#sending another email, for Patrick to QA epubs
 		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, bookinfo)
-	
+
 message_epubQA = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
 #{body_b}
@@ -155,7 +157,7 @@ MESSAGE_END_C
 		unless Val::Resources.testing == true || Val::Resources.testing_Prod == true
 			Vldtr::Tools.sendmail(message_epubQA, 'Patrick.Woodruff@macmillan.com', 'workflows@macmillan.com')
 			logger.info {"Sending success message for validator to PE/PM"}
-		end	
+		end
 
 	end
 else
