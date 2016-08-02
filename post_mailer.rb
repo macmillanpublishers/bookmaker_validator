@@ -19,7 +19,7 @@ alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
 epub, epub_firstpass = '', ''
-ok = true
+send_ok = true
 errtxt_files = []
 cc_mails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
@@ -41,7 +41,7 @@ if File.file?(Val::Posts.bookinfo_file)
 	bookinfo_pmname = bookinfo_hash['production_manager']
 	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\ntitle: \"#{bookinfo_title}\"\nauthor: \'#{bookinfo_author}\'\nimprint: \'#{bookinfo_imprint}\'\nproduct-type: \'#{product_type}\'\n"
 else
-	ok = false
+	send_ok = false
 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
 end
 
@@ -56,7 +56,7 @@ if Dir.exist?(done_isbn_dir)
 		end
 	}
 	if epub.empty? && epub_firstpass.empty?
-		ok = false
+		send_ok = false
 		logger.info {"no epub exists! skip to the end :("}
 	end
 	logger.info {"checking for error files in bookmaker..."}
@@ -65,12 +65,12 @@ if Dir.exist?(done_isbn_dir)
 			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
 			file = file.gsub(//,'.txt')
 			errtxt_files << file
-			ok = false
+			send_ok = false
 		end
 	}
 else
 	logger.info {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}
-	ok = false
+	send_ok = false
 end
 
 
@@ -85,7 +85,7 @@ if File.file?(Val::Posts.contacts_file)
 	pe_name = contacts_hash['production_editor_name']
 	pe_mail = contacts_hash['production_editor_email']
 else
-	ok = false
+	send_ok = false
 	logger.info {"Val::Posts.contacts_file.json not present or unavailable, unable to send mails"}
 end
 
