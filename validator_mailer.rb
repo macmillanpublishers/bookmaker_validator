@@ -13,6 +13,9 @@ send_ok = true
 error_text = File.read(File.join(Val::Paths.mailer_dir,'error_occurred.txt'))
 unstyled_notify = File.read(File.join(Val::Paths.mailer_dir,'unstyled_notify.txt'))
 unstyled_request = File.read(File.join(Val::Paths.mailer_dir,'unstyled_request.txt'))
+alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
+alert_hash = Mcmlln::Tools.readjson(alerts_file)
+
 cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
@@ -76,63 +79,59 @@ end
 #Prepare warning/error text
 warnings = "WARNINGS:\n"
 if !status_hash['api_ok']
-	#warning-api
-	warnings = "#{warnings}- Dropbox api cannot determine file submitter.\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['api']}\n"
 end
 if status_hash['filename_isbn']['isbn'].empty?
-	#warning-no_filename_isbn
-	warnings = "#{warnings}- No ISBN was included in the filename.\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['no_filename_isbn']}\n"
 end
 if !status_hash['filename_isbn']["checkdigit"]
-	#warning-filename_isbn_checkdigit_fail
-	warnings = "#{warnings}- The ISBN included in the filename is not valid (#{status_hash['filename_isbn']['isbn']}): the checkdigit does not match. \n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['filename_isbn_checkdigit_fail']} #{status_hash['filename_isbn']['isbn']}\n"
 end
 if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"] == true
-	warnings = "#{warnings}- Data-warehouse lookup of the ISBN included in the filename failed (#{status_hash['filename_isbn']['isbn']}).\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['filename_isbn_lookup_fail']} #{status_hash['filename_isbn']['isbn']}\n"
 end
 if !status_hash['docisbn_checkdigit_fail'].empty?
-	#bad_isbns = status_hash['pisbn_checkdigit_fail'] + status_hash['docisbn_checkdigit_fail']
-	warnings = "#{warnings}- ISBN(s) found in the manuscript are invalid; the check-digit does not match: #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_checkdigit_fail']} #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
 end
 if !status_hash['docisbn_lookup_fail'].empty?
-	warnings = "#{warnings}- Data-warehouse lookup of ISBN(s) found in the manuscript failed: #{status_hash['docisbn_lookup_fail'].uniq}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_lookup_fail']} #{status_hash['docisbn_lookup_fail'].uniq}\n"
 end
 if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
-	warnings = "#{warnings}- ISBN(s) found in manuscript (#{status_hash['docisbn_match_fail'].uniq}) do not match the work-id of lookup ISBN (#{bookinfo_isbn}) and may be incorrect.\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_match_fail']} #{status_hash['docisbn_match_fail'].uniq}\n"
 end
 if !status_hash['pm_lookup'] && File.file?(Val::Files.bookinfo_file)
-	warnings = "#{warnings}- Error looking up Production Manager email for this title. Found PM_name/email: \'#{bookinfo_pmname}\'/\'#{contacts_hash['production_manager_email']}\' \n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['pm_lookup_fail']} \'#{bookinfo_pmname}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
 if !status_hash['pe_lookup'] && File.file?(Val::Files.bookinfo_file)
-	warnings = "#{warnings}- Error looking up Production Editor email for this title. Found PE_name/email: \'#{bookinfo_pename}\'/\'#{contacts_hash['production_editor_email']}\' \n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['pe_lookup_fail']} \'#{bookinfo_pename}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
 if !status_hash['document_styled']
-	warnings = "#{warnings}- Document not styled with Macmillan styles.\n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['unstyled']}\n"
 end
 if warnings == "WARNINGS:\n"
 	warnings = ''
 end
 
 nogoodisbn = false
-errors = "ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
+errors = "ERROR(s): #{alert_hash['errors']['error_header'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
 if !status_hash['isbn_match_ok']
-	errors = "#{errors}- No usable ISBN present in the filename, and ISBNs in the manuscript were for different work-id's: #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
+	errors = "#{errors}- #{alert_hash['errors']['isbn_match_fail']} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
 end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
 	nogoodisbn = true
 end
 if nogoodisbn
-	errors = "#{errors}- No usable ISBN present in the filename or in the manuscript.\n"
+	errors = "#{errors}- #{alert_hash['errors']['no_good_isbn']}\n"
 end
 if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok']
-	errors = "#{errors}- An error occurred while running #{Val::Paths.project_name}, please contact workflows@macmillan.com.\n"
+	errors = "#{errors}- #{alert_hash['errors']['validator_error'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
 end
 if !status_hash['docfile']
 	#reset warnings & errors for a simpler message
-	warnings, errors = '',"ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
-	errors = "#{errors}- The submitted document \"#{Val::Doc.filename_normalized}\" was not a .doc or .docx\n"
+	warnings, errors = '',"ERROR(s): #{alert_hash['errors']['error_header'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
+	errors = "#{errors}- #{alert_hash['errors']['not_a_docfile']} \"#{Val::Doc.filename_normalized}\"\n"
 end
-if errors == "ERROR(s): One or more problems prevented #{Val::Paths.project_name} from completing successfully:\n"
+if errors == "ERROR(s): #{alert_hash['errors']['error_header'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
 	errors = ''
 end
 

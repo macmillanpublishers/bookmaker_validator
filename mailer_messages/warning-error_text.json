@@ -1,0 +1,21 @@
+{
+  "warnings": {
+      "api": "Dropbox api cannot determine file submitter.",
+      "no_filename_isbn": "No ISBN was included in the filename.",
+      "filename_isbn_checkdigit_fail": "The ISBN included in the filename is invalid (checkdigit does not match):",
+      "filename_isbn_lookup_fail": "Data-warehouse lookup of the ISBN included in the filename failed:",
+      "docisbn_checkdigit_fail": "ISBN(s) found in the manuscript are invalid; the check-digit does not match:",
+      "docisbn_lookup_fail": "Data-warehouse lookup failed for ISBN(s) found in the manuscript:",
+      "docisbn_match_fail": "ISBN(s) in the manuscript found for different works, one or more may be incorrect:",
+      "pm_lookup_fail": "Error looking up Production Manager email for this title. Found PM_name/email:",
+      "pe_lookup_fail": "Error looking up Production Editor email for this title. Found PE_name/email:",
+      "unstyled": "Document not styled with Macmillan styles."
+    },
+  "errors": {
+      "error_header": "One or more problems prevented PROJECT from completing successfully:",
+      "isbn_match_fail": "No usable ISBN in filename, and ISBNs in the manuscript were for different works:",
+      "no_good_isbn": "No usable ISBN present in the filename or in the manuscript.",
+      "validator_error": "An error occurred while running PROJECT, please contact workflows@macmillan.com.",
+      "not_a_docfile": "The submitted document was not a .doc or .docx:"
+    }
+}
