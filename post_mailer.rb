@@ -112,7 +112,7 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	unless File.file?(Val::Paths.ng_value_file)
+	unless File.file?(Val::Paths.testing_value_file)
 		#conditional to addressees are complicated:
 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
 		if pm_mail =~ /@/
