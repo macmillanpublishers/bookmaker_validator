@@ -1,7 +1,7 @@
-Subject: File: PROJECT_NAME is processing "FILENAME_SPLIT"
+Subject: egalley_transmittal success: "FILENAME_SPLIT" is being processed by PROJECT_NAME
 
-A copy of your file "FILENAME_SPLIT" is now being processed by PROJECT_NAME.
+A copy of your file "FILENAME_SPLIT" is now being processed by PROJECT_NAME. Your work here is done! Thanks for pitching in.
 
-You will receive another email once the process has finished.  It may take up to 30 minutes.
+The Production Manager for this book will receive another email once the process has finished.  It may take up to 30 minutes.
 
 Please contact the Workflows team at workflows@macmillan.com with any questions!
