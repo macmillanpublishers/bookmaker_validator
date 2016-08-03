@@ -8,6 +8,9 @@ The mailer requires the Dropbox sdk gem, and the process watcher requires the pr
 `gem install dropbox-sdk`
 `gem install process`
 
+The *nokogiri* gem is also required, but installation varies by platform.
+Go [here](http://www.nokogiri.org/tutorials/installing_nokogiri.html) for instructions.
+
 #### Word .dotm file with Macro
 The Word .dotm file needs to be loaded in Word's Startup folder, and the 'run_Bookmaker_Validator.ps1' script is expecting it to have a module named 'Validator' and macro named 'Launch'
 
