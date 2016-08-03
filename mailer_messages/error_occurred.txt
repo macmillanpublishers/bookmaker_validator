@@ -1,10 +1,10 @@
-Subject: Error running PROJECT_NAME on "FILENAME_SPLIT"
+Subject: Egalley could not be created: "FILENAME_SPLIT" encountered an error during conversion in PROJECT_NAME 
 
-An error occurred while attempting to run PROJECT_NAME on your file FILENAME_NORMALIZED."	
+An error occurred while attempting to run your file "FILENAME_NORMALIZED" in PROJECT_NAME. This means we were NOT able to create an EPUB file.	
 
 Your original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
 
-See below for more information on any error(s), other warnings detected, and lookup info based on the ISBN:
+There may be things in the manuscript that need to be fixed. See below for more information on any error(s), other warnings detected, and the book info we found in Biblio based on the ISBN in the manuscript:
 
 BOOKINFO 
 ERRORS

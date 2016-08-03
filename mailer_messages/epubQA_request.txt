@@ -1,14 +1,15 @@
 To: Patrick Woodruff <Patrick.Woodruff@macmillan.com>
 Cc: Workflows <Workflows@macmillan.com>
-Subject: Please QA ePub for FILENAME_NORMALIZED
+Subject: Please QA EPUB for FILENAME_NORMALIZED
 
 Hello Patrick,
 
-An ePub has been automatically generated for file "FILENAME_NORMALIZED". You can find it in a folder in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
+An EPUB has been automatically generated for the file "FILENAME_NORMALIZED". You can find it in a folder in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
 
+Book details:
 BOOKINFO
 
-Can you please QA this pub to verify everything looks ok?
+Can you please QA this EPUB to verify everything looks ok?
 
 Thank you!
-Workflows@macmillan.com
+workflows@macmillan.com
