@@ -2,7 +2,7 @@
 bookmaker_validator accepts .doc(x) files via Dropbox, and then runs checks and auto-repairs them via Word Macro(s).
 
 # Dependencies
-#### Dropbox sdk gem, Process gem:
+#### Dropbox-sdk, Process, nokogiri gems:
 The mailer requires the Dropbox sdk gem, and the process watcher requires the process gem.  They can be installed like so:
 
 `gem install dropbox-sdk`
