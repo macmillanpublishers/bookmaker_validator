@@ -11,10 +11,35 @@ require_relative './val_header.rb'
 Val::Logs.log_setup()
 logger = Val::Logs.logger
 
-pe_pm_file = File.join(Val::Paths.scripts_dir,'staff_email.json')
+staff_file = File.join(Val::Paths.scripts_dir,'staff_email.json')
+staff_defaults_file = File.join(Val::Paths.scripts_dir,'defaults.json')
 cc_emails = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 
+
+# ---------------------- FUNCTIONS
+def staff_lookup(pm_or_pe, name, staff_hash, submitter_mail, staff_defaults_hash)
+	mail = 'not found'
+	if name == "not found"    #no name associated in biblio, lookup backup PM/PE via submitter division
+		status = "not in biblio"
+		for i in 0..staff_hash.length - 1
+			if submitter_mail == staff_hash[i]['email']
+				submitter_div = staff_hash[i]['division']
+				mail = staff_defaults_hash[submitter_div][pm_or_pe]
+			end
+		end
+		if mail == 'not found' then mail = 'workflows@macmillan.com' end	#this means dropbox api failed, just sentall emails to Workflows
+	else
+		for i in 0..staff_hash.length - 1
+			if name == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
+				mail = staff_hash[i]['email']
+				status = 'ok'
+			end
+		end
+		if mail == 'not found' then status = 'not in json'; mail = 'workflows@macmillan.com' end
+	end
+	return mail, status
+end
 
 
 #--------------------- RUN
@@ -23,8 +48,8 @@ if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
 	status_hash['validator_macro_complete'] = false
 	status_hash['document_styled'] = false
-	status_hash['pe_lookup'] = true
-	status_hash['pm_lookup'] = true
+	status_hash['pe_lookup'] = ''
+	status_hash['pm_lookup'] = ''
 	status_hash['bookmaker_ready'] = false
 else
 	logger.info {"status.json not present or unavailable"}
@@ -42,8 +67,6 @@ if File.file?(Val::Files.stylecheck_file)
 		#set vars for status.json fro stylecheck.json
   	status_hash['validator_macro_complete'] = stylecheck_hash['completed']
   	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
-  	#stylecheck_isbns = stylecheck_hash['isbn']['list']
-		#logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\", isbns:\"#{stylecheck_isbns}\""}
   	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\""}
   end
 else
@@ -51,6 +74,18 @@ else
 	status_hash['validator_macro_complete'] = false
 end
 
+#read in our static pe/pm json
+staff_hash = Mcmlln::Tools.readjson(staff_file)
+staff_defaults_hash = Mcmlln::Tools.readjson(staff_defaults_file)
+
+#read in out contacts.json so we can update it with pe/pm:
+if File.file?(Val::Files.contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(Val::Files.contacts_file)
+else
+	contacts_hash = {}
+	contacts_hash['submitter_email'] = 'workflows@macmillan.com'
+	logger.info {"contacts json not found?"}
+end
 
 #get info from bookinfo.json, do pe & pm lookups (& setting up handling for cc's)
 if File.file?(Val::Files.bookinfo_file)
@@ -64,78 +99,18 @@ if File.file?(Val::Files.bookinfo_file)
 	imprint = bookinfo_hash['imprint']
 	product_type = bookinfo_hash['product_type']
 
-	#read in our static pe/pm json
-	pe_pm_hash = Mcmlln::Tools.readjson(pe_pm_file)
+	#lookup mails & status for PE's and PM's, add to submitter_file json
+	contacts_hash['production_manager_email'], status_hash['pm_lookup'] = staff_lookup(pm, pm_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+	contacts_hash['production_manager_name'] = pm_name
+	contacts_hash['production_editor_email'], status_hash['pe_lookup'] = staff_lookup(pe, pe_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+	contacts_hash['production_editor_name'] = pe_name
 
-	#read in out contacts.json so we can update it with pe/pm:
-	if File.file?(Val::Files.contacts_file)
-		contacts_hash = Mcmlln::Tools.readjson(Val::Files.contacts_file)
-	else
-		contacts_hash = {}
-		logger.info {"contacts json not found?"}
-	end
-
-	pm_mail = ''
-	pe_mail = ''
-	#contacts_hash['cc_emails'] = ''
-	for i in 0..pe_pm_hash.length - 1
-		if pm_name == "#{pe_pm_hash[i]['firstName']} #{pe_pm_hash[i]['lastName']}"
-		 	pm_mail = pe_pm_hash[i]['email']
-		end
-		if pe_name == "#{pe_pm_hash[i]['firstName']} #{pe_pm_hash[i]['lastName']}"
-		 	pe_mail = pe_pm_hash[i]['email']
-		end
-	end
-	logger.info {"retrieved from staff_email.json- pe_mail:\"#{pe_mail}\", pm_mail:\"#{pm_mail}\""}
-
-	#add PE's & PM's to submitter_file json
-	if pm_mail =~ /@/
-		contacts_hash.merge!(production_manager_name: pm_name)
-		contacts_hash.merge!(production_manager_email: pm_mail)
-	else
-		status_hash['pm_lookup'] = false
-	end
-	if pe_mail =~ /@/
-		contacts_hash.merge!(production_editor_name: pe_name)
-		contacts_hash.merge!(production_editor_email: pe_mail)
-	elsif pe_mail !~ /@/
-		status_hash['pe_lookup'] = false
-	end
-	#add pe/pm emails (if found) to submitter_file
-	if status_hash['pm_lookup'] || status_hash['pe_lookup'] && File.file?(Val::Files.contacts_file)
-		Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
-	end
+	Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
+	logger.info {"retrieved info--  PM mail:\"#{pm_mail}\", status: \'#{pm_lookup}\'.  PE mail:\"#{pe_mail}\", status: \'#{pe_lookup}\'"}
 else
 	logger.info {"no book_info.json found, unable to retrieve pe/pm emails"}
-	status_hash['pm_lookup'], status_hash['pe_lookup'] = false, false
+	status_hash['pm_lookup'], status_hash['pe_lookup'] = 'no bookinfo_file', 'no bookinfo_file'
 end
-
-
-# #crosscheck document isbns via work_id
-# if File.file?(Val::Files.bookinfo_file) && File.file?(Val::Files.stylecheck_file) && File.file?(Val::Files.status_file)
-# 	stylecheck_isbns.each { |sc_isbn|
-# 		sc_isbn = sc_isbn.to_s.gsub(/-/,'')
-# 		if sc_isbn != bookinfo_hash['isbn']
-# 			if Vldtr::Tools.checkisbn(sc_isbn)
-# 				thissql = exactSearchSingleKey(sc_isbn, "EDITION_EAN")
-# 				myhash = runQuery(thissql)
-# 				if myhash.nil? or myhash.empty? or !myhash or myhash['book'].nil? or myhash['book'].empty? or !myhash['book']
-# 					logger.info {"isbn data-warehouse-lookup for manuscript isbn: #{sc_isbn} failed."}
-# 					status_hash['docisbn_lookup_fail'] << sc_isbn
-# 				else
-# 					sc_work_id = myhash['book']['WORK_ID']
-# 					if sc_work_id != bookinfo_hash['work_id']
-# 						status_hash['docisbn_match_fail'] << sc_isbn
-# 						logger.info {"isbn mismatch found with manuscript isbn: #{sc_isbn}."}
-# 					end
-# 				end
-# 			else
-# 				status_hash['docisbn_checkdigit_fail'] << sc_isbn
-# 				logger.info {"isbn from manuscript failed checkdigit: #{sc_isbn}"}
-# 			end
-# 		end
-# 	}
-# end
 
 
 #check for alert or other unplanned items in Val::Paths.tmp_dir:
@@ -153,26 +128,24 @@ if File.file?(Val::Files.bookinfo_file) && status_hash['validator_macro_complete
 	status_hash['bookmaker_ready'] = true
 end
 
-
 #update status file with new news!
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
 
-
-#emailing workflows if pe/pm lookups failed
-if (File.file?(Val::Files.bookinfo_file) && (!status_hash['pm_lookup'] || !status_hash['pm_lookup']))
-	logger.info {"pe or pm lookup failed"}
+#emailing workflows if pe/pm json lookups failed
+if (File.file?(Val::Files.bookinfo_file) && (status_hash['pm_lookup']=='not in json' || status_hash['pe_lookup']=='not in json'))
+	logger.info {"pe or pm json lookup failed"}
 
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: "Lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
+Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
 
-PE or PM lookup failed for bookmaker_validator:
+PE or PM lookup againt staff json failed for bookmaker_validator:
 
 PE name (from data-warehouse): #{pe_name}
 PM name (from data-warehouse): #{pm_name}
-PE email (lookup against our static json): #{pe_mail}
-PM email (lookup against our static json): #{pm_mail}
+
+All emails for PM or PE will be emailed to workflows instead, please update json and re-run file.
 MESSAGE_END
 
 	#now sending

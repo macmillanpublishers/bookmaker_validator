@@ -7,8 +7,8 @@
       "docisbn_checkdigit_fail": "ISBN(s) found in the manuscript are invalid; the check-digit does not match:",
       "docisbn_lookup_fail": "Data-warehouse lookup failed for ISBN(s) found in the manuscript:",
       "docisbn_match_fail": "ISBN(s) in the manuscript found for different works, one or more may be incorrect:",
-      "pm_lookup_fail": "Error looking up Production Manager email for this title. Found PM_name/email:",
-      "pe_lookup_fail": "Error looking up Production Editor email for this title. Found PE_name/email:",
+      "pm_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to head PM for Division",
+      "pe_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to Managing Editor",
       "unstyled": "Document not styled with Macmillan styles."
     },
   "errors": {

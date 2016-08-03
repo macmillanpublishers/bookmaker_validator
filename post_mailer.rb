@@ -21,8 +21,8 @@ alert_hash = Mcmlln::Tools.readjson(alerts_file)
 epub, epub_firstpass = '', ''
 send_ok = true
 errtxt_files = []
-cc_mails = ['workflows@macmillan.com']
-cc_address = 'Cc: Workflows <workflows@macmillan.com>'
+# cc_mails = ['workflows@macmillan.com']
+# cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 to_address = 'To: '
 
 
@@ -115,35 +115,37 @@ if send_ok
 	unless File.file?(Val::Paths.testing_value_file)
 		#conditional to addressees are complicated:
 		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
-		if pm_mail =~ /@/
-			cc_mails << pm_mail
-			to_address = "#{to_address}, #{pm_name} <#{pm_mail}>"
-		end
-		if pe_mail =~ /@/ && pe_mail != pm_mail
-			cc_mails << pe_mail
-			to_address = "#{to_address}, #{pe_name} <#{pe_mail}>"
-		end
-		if pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail =~ /@/
-			to_address = "#{to_address}, #{submitter_name} <#{submitter_mail}>"
-			to_mail = submitter_mail
-		elsif pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail !~ /@/
-			to_address = cc_address
-			to_mail = cc_mails
-			cc_mails, cc_address = '', ''
-		else
-			cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
-			to_mail = submitter_mail
-		end
+		# if pm_mail =~ /@/
+		# 	cc_mails << pm_mail
+		# 	to_address = "To: #{pm_name} <#{pm_mail}>"
+		# end
+		# # if pe_mail =~ /@/ && pe_mail != pm_mail
+		# # 	cc_mails << pe_mail
+		# # 	to_address = "To: #{pe_name} <#{pe_mail}>"
+		# # end
+		# #this was, if there's no pmmail, no pemail, make submitter primary recipients
+		# COME BACK TO THIS
+		# if pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail =~ /@/
+		# 	to_address = "To: #{submitter_name} <#{submitter_mail}>"
+		# 	to_mail = submitter_mail
+		# elsif pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail !~ /@/
+		# 	to_address = cc_address
+		# 	to_mail = cc_mails
+		# 	cc_mails, cc_address = '', ''
+		# else
+		# 	cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
+		# 	to_mail = submitter_mail
+		# end
 		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, bookinfo)
 
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
-#{to_address}
-#{cc_address}
+To: #{pm_name} <#{pm_mail}>
+Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
 
-		Vldtr::Tools.sendmail(message, to_mail, cc_mails)
+		Vldtr::Tools.sendmail(message, pm_mail, 'workflows@macmillan.com')
 		logger.info {"Sending success message for validator to PE/PM"}
 
 		#sending another email, for Patrick to QA epubs
@@ -164,7 +166,7 @@ else
 
 	message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
-To: From: Workflows <workflows@macmillan.com>
+To: Workflows <workflows@macmillan.com>
 Subject: validator_posts checks FAILED for #{Val::Doc.filename_normalized}
 
 Either epub creation failed or other error detected during #{Val::Resources.thisscript}
