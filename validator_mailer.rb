@@ -13,6 +13,8 @@ send_ok = true
 error_text = File.read(File.join(Val::Paths.mailer_dir,'error_occurred.txt'))
 unstyled_notify = File.read(File.join(Val::Paths.mailer_dir,'unstyled_notify.txt'))
 unstyled_request = File.read(File.join(Val::Paths.mailer_dir,'unstyled_request.txt'))
+notify_paper_copyedit = File.read(File.join(Val::Paths.mailer_dir,'notify_paper_copyedit.txt'))
+notify_fixed_layout = File.read(File.join(Val::Paths.mailer_dir,'notify_fixed_layout.txt'))
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
@@ -83,10 +85,10 @@ if !status_hash['api_ok']
 	warnings = "#{warnings}- #{alert_hash['warnings']['api']}\n"
 end
 if status_hash['pm_lookup'] == 'not in biblio'
-	warnings = "#{warnings}- #{alert_hash['warnings']['pm_lookup_fail']} \'#{bookinfo_pmname}\'/\'#{contacts_hash['production_manager_email']}\' \n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['pm_lookup_fail']}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
 if status_hash['pe_lookup'] == 'not in biblio'
-	warnings = "#{warnings}- #{alert_hash['warnings']['pe_lookup_fail']} \'#{bookinfo_pename}\'/\'#{contacts_hash['production_editor_email']}\' \n"
+	warnings = "#{warnings}- #{alert_hash['warnings']['pe_lookup_fail']}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
 if status_hash['filename_isbn']['isbn'].empty?
 	warnings = "#{warnings}- #{alert_hash['warnings']['no_filename_isbn']}\n"
@@ -124,7 +126,7 @@ end
 if nogoodisbn
 	errors = "#{errors}- #{alert_hash['errors']['no_good_isbn']}\n"
 end
-if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok']
+if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
 	errors = "#{errors}- #{alert_hash['errors']['validator_error'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
 	addPEcc = true
 end
@@ -202,6 +204,35 @@ MESSAGE_END_B
 	end
 end
 
+#paper_copyedit
+if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
+		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, bookinfo)
+message_c = <<MESSAGE_END_C
+From: Workflows <workflows@macmillan.com>
+To: #{pm_name} <#{pm_mail}>
+Cc: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END_C
+			unless File.file?(Val::Paths.testing_value_file)
+				Vldtr::Tools.sendmail(message_c, pm_mail, 'workflows@macmillan.com')
+				logger.info {"sent message to pm notifying them of paper_copyedit (no egalley)"}
+		end
+end
+
+#fixed layout
+if status_hash['epub_format'] == false && send_ok
+		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, bookinfo)
+message_d = <<MESSAGE_END_D
+From: Workflows <workflows@macmillan.com>
+To: #{pm_name} <#{pm_mail}>
+Cc: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END_D
+		unless File.file?(Val::Paths.testing_value_file)
+				Vldtr::Tools.sendmail(message_d, pm_mail, 'workflows@macmillan.com')
+				logger.info {"sent message to pm notifying them of fixed_layout (no egalley)"}
+		end
+end
 
 if errors.empty? && status_hash['document_styled'] && send_ok
 	logger.info {"this file looks bookmaker_ready, no mailer at this point"}
@@ -209,7 +240,6 @@ if errors.empty? && status_hash['document_styled'] && send_ok
 		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
 	end
 end
-
 
 #add errors/warnings to status.json for cleanup
 if !errors.empty? then status_hash['errors'] = errors end

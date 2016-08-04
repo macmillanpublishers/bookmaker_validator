@@ -18,27 +18,39 @@ cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 
 
 # ---------------------- FUNCTIONS
-def staff_lookup(pm_or_pe, name, staff_hash, submitter_mail, staff_defaults_hash)
+def staff_lookup(pm_or_pe, fullname, staff_hash, submitter_mail, staff_defaults_hash)
 	mail = 'not found'
-	if name == "not found"    #no name associated in biblio, lookup backup PM/PE via submitter division
+	if fullname == "not found"    #no name associated in biblio, lookup backup PM/PE via submitter division
 		status = "not in biblio"
 		for i in 0..staff_hash.length - 1
 			if submitter_mail == staff_hash[i]['email']
 				submitter_div = staff_hash[i]['division']
-				mail = staff_defaults_hash[submitter_div][pm_or_pe]
+				if staff_defaults_hash[submitter_div]
+					mail = staff_defaults_hash[submitter_div][pm_or_pe]
+					name = "#{mail.split('@')[0].split('.')[0].capitalize} #{mail.split('@')[0].split('.')[1].capitalize}"
+				else
+					status = "not in biblio and \'#{submitter_div}\' not present in defaults.json"
+					name = 'Workflows'
+					mail = 'workflows@macmillan.com'
+				end
 			end
 		end
-		if mail == 'not found' then mail = 'workflows@macmillan.com' end	#this means dropbox api failed, just sentall emails to Workflows
-	else
+		if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
+			 name = 'Workflows'
+			 mail = 'workflows@macmillan.com'
+			 status = "not in biblio and submitter email not in staff.json (or dbox-api failed)"
+		end
+	else			#and here we have a name, just need to lookup email
+		name = fullname
 		for i in 0..staff_hash.length - 1
-			if name == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
+			if fullname == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
 				mail = staff_hash[i]['email']
 				status = 'ok'
 			end
 		end
 		if mail == 'not found' then status = 'not in json'; mail = 'workflows@macmillan.com' end
 	end
-	return mail, status
+	return mail, name, status
 end
 
 
@@ -100,10 +112,8 @@ if File.file?(Val::Files.bookinfo_file)
 	product_type = bookinfo_hash['product_type']
 
 	#lookup mails & status for PE's and PM's, add to submitter_file json
-	contacts_hash['production_manager_email'], status_hash['pm_lookup'] = staff_lookup('PM', pm_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
-	contacts_hash['production_manager_name'] = pm_name
-	contacts_hash['production_editor_email'], status_hash['pe_lookup'] = staff_lookup('PE', pe_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
-	contacts_hash['production_editor_name'] = pe_name
+	contacts_hash['production_manager_email'], contacts_hash['production_manager_name'], status_hash['pm_lookup'] = staff_lookup('PM', pm_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+	contacts_hash['production_editor_email'], contacts_hash['production_editor_name'], status_hash['pe_lookup'] = staff_lookup('PE', pe_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
 
 	Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
 	logger.info {"retrieved info--  PM mail:\"#{contacts_hash['production_manager_email']}\", status: \'#{status_hash['pm_lookup']}\'.  PE mail:\"#{contacts_hash['production_editor_email']}\", status: \'#{status_hash['pe_lookup']}\'"}
@@ -132,7 +142,7 @@ end
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
 
 #emailing workflows if pe/pm json lookups failed
-if (File.file?(Val::Files.bookinfo_file) && (status_hash['pm_lookup']=='not in json' || status_hash['pe_lookup']=='not in json'))
+if (File.file?(Val::Files.bookinfo_file) && (status_hash['pm_lookup']=~/not in json|not in biblio and/ || status_hash['pe_lookup']=~/not in json|not in biblio and/))
 	logger.info {"pe or pm json lookup failed"}
 
 	message = <<MESSAGE_END
@@ -140,10 +150,16 @@ From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
 
-PE or PM lookup againt staff json failed for bookmaker_validator:
+PE or PM lookup againt staff json failed for bookmaker_validator;
+or submitter's email didn't match staff_emails.json;
+or submitters division in staff_email.json doesn't match a division in defaults.json.
+(or Dropbox API failed!)
+See info below (and logs) for troubleshooting help
 
 PE name (from data-warehouse): #{pe_name}
+pe lookup 'status': #{status_hash['pe_lookup']}
 PM name (from data-warehouse): #{pm_name}
+pm lookup 'status': #{status_hash['pm_lookup']}
 
 All emails for PM or PE will be emailed to workflows instead, please update json and re-run file.
 MESSAGE_END

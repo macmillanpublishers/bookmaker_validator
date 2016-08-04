@@ -86,6 +86,10 @@ module Val
 		def self.isbn_file
 			@@isbn_file
 		end
+		@@typesetfrom_file = File.join(Paths.server_dropbox_path,'static_data_files','typeset_from_report','typeset_from.xml')
+		def self.typesetfrom_file
+			@@typesetfrom_file
+		end
 		@@inprogress_file = File.join(Paths.project_dir,"#{Doc.filename_normalized}_IN_PROGRESS.txt")
 		def self.inprogress_file
 			@@inprogress_file
