@@ -72,7 +72,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 		thissql_C = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Manager")
 		myhash_C = runPeopleQuery(thissql_C)
 		if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book']
-  			pm_name = ''
+  			pm_name = 'not found'
   			loginfo = "no pm found for this EDITION_EAN\n"
 		else
   			pm_name = myhash_C['book']['PERSON_REALNAME'][0]
@@ -80,8 +80,8 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
  		thissql_D = personSearchSingleKey(lookup_isbn, "EDITION_EAN", "Production Editor")
     myhash_D = runPeopleQuery(thissql_D)
     if myhash_D.nil? or myhash_D.empty? or !myhash_D or myhash_D['book'].nil? or myhash_D['book'].empty? or !myhash_D['book']
-  			pe_name = ''
-  			loginfo = "#{loginfo}no pm found for this EDITION_EAN\n"
+  			pe_name = 'not found'
+  			loginfo = "#{loginfo}no pe found for this EDITION_EAN\n"
 		else
   			pe_name = myhash_D['book']['PERSON_REALNAME'][0]
 		end

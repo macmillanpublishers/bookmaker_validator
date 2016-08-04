@@ -101,13 +101,13 @@ module Val
 			@@testing
 		end
 		@@testing_Prod = false			#this allows to test on prod without emailing Patrick for epubQA
-		def self.testing_Prod			
+		def self.testing_Prod
 			@@testing_Prod
-		end		
+		end
 		@@pilot = false			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
-		def self.pilot			
+		def self.pilot
 			@@pilot
-		end		
+		end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript
@@ -135,11 +135,11 @@ module Val
 	end
 	class Logs
 		@@dropbox_logfolder = ''
-		if File.file?(Paths.testing_value_file)
+		if File.file?(Paths.testing_value_file) || Resources.testing == true
 			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
 		else
 			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
-		end	
+		end
 		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
 		def self.logfolder
 			@@logfolder
