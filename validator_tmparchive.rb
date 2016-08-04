@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'dropbox_sdk'
 require 'open3'
+require 'nokogiri'
 
 require_relative '../utilities/oraclequery.rb'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
@@ -121,6 +122,18 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""
 
 	  return loginfo, alt_isbn_array
+end
+
+def typeset_from_check(typesetfrom_file, isbn_array)
+    file_xml = File.open(typesetfrom_file) { |f| Nokogiri::XML(f)}
+    msword_copyedit = false
+    isbn_array.each { |isbn|
+        check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from")
+        if check =~ /Copyedited Word File/ || check =~ /Word Styles File/ || check =~ /Unedited Word File/
+            msword_copyedit = true
+        end
+    }
+    return msword_copyedit
 end
 
 
@@ -266,6 +279,13 @@ if !status_hash['isbn_match_ok']          #fatal mismatch, delete bookinfo file!
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
+
 if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
+     status_hash['paper_copyedit'], status_hash['epub_format'] = '', ''
+else
+    #check for paper_copyedits
+    status_hash['paper_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
+    #check for epub format
+    status_hash['epub_format'] = true
 end

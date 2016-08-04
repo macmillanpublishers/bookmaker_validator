@@ -13,6 +13,8 @@ send_ok = true
 error_text = File.read(File.join(Val::Paths.mailer_dir,'error_occurred.txt'))
 unstyled_notify = File.read(File.join(Val::Paths.mailer_dir,'unstyled_notify.txt'))
 unstyled_request = File.read(File.join(Val::Paths.mailer_dir,'unstyled_request.txt'))
+notify_paper_copyedit = File.read(File.join(Val::Paths.mailer_dir,'notify_paper_copyedit.txt'))
+notify_fixed_layout = File.read(File.join(Val::Paths.mailer_dir,'notify_fixed_layout.txt'))
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
@@ -201,6 +203,32 @@ MESSAGE_END_B
 		Vldtr::Tools.sendmail(message_b, submitter_mail, cc_mails_b)
 		logger.info {"sent message to submitter cc pe/pm notifying them of request to westchester for 1stpassepub"}
 	end
+end
+
+#paper_copyedit
+if status_hash['msword_copyedit'] == false && send_ok
+		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, bookinfo)
+message_c = <<MESSAGE_END_C
+From: Workflows <workflows@macmillan.com>
+To: #{pm_name} <#{pm_mail}>
+Cc: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END_C
+		Vldtr::Tools.sendmail(message_c, pm_mail, 'workflows@macmillan.com')
+		logger.info {"sent message to pm notifying them of paper_copyedit (no egalley)"}
+end
+
+#fixed layout
+if status_hash['epub_format'] == false && send_ok
+		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, bookinfo)
+message_d = <<MESSAGE_END_D
+From: Workflows <workflows@macmillan.com>
+To: #{pm_name} <#{pm_mail}>
+Cc: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END_D
+		Vldtr::Tools.sendmail(message_d, pm_mail, 'workflows@macmillan.com')
+		logger.info {"sent message to pm notifying them of fixed_layout (no egalley)"}
 end
 
 

@@ -86,6 +86,10 @@ module Val
 		def self.isbn_file
 			@@isbn_file
 		end
+		@@typesetfrom_file = File.join(Paths.server_dropbox_path,'static_data_files','typeset_from_report','typeset_from.xml')
+		def self.typesetfrom_file
+			@@typesetfrom_file
+		end
 		@@inprogress_file = File.join(Paths.project_dir,"#{Doc.filename_normalized}_IN_PROGRESS.txt")
 		def self.inprogress_file
 			@@inprogress_file
@@ -101,13 +105,13 @@ module Val
 			@@testing
 		end
 		@@testing_Prod = false			#this allows to test on prod without emailing Patrick for epubQA
-		def self.testing_Prod			
+		def self.testing_Prod
 			@@testing_Prod
-		end		
+		end
 		@@pilot = false			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
-		def self.pilot			
+		def self.pilot
 			@@pilot
-		end		
+		end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript
@@ -139,7 +143,7 @@ module Val
 			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
 		else
 			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
-		end	
+		end
 		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
 		def self.logfolder
 			@@logfolder
