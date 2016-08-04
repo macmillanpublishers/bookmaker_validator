@@ -95,11 +95,15 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 
     #get alternate isbns:
     alt_isbn_array = []
+    epub_format = false
     thissql_E = exactSearchSingleKey(work_id, "WORK_ID")
     editionshash_B = runQuery(thissql_E)
     editionshash_B.each { |book, hash|
       hash.each { |k,v|
         if k == 'EDITION_EAN' then alt_isbn_array << v end
+        if k == 'FORMAT_LONGNAME'
+            if v == 'EPUB' then epub_format = true end
+        end
       }
     }
 
@@ -121,7 +125,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
     status_hash[hash_lookup_string] = true
 		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{title}\", author: \"#{author}\", imprint: \"#{imprint}\", product_type: \"#{product_type}\""
 
-	  return loginfo, alt_isbn_array
+	  return loginfo, alt_isbn_array, epub_format
 end
 
 def typeset_from_check(typesetfrom_file, isbn_array)
@@ -217,7 +221,7 @@ if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,
     logger.info {testlog}
     if testlookup == true
         logger.info {"isbn \"#{filename_isbn}\" checked out, proceeding with getting book info"}
-        lookuplog, alt_isbn_array = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
+        lookuplog, alt_isbn_array, status_hash['epub_format'] = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
 		    logger.info {lookuplog}
     end
 else
@@ -252,7 +256,7 @@ if File.file?(Val::Files.isbn_file)
                     if testlookup_b == true
                         if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
                             logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
-                            lookuplog_b, alt_isbn_array = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
+                            lookuplog_b, alt_isbn_array, status_hash['epub_format'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
                     		    logger.info {lookuplog}
                             status_hash['docisbns'] << i
                         else            #since an isbn array exists that we don't match, we have a mismatch;
@@ -282,10 +286,8 @@ Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
 
 if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
-     status_hash['paper_copyedit'], status_hash['epub_format'] = '', ''
+     status_hash['msword_copyedit'], status_hash['epub_format'] = '', ''
 else
     #check for paper_copyedits
-    status_hash['paper_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
-    #check for epub format
-    status_hash['epub_format'] = true
+    status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
 end
