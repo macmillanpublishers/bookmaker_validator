@@ -212,7 +212,6 @@ else
     Mcmlln::Tools.copyFile(Val::Doc.input_file, Val::Files.working_file)
 end
 
-
 #try lookup on filename isbn
 if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
@@ -277,12 +276,9 @@ else
   	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
 end
 
-
 if !status_hash['isbn_match_ok']          #fatal mismatch, delete bookinfo file!
     Mcmlln::Tools.deleteFile(Val::Files.bookinfo_file)
 end
-
-Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
 
 if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
@@ -290,4 +286,9 @@ if !File.file?(Val::Files.bookinfo_file)
 else
     #check for paper_copyedits
     status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
+    if status_hash['msword_copyedit'] == false then logger.info {"This appears to be a paper_copyedit, will skip validator macro"} end
+    #log re: fixed layout:
+    if status_hash['epub_format'] == false then logger.info {"This looks like fixed layout, will skip validator macro"} end
 end
+
+Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

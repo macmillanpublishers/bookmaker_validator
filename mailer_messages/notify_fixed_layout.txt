@@ -1,7 +1,16 @@
-Subject: File: PROJECT_NAME is processing "FILENAME_SPLIT"
+Subject: PROJECT_NAME cannot create an egalley for "FILENAME_SPLIT" (fixed layout)
 
-A copy of your file "FILENAME_SPLIT" is now being processed by PROJECT_NAME.
+The file "FILENAME_SPLIT" appears to be for a title with a fixed layout.
+PROJECT_NAME cannot create an egalley for a fixed layout title.
+If you think that PROJECT_NAME may have made this determination in error, please verify that Biblio has an edition for this work with "Product Type" of 'Ebook' and "Format" of 'EPUB'.
 
-You will receive another email once the process has finished.  It may take up to 30 minutes.
+If you would still like to have an egalley created for this manuscript, please reach out to the ebooks team directly:
+ebooks@macmillan.com(?!)
 
-Please contact the Workflows team at workflows@macmillan.com with any questions!
+The submitted original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
+Please contact the workflows team with further questions or issues: workflows@mamicllan.com.
+
+See below for book info, and any warnings detected in the manuscript:
+
+BOOKINFO
+WARNINGS

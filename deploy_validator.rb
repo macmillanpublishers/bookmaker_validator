@@ -88,7 +88,7 @@ begin
 					run_script("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{std_logfile}\'\"", output_hash, "Val::Resources.run_macro", json_logfile)
 			end
 	else
-			['Val::Files.bookinfo_file'] = false ; output_hash['deploy.rb'] = 'skipping macro, no status.json file'
+			output_hash['Val::Files.bookinfo_file'] = false ; output_hash['deploy.rb'] = 'skipping macro, no status.json file'
 	end
 
 	run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
