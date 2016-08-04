@@ -100,13 +100,13 @@ if File.file?(Val::Files.bookinfo_file)
 	product_type = bookinfo_hash['product_type']
 
 	#lookup mails & status for PE's and PM's, add to submitter_file json
-	contacts_hash['production_manager_email'], status_hash['pm_lookup'] = staff_lookup(pm, pm_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+	contacts_hash['production_manager_email'], status_hash['pm_lookup'] = staff_lookup('PM', pm_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
 	contacts_hash['production_manager_name'] = pm_name
-	contacts_hash['production_editor_email'], status_hash['pe_lookup'] = staff_lookup(pe, pe_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+	contacts_hash['production_editor_email'], status_hash['pe_lookup'] = staff_lookup('PE', pe_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
 	contacts_hash['production_editor_name'] = pe_name
 
 	Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
-	logger.info {"retrieved info--  PM mail:\"#{pm_mail}\", status: \'#{pm_lookup}\'.  PE mail:\"#{pe_mail}\", status: \'#{pe_lookup}\'"}
+	logger.info {"retrieved info--  PM mail:\"#{contacts_hash['production_manager_email']}\", status: \'#{status_hash['pm_lookup']}\'.  PE mail:\"#{contacts_hash['production_editor_email']}\", status: \'#{status_hash['pe_lookup']}\'"}
 else
 	logger.info {"no book_info.json found, unable to retrieve pe/pm emails"}
 	status_hash['pm_lookup'], status_hash['pe_lookup'] = 'no bookinfo_file', 'no bookinfo_file'
