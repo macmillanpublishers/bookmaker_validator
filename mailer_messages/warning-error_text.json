@@ -8,7 +8,7 @@
       "docisbn_lookup_fail": "Data-warehouse lookup failed for ISBN(s) found in the manuscript:",
       "docisbn_match_fail": "ISBN(s) in the manuscript found for different works, one or more may be incorrect:",
       "pm_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to head PM for Division",
-      "pe_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to Managing Editor",
+      "pe_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to Managing Editor"
     },
   "errors": {
       "error_header": "One or more problems prevented PROJECT from completing successfully:",
