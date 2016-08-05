@@ -13,6 +13,8 @@ logfile = "#{Val::Logs.logfolder}/#{Val::Logs.logfilename}"
 outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalized)
 err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
 warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
+alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
+alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
 bookmaker_bot_IN = ''
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
@@ -121,6 +123,22 @@ if status_hash['bookmaker_ready']
 else	#if not bookmaker_ready, clean up
 	#create outfolder:
 	FileUtils.mkdir_p outfolder
+
+	#if notices exist, collect and bundle them into warnings
+	notices = "NOTICES:\n"
+	if status_hash['epub_format'] == false
+		notices = "#{notices}- #{alert_hash['notices']['fixed_layout']}\n"
+	end
+	if status_hash['msword_copyedit'] == false
+		notices = "#{notices}- #{alert_hash['notices']['paper_copyedit']}\n"
+	end
+	if !status_hash['document_styled']
+		notices = "#{notices}- #{alert_hash['notices']['unstyled']}\n"
+	end
+	if notices != "NOTICES:\n"
+		new_warnings = "#{notices}#{status_hash['warnings']}"
+		status_hash['warnings'] = new_warnings
+	end
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?

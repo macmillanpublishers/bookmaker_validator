@@ -17,5 +17,10 @@
       "validator_error": "An error occurred while running PROJECT, please contact workflows@macmillan.com.",
       "not_a_docfile": "The submitted document was not a .doc or .docx:",
       "bookmaker_error": "PROJECT encountered non-fatal errors:"
+    },
+  "notices": {
+      "unstyled": "This document does not appear to be styled with Macmillan styles.",
+      "paper_copyedit": "All editions of the work associated with your file are set as \"typeset from: Manuscript\" in Biblio.\nEgalleymaker cannot make an egalley for a paper copy-edit",
+      "fixed_layout": "This file appears to be for a title with a fixed layout; egalleymaker cannot make an egalley for a fixed-layout title."
     }
 }
