@@ -1,4 +1,4 @@
-Subject: egalley_transmittal success: "FILENAME_SPLIT" is being processed by PROJECT_NAME
+Subject: PROJECT_NAME success: "FILENAME_SPLIT" is being processed by PROJECT_NAME
 
 A copy of your file "FILENAME_SPLIT" is now being processed by PROJECT_NAME. Your work here is done! Thanks for pitching in.
 

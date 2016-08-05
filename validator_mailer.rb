@@ -108,9 +108,6 @@ end
 if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
 	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_match_fail']} #{status_hash['docisbn_match_fail'].uniq}\n"
 end
-# if !status_hash['document_styled']
-# 	warnings = "#{warnings}- #{alert_hash['warnings']['unstyled']}\n"
-# end
 if warnings == "WARNINGS:\n"
 	warnings = ''
 end
