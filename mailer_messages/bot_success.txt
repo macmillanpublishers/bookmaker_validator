@@ -1,9 +1,9 @@
-Subject: Egalley created! "FILENAME_SPLIT" was successfully processed by PROJECT_NAME
+Subject: Egalley created! "FILENAME_SPLIT" was successfully processed by egalleymaker
 
-The manuscript "FILENAME_NORMALIZED" has been successfully processed by egalley_transmittal and an egalley has been uploaded to CoreSource.  
+The manuscript "FILENAME_NORMALIZED" has been successfully processed by egalleymaker and an egalley has been uploaded to CoreSource.
 
 You can also find the EPUB generated from your manuscript in the following folder:
-'Dropbox (Macmillan Publishers)\egalley_transmittal\OUT
+'Dropbox (Macmillan Publishers)\egalleymaker\OUT'
 
 The book metadata from Biblio is below, as well as any problems we found with the manuscript as we were doing the conversion:
 
