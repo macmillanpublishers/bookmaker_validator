@@ -20,7 +20,7 @@
     },
   "notices": {
       "unstyled": "This document does not appear to be styled with Macmillan styles.",
-      "paper_copyedit": "All editions of the work associated with your file are set as \"typeset from: Manuscript\" in Biblio.\nEgalleymaker cannot make an egalley for a paper copy-edit",
+      "paper_copyedit": "All editions of the work associated with your file are set to \"typeset from: Manuscript\" in Biblio: egalleymaker cannot make an egalley for a paper copy-edit.",
       "fixed_layout": "This file appears to be for a title with a fixed layout; egalleymaker cannot make an egalley for a fixed-layout title."
     }
 }
