@@ -11,13 +11,13 @@ require_relative './val_header.rb'
 Val::Logs.log_setup(Val::Posts.logfile_name)
 logger = Val::Logs.logger
 
-et_project_dir, coresource_dir  = '', ''		#'et' for egalley_transmittal :)
+et_project_dir, coresource_dir  = '', ''		#'et' for egalleymaker :)
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
-	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal_stg')
+	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalleymaker_stg')
 else
-	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalley_transmittal')
+	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalleymaker')
 end
-if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true || Val::Resources.pilot == true	
+if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true || Val::Resources.pilot == true
 	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
 	FileUtils.mkdir_p coresource_dir
 else
