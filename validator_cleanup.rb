@@ -127,13 +127,13 @@ else	#if not bookmaker_ready, clean up
 	#if notices exist, collect and bundle them into warnings
 	notices = "NOTICES:\n"
 	if status_hash['epub_format'] == false
-		notices = "#{notices}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='fixed_layout' then puts v end}}}\n"
+		notices = "#{notices}- #{alert_hash['notices'].each {|h| h.each {|k,v| if v=='fixed_layout' then puts h['message'] end}}}\n"
 	end
 	if status_hash['msword_copyedit'] == false
-		notices = "#{notices}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='paper_copyedit' then puts v end}}}\n"
+		notices = "#{notices}- #{alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then puts h['message'] end}}}\n"
 	end
 	if !status_hash['document_styled']
-		notices = "#{notices}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='unstyled' then puts v end}}}\n"
+		notices = "#{notices}- #{alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then puts h['message'] end}}}\n"
 	end
 	if notices != "NOTICES:\n"
 		new_warnings = "#{notices}#{status_hash['warnings']}"
