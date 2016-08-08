@@ -1,12 +1,12 @@
-Subject: A firstpass EPUB has been requested for "FILENAME_SPLIT"
+Subject: Please request a firstpass EPUB for "FILENAME_SPLIT"
 
-Your file, "FILENAME_NORMALIZED", was submitted to Egalleymaker but appeared to be un-styled. Egalleymaker can only run on manuscripts that use Word Styles, so a request has been submitted to Westchester instead for firstpass EPUB creation for this book. 
+Your book, "FILENAME_NORMALIZED", was submitted to Egalleymaker but an egalley file could NOT be created. Either the manuscript does not use Word Styles, or there's an error or other issue preventing an egalley from being created. Please order a firstpass EPUB from Westchester instead, and include this on the PO. 
 
-Your original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
+The original manuscript file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder, for reference.
 
 The book metadata from Biblio is below, as well as any warnings detected in the manuscript:
 
 BOOKINFO 
 WARNINGS
 
-
+Please contact the Ebooks team at ebook.production@macmillanusa.com with any questions.

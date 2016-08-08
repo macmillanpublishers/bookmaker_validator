@@ -1,26 +1,95 @@
 {
-  "warnings": {
-      "api": "Dropbox api cannot determine file submitter.",
-      "no_filename_isbn": "No ISBN was included in the filename.",
-      "filename_isbn_checkdigit_fail": "The ISBN included in the filename is invalid (checkdigit does not match):",
-      "filename_isbn_lookup_fail": "Data-warehouse lookup of the ISBN included in the filename failed:",
-      "docisbn_checkdigit_fail": "ISBN(s) found in the manuscript are invalid; the check-digit does not match:",
-      "docisbn_lookup_fail": "Data-warehouse lookup failed for ISBN(s) found in the manuscript:",
-      "docisbn_match_fail": "ISBN(s) in the manuscript found for different works, one or more may be incorrect:",
-      "pm_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to head PM for Division",
-      "pe_lookup_fail": "No PM listed for this title in Biblio. Sending relevant emails to Managing Editor"
+  "warnings": [
+    {
+      "name": "api",
+      "message": "Dropbox api cannot determine file submitter.",
+      "description": "Egalleymaker uses Dropbox account information to figure out who originally submitted the file for conversion (typically, the designer does this. However, for some reason Egalleymaker could not get this information from Dropbox this time."
     },
-  "errors": {
-      "error_header": "One or more problems prevented PROJECT from completing successfully:",
-      "isbn_match_fail": "No usable ISBN in filename, and ISBNs in the manuscript were for different works:",
-      "no_good_isbn": "No usable ISBN present in the filename or in the manuscript.",
-      "validator_error": "An error occurred while running PROJECT, please contact workflows@macmillan.com.",
-      "not_a_docfile": "The submitted document was not a .doc or .docx:",
-      "bookmaker_error": "PROJECT encountered non-fatal errors:"
+    {
+      "name": "no_filename_isbn",
+      "message": "No ISBN was included in the filename.",
+      "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename. If the ISBN doesn't appear in either location, Egalleymaker will fail."
     },
-  "notices": {
-      "unstyled": "This document does not appear to be styled with Macmillan styles.",
-      "paper_copyedit": "All editions of the work associated with your file are set to \"typeset from: Manuscript\" in Biblio: egalleymaker cannot make an egalley for a paper copy-edit.",
-      "fixed_layout": "This file appears to be for a title with a fixed layout; egalleymaker cannot make an egalley for a fixed-layout title."
-    }
+    {
+      "name": "filename_isbn_checkdigit_fail",
+      "message": "The ISBN included in the filename is invalid (checkdigit does not match):",
+      "description": "Every ISBN meets a particular format, and includes a special number as the last digit--called the check digit--that you can validate against a formula. The ISBN in the filename for this title might have a typo, because the check digit does not conform to the special ISBN formula."
+    },
+    {
+      "name": "filename_isbn_lookup_fail",
+      "message": "Data-warehouse lookup of the ISBN included in the filename failed:",
+      "description": "Egalleymaker tried to use the ISBN it found in the manuscript filename to lookup the book information from Biblio, but this lookup failed."
+    },
+    {
+      "name": "docisbn_checkdigit_fail",
+      "message": "ISBN(s) found in the manuscript are invalid; the check-digit does not match:",
+      "description": "Every ISBN meets a particular format, and includes a special number as the last digit--called the check digit--that you can validate against a formula. The ISBN(s) found in the manuscript text for this title might have a typo, because the check digit does not conform to the special ISBN formula."
+    },
+    {
+      "name": "docisbn_lookup_fail",
+      "message": "Data-warehouse lookup failed for ISBN(s) found in the manuscript:",
+      "description": "Egalleymaker tried to use the ISBN it found in the manuscript filename to lookup the book information from Biblio, but this lookup failed."
+    },
+    {
+      "name": "docisbn_match_fail",
+      "message": "ISBN(s) in the manuscript found for different works, one or more may be incorrect:",
+      "description": "Egalleymaker requires an ISBN, and it found some in the manuscript text, however these ISBNs were for different books, and Egalleymaker didn't know which one is correct."
+    },
+    {
+      "name": "pm_lookup_fail",
+      "message": "No PM listed for this title in Biblio. Sending relevant emails to head PM for Division",
+      "description": "Egalleymaker uses the Biblio information for each book to get the name of the Production Manager, however this field wasn't filled out for this book, so Egalleymaker is just going to send all notifications to the head Production Manager for this division."
+    },
+    {
+      "name": "pe_lookup_fail",
+      "message": "No PE listed for this title in Biblio. Sending relevant emails to Managing Editor",
+      "description": "Egalleymaker uses the Biblio information for each book to get the name of the Production Editor, however this field wasn't filled out for this book, so Egalleymaker is just going to send all notifications to the Managing Editor for this division."
+    }],
+  "errors": [
+    {
+      "name": "error_header",
+      "message": "One or more problems prevented PROJECT from completing successfully:",
+      "description": "This is just a generic header telling you that Egalleymaker found some problems that prevented an EPUB from being created. The errors will be listed below."
+    },
+    {
+      "name": "isbn_match_fail",
+      "message": "No usable ISBN in filename, and ISBNs in the manuscript were for different works:",
+      "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename. No ISBN was included in the filename, so Egalleymaker looked in the manuscript text, and found ISBNs for multiple books. It didn't know which ISBN was correct, and so it wasn't able to run. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
+    },
+    {
+      "name": "no_good_isbn",
+      "message": "No usable ISBN present in the filename or in the manuscript.",
+      "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename, but neither was present for this book. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
+    },
+    {
+      "name": "validator_error",
+      "message": "An error occurred while running PROJECT, please contact workflows@macmillan.com.",
+      "description": "Egalleymaker does its best to format the manuscript so it meets the Bookmaker requirements. However, there was a problem with the manuscript formatting that Egalleymaker didn't know how to handle, and so it wasn't able to run. The Ebooks team should be able to help you identify (and fix) this formatting problem."
+    },
+    {
+      "name": "not_a_docfile",
+      "message": "The submitted document was not a .doc or .docx:",
+      "description": "Files submitted to Egalleymaker must use the Microsoft Word .doc or .docx file format."
+    },
+    {
+      "name": "bookmaker_error",
+      "message": "PROJECT encountered non-fatal errors:",
+      "description": "Your book was successfully validated, however when it was sent to Bookmaker for final conversion, Bookmaker ran into an error and couldn't create the EPUB file. The Workflows team has already been notified and is looking into the problem."
+    }],
+  "notices": [
+    {
+      "name": "unstyled",
+      "message": "This document does not appear to be styled with Macmillan styles.",
+      "description": "This manuscript does not use Macmillan's Word Styles, and so an egalley can not be created automatically. The Production Manager will need to request and egalley from Westchester."
+    },
+    {
+      "name": "paper_copyedit",
+      "message": "All editions of the work associated with your file are set to \"typeset from: Manuscript\" in Biblio: egalleymaker cannot make an egalley for a paper copyedit.",
+      "description": "Egalleymaker requires the final copyedited file to make the egalley EPUB. When a manuscript gets a paper copyedit, the copyedits are not incorporated into the manuscript until after transmittal to Westchester, and so they must also create the egalley file. The Production Manager will need to request and egalley from Westchester."
+    },
+    {
+      "name": "fixed_layout",
+      "message": "This file appears to be for a title with a fixed layout; egalleymaker cannot make an egalley for a fixed-layout title.",
+      "description": "Fixed-layout books generally do not get egalley EPUB files. Contact the Ebooks team (ebook.production@macmillanusa.com) to discuss your options."
+    }]
 }

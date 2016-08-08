@@ -1,9 +1,9 @@
-Subject: Request for firstpass EPUB for FILENAME_SPLIT
+Subject: Request firstpass EPUB for FILENAME_SPLIT
 
-Hello Westchester,
+Hey there!
 
-Please generate a firstpass EPUB for file "FILENAME_NORMALIZED".  See below for details pertaining to this title:
+Egalleymaker was not able to create an egalley for "FILENAME_NORMALIZED". Please request a firstpass EPUB from Westchester, and include this item on your PO.  The full book details are below:
 
 BOOKINFO
 
-Please contact the Workflows team at workflows@macmillan.com with any questions.
+You can contact the Ebooks team at ebook.production@macmillanusa.com with any questions.
