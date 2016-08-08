@@ -44,6 +44,10 @@ module Val
 		def self.server_dropbox_path
 			@@server_dropbox_path
 		end
+		@@static_data_files = File.join(server_dropbox_path,'static_data_files')
+		def self.static_data_files
+			@@static_data_files
+		end
 		@@project_dir = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-2].join(File::SEPARATOR)
 		def self.project_dir
 			@@project_dir
@@ -86,9 +90,17 @@ module Val
 		def self.isbn_file
 			@@isbn_file
 		end
-		@@typesetfrom_file = File.join(Paths.server_dropbox_path,'static_data_files','typeset_from_report','typeset_from.xml')
+		@@typesetfrom_file = File.join(Paths.static_data_files,'typeset_from_report','typeset_from.xml')
 		def self.typesetfrom_file
 			@@typesetfrom_file
+		end
+		@@imprint_defaultPMs = File.join(Paths.static_data_files,'staff_list','defaults.json')
+		def self.imprint_defaultPMs
+			@@imprint_defaultPMs
+		end
+		@@staff_emails = File.join(Paths.static_data_files,'staff_list','staff_email.json')
+		def self.staff_emails
+			@@staff_emails
 		end
 		@@inprogress_file = File.join(Paths.project_dir,"#{Doc.filename_normalized}_IN_PROGRESS.txt")
 		def self.inprogress_file
