@@ -12,7 +12,6 @@ logger = Val::Logs.logger
 send_ok = true
 error_text = File.read(File.join(Val::Paths.mailer_dir,'error_occurred.txt'))
 unstyled_notify = File.read(File.join(Val::Paths.mailer_dir,'unstyled_notify.txt'))
-unstyled_request = File.read(File.join(Val::Paths.mailer_dir,'unstyled_request.txt'))
 notify_paper_copyedit = File.read(File.join(Val::Paths.mailer_dir,'notify_paper_copyedit.txt'))
 notify_fixed_layout = File.read(File.join(Val::Paths.mailer_dir,'notify_fixed_layout.txt'))
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
@@ -21,13 +20,6 @@ alert_hash = Mcmlln::Tools.readjson(alerts_file)
 cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
-if Val::Resources.pilot == true			#set Westchester contact info based on pilot status
-	WC_name = 'Workflows'
-	WC_mail = 'workflows@macmillan.com'
-else
-	WC_name = 'Matthew Retzer'
-	WC_mail = 'matthew.retzer@macmillan.com'
-end
 nogoodisbn = false
 addPEcc = false 		#to cc PE's on isbn errors
 
@@ -82,57 +74,72 @@ end
 #Prepare warning/error text
 warnings = "WARNINGS:\n"
 if !status_hash['api_ok']
-	warnings = "#{warnings}- #{alert_hash['warnings']['api']}\n"
+	api_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='api' then api_msg = h['message'] end}}
+	warnings = "#{warnings}- #{api_msg}\n"
 end
 if status_hash['pm_lookup'] == 'not in biblio'
-	warnings = "#{warnings}- #{alert_hash['warnings']['pm_lookup_fail']}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
+	pmlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pm_lookup_fail' then pmlookup_msg = h['message'] end}}
+	warnings = "#{warnings}- #{pmlookup_msg}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
 if status_hash['pe_lookup'] == 'not in biblio'
-	warnings = "#{warnings}- #{alert_hash['warnings']['pe_lookup_fail']}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
+	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
+	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
 if status_hash['filename_isbn']['isbn'].empty?
-	warnings = "#{warnings}- #{alert_hash['warnings']['no_filename_isbn']}\n"
+	nofileisbn_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='no_filename_isbn' then nofileisbn_msg = h['message'] end}}
+	warnings = "#{warnings}- #{nofileisbn_msg}\n"
 end
 if !status_hash['filename_isbn']["checkdigit"]
-	warnings = "#{warnings}- #{alert_hash['warnings']['filename_isbn_checkdigit_fail']} #{status_hash['filename_isbn']['isbn']}\n"
+	fileisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_checkdigit_fail' then fileisbncd_msg = h['message'] end}}
+	warnings = "#{warnings}- #{fileisbncd_msg} #{status_hash['filename_isbn']['isbn']}\n"
 end
 if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"] == true
-	warnings = "#{warnings}- #{alert_hash['warnings']['filename_isbn_lookup_fail']} #{status_hash['filename_isbn']['isbn']}\n"
+	fileisbnlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_lookup_fail' then fileisbnlookup_msg = h['message'] end}}
+	warnings = "#{warnings}- #{fileisbnlookup_msg} #{status_hash['filename_isbn']['isbn']}\n"
 end
 if !status_hash['docisbn_checkdigit_fail'].empty?
-	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_checkdigit_fail']} #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
+	docisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_checkdigit_fail' then docisbncd_msg = h['message'] end}}
+	warnings = "#{warnings}- #{docisbncd_msg} #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
 end
 if !status_hash['docisbn_lookup_fail'].empty?
-	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_lookup_fail']} #{status_hash['docisbn_lookup_fail'].uniq}\n"
+	docisbnlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_lookup_fail' then docisbnlookup_msg = h['message'] end}}
+	warnings = "#{warnings}- #{docisbnlookup_msg} #{status_hash['docisbn_lookup_fail'].uniq}\n"
 end
 if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
-	warnings = "#{warnings}- #{alert_hash['warnings']['docisbn_match_fail']} #{status_hash['docisbn_match_fail'].uniq}\n"
+	docisbnmatch_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_match_fail' then docisbnmatch_msg = h['message'] end}}
+	warnings = "#{warnings}- #{docisbnmatch_msg} #{status_hash['docisbn_match_fail'].uniq}\n"
 end
 if warnings == "WARNINGS:\n"
 	warnings = ''
 end
 
-errors = "ERROR(s): #{alert_hash['errors']['error_header'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
+#Errors
+errheader_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='error_header' then errheader_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
+errors = "ERROR(s): #{errheader_msg}\n"
 if !status_hash['isbn_match_ok']
-	errors = "#{errors}- #{alert_hash['errors']['isbn_match_fail']} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
+	isbnmatch_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='isbn_match_fail' then isbnmatch_msg = h['message'] end}}
+	errors = "#{errors}- #{isbnmatch_msg} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
 	addPEcc = true
 end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
 	nogoodisbn = true
 end
 if nogoodisbn
-	errors = "#{errors}- #{alert_hash['errors']['no_good_isbn']}\n"
+	nogoodisbn_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='no_good_isbn' then nogoodisbn_msg = h['message'] end}}
+	errors = "#{errors}- #{nogoodisbn_msg}\n"
 end
 if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
-	errors = "#{errors}- #{alert_hash['errors']['validator_error'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
+	validatorerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='validator_error' then validatorerr_msg = h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
+	errors = "#{errors}- #{validatorerr_msg}\n"
 	addPEcc = true
 end
 if !status_hash['docfile']
 	#reset warnings & errors for a simpler message
-	warnings, errors = '',"ERROR(s): #{alert_hash['errors']['error_header'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
-	errors = "#{errors}- #{alert_hash['errors']['not_a_docfile']} \"#{Val::Doc.filename_normalized}\"\n"
+	warnings, errors = '',"ERROR(s): #{errheader_msg}\n"
+	docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
+	errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
 end
-if errors == "ERROR(s): #{alert_hash['errors']['error_header'].gsub(/PROJECT/,Val::Paths.project_name)}\n"
+if errors == "ERROR(s): #{errheader_msg}\n"
 	errors = ''
 end
 
@@ -148,56 +155,29 @@ if !errors.empty? && send_ok
 			cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 			cc_mails_err << pe_mail
 		end
-
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
 #{cc_address_err}
 #{body}
 MESSAGE_END
-
 		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails_err)
 		logger.info {"sent message to submitter re: fatal ERRORS encountered"}
 	end
 end
 
-
+#unstyled, no errors, notification to PM for Westchester egalley.
 if errors.empty? && !status_hash['document_styled'] && send_ok
 	unless File.file?(Val::Paths.testing_value_file)
-		#send email to westchester requesting firstpassepub cc: submitter, pe/pm
-		to_address = "To: #{WC_name} <#{WC_mail}>"
-		if pm_mail =~ /@/
-			cc_mails_b << pm_mail
-			cc_address_b = "#{cc_address}, #{pm_name} <#{pm_mail}>"
-		end
-		body = Val::Resources.mailtext_gsubs(unstyled_request, warnings, errors, bookinfo)
-
-message_a = <<MESSAGE_END_A
-From: Workflows <workflows@macmillan.com>
-#{to_address}
-#{cc_address_b}
-#{body}
-MESSAGE_END_A
-
-		Vldtr::Tools.sendmail(message_a, WC_mail, cc_mails_b)
-		logger.info {"sent message to westchester requesting firstpassepub for unstyled doc"}
-
-
-		#send email to submitter cc:pe&pm to notify of success
-		to_address = "To: #{pm_name} <#{pm_mail}>"
 		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, bookinfo)
-		#remove unstyled warning from body:
-		body = body.gsub(/- Document not styled with Macmillan styles.\n/,'')
-
 message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
-#{to_address}
-#{cc_address}
+To: #{pm_name} <#{pm_mail}>
+Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_B
-
 		Vldtr::Tools.sendmail(message_b, pm_mail, cc_mails)
-		logger.info {"sent message to submitter cc pe/pm notifying them of request to westchester for 1stpassepub"}
+		logger.info {"sent message to submitter cc pe/pm for notify/request for egalley to Westchester"}
 	end
 end
 
@@ -243,3 +223,33 @@ if !errors.empty? then status_hash['errors'] = errors end
 if !warnings.empty? then status_hash['warnings'] = warnings end
 
 Vldtr::Tools.write_json(status_hash,Val::Files.status_file)
+
+#emailing workflows if pe/pm json lookups failed
+if (File.file?(Val::Files.bookinfo_file) && (status_hash['pm_lookup']=~/not in json|not in biblio and/ || status_hash['pe_lookup']=~/not in json|not in biblio and/))
+	logger.info {"pe or pm json lookup failed"}
+
+	message = <<MESSAGE_END
+From: Workflows <workflows@macmillan.com>
+To: Workflows <workflows@macmillan.com>
+Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
+
+PE or PM lookup againt staff json failed for bookmaker_validator;
+or submitter's email didn't match staff_emails.json;
+or submitters division in staff_email.json doesn't match a division in defaults.json.
+(or Dropbox API failed!)
+See info below (and logs) for troubleshooting help
+
+PE name (from data-warehouse): #{pe_name}
+pe lookup 'status': #{status_hash['pe_lookup']}
+PM name (from data-warehouse): #{pm_name}
+pm lookup 'status': #{status_hash['pm_lookup']}
+
+All emails for PM or PE will be emailed to workflows instead, please update json and re-run file.
+MESSAGE_END
+
+	#now sending
+	unless File.file?(Val::Paths.testing_value_file)
+		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
+		logger.info {"sent email re failed lookup, now exiting validator_checker"}
+	end
+end

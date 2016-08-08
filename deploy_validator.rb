@@ -16,6 +16,7 @@ p_logfile = Val::Logs.p_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
 
 process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
 validator_tmparchive = File.join(Val::Paths.scripts_dir,'validator_tmparchive.rb')
+validator_lookups = File.join(Val::Paths.scripts_dir,'validator_lookups.rb')
 validator_checker = File.join(Val::Paths.scripts_dir,'validator_checker.rb')
 validator_mailer = File.join(Val::Paths.scripts_dir,'validator_mailer.rb')
 validator_cleanup = File.join(Val::Paths.scripts_dir,'validator_cleanup.rb')
@@ -73,6 +74,7 @@ Process.detach(pid)
 #the rest of the validator:
 begin
 	run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
+	run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)	
 
 	#now we make sure the macro needs to be run:
 	if File.file?(Val::Files.status_file)				#get info from status.json

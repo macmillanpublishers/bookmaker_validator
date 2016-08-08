@@ -95,7 +95,8 @@ if File.file?(Val::Posts.status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
 	if !errtxt_files.empty?
-		errors = "ERROR(s):\n- #{alert_hash['errors']['bookmaker_error'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
+		bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
+		errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
 		status_hash['errors'] = errors
 		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
 		send_ok = false
@@ -113,29 +114,6 @@ if send_ok
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
 	unless File.file?(Val::Paths.testing_value_file)
-		#conditional to addressees are complicated:
-		#However to & cc_mails passed to sendmail are ALL just 'recipients', the true to versus cc is sorted from the message header
-		# if pm_mail =~ /@/
-		# 	cc_mails << pm_mail
-		# 	to_address = "To: #{pm_name} <#{pm_mail}>"
-		# end
-		# # if pe_mail =~ /@/ && pe_mail != pm_mail
-		# # 	cc_mails << pe_mail
-		# # 	to_address = "To: #{pe_name} <#{pe_mail}>"
-		# # end
-		# #this was, if there's no pmmail, no pemail, make submitter primary recipients
-		# COME BACK TO THIS
-		# if pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail =~ /@/
-		# 	to_address = "To: #{submitter_name} <#{submitter_mail}>"
-		# 	to_mail = submitter_mail
-		# elsif pm_mail !~ /@/ && pe_mail !~ /@/ && submitter_mail !~ /@/
-		# 	to_address = cc_address
-		# 	to_mail = cc_mails
-		# 	cc_mails, cc_address = '', ''
-		# else
-		# 	cc_address = "#{cc_address}, #{submitter_name} <#{submitter_mail}>"
-		# 	to_mail = submitter_mail
-		# end
 		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, bookinfo)
 
 message = <<MESSAGE_END
