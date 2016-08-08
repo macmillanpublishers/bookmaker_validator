@@ -10,4 +10,4 @@ The book metadata from Biblio is below, as well as any problems we found with th
 BOOKINFO
 WARNINGS
 
-Please contact the Workflows team at workflows@macmillan.com with any questions.
+Please contact the Ebooks team at ebook.production@macmillanusa.com with any questions.
