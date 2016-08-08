@@ -21,13 +21,6 @@ alert_hash = Mcmlln::Tools.readjson(alerts_file)
 cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
-if Val::Resources.pilot == true			#set Westchester contact info based on pilot status
-	WC_name = 'Workflows'
-	WC_mail = 'workflows@macmillan.com'
-else
-	WC_name = 'Matthew Retzer'
-	WC_mail = 'matthew.retzer@macmillan.com'
-end
 nogoodisbn = false
 addPEcc = false 		#to cc PE's on isbn errors
 
@@ -82,59 +75,56 @@ end
 #Prepare warning/error text
 warnings = "WARNINGS:\n"
 if !status_hash['api_ok']
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='api' then puts v end}}}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='api' then puts v end}}}\n"
 end
 if status_hash['pm_lookup'] == 'not in biblio'
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='pm_lookup_fail' then puts v end}}}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='pm_lookup_fail' then puts v end}}}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
 if status_hash['pe_lookup'] == 'not in biblio'
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='pe_lookup_fail' then puts v end}}}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='pe_lookup_fail' then puts v end}}}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
 if status_hash['filename_isbn']['isbn'].empty?
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='no_filename_isbn' then puts v end}}}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='no_filename_isbn' then puts v end}}}\n"
 end
 if !status_hash['filename_isbn']["checkdigit"]
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='filename_isbn_checkdigit_fail' then puts v end}}} #{status_hash['filename_isbn']['isbn']}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='filename_isbn_checkdigit_fail' then puts v end}}} #{status_hash['filename_isbn']['isbn']}\n"
 end
 if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"] == true
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='filename_isbn_lookup_fail' then puts v end}}} #{status_hash['filename_isbn']['isbn']}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='filename_isbn_lookup_fail' then puts v end}}} #{status_hash['filename_isbn']['isbn']}\n"
 end
 if !status_hash['docisbn_checkdigit_fail'].empty?
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='docisbn_checkdigit_fail' then puts v end}}} #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='docisbn_checkdigit_fail' then puts v end}}} #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
 end
 if !status_hash['docisbn_lookup_fail'].empty?
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='docisbn_lookup_fail' then puts v end}}} #{status_hash['docisbn_lookup_fail'].uniq}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='docisbn_lookup_fail' then puts v end}}} #{status_hash['docisbn_lookup_fail'].uniq}\n"
 end
 if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
-	warnings = "#{warnings}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='docisbn_match_fail' then puts v end}}} #{status_hash['docisbn_match_fail'].uniq}\n"
+	warnings = "#{warnings}- #{alert_hash['warnings'].each {|h| h.each {|k,v| if k['name']=='docisbn_match_fail' then puts v end}}} #{status_hash['docisbn_match_fail'].uniq}\n"
 end
 if warnings == "WARNINGS:\n"
 	warnings = ''
 end
 
-
-
-errors = "ERROR(s): #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='error_header' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
 if !status_hash['isbn_match_ok']
-	errors = "#{errors}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='isbn_match_fail' then puts v end}}} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
+	errors = "#{errors}- #{alert_hash['errors'].each {|h| h.each {|k,v| if k['name']=='isbn_match_fail' then puts v end}}} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
 	addPEcc = true
 end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
 	nogoodisbn = true
 end
 if nogoodisbn
-	errors = "#{errors}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='no_good_isbn' then puts v end}}}\n"
+	errors = "#{errors}- #{alert_hash['errors'].each {|h| h.each {|k,v| if k['name']=='no_good_isbn' then puts v end}}}\n"
 end
 if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
-	errors = "#{errors}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='validator_error' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
+	errors = "#{errors}- #{alert_hash['errors'].each {|h| h.each {|k,v| if k['name']=='validator_error' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
 	addPEcc = true
 end
 if !status_hash['docfile']
 	#reset warnings & errors for a simpler message
-	warnings, errors = '',"ERROR(s): #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='error_header' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
-	errors = "#{errors}- #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='not_a_docfile' then puts v end}}} \"#{Val::Doc.filename_normalized}\"\n"
+	warnings, errors = '',"ERROR(s): #{alert_hash['errors'].each {|h| h.each {|k,v| if k['name']=='error_header' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
+	errors = "#{errors}- #{alert_hash['errors'].each {|h| h.each {|k,v| if k['name']=='not_a_docfile' then puts v end}}} \"#{Val::Doc.filename_normalized}\"\n"
 end
-if errors == "ERROR(s): #{alert_hash['notices'].each {|h| h.each {|k,v| if k['name']=='error_header' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
+if errors == "ERROR(s): #{alert_hash['errors'].each {|h| h.each {|k,v| if k['name']=='error_header' then puts v end}}.gsub(/PROJECT/,Val::Paths.project_name)}\n"
 	errors = ''
 end
 
