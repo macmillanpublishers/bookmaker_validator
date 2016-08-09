@@ -96,12 +96,24 @@ if warnings == "WARNINGS:\n"
 	warnings = ''
 end
 
-#adding unstyled notice to Warnings for mailer
+#adding notices to Warnings for mailer & cleanup (only unstyled should be attached ot mailers
+notices = "NOTICE(S):\n"
 if !status_hash['document_styled']
 	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
-	warnings = "#{warnings} \nNOTICES:\n- #{unstyled_msg}\n"
+	notices = "#{notices}- #{unstyled_msg}\n"
 end
-
+if status_hash['epub_format'] == false
+	fixlayout_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='fixed_layout' then fixlayout_msg=h['message'] end}}
+	notices = "#{notices}- #{fixlayout_msg}\n"
+end
+if status_hash['msword_copyedit'] == false
+	paprcopyedit_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then paprcopyedit_msg=h['message'] end}}
+	notices = "#{notices}- #{paprcopyedit_msg}\n"
+end
+if notices != "NOTICE(S):\n"
+	new_warnings = "#{notices}#{status_hash['warnings']}"
+	status_hash['warnings'] = new_warnings
+end
 
 #Errors
 errheader_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='error_header' then errheader_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}

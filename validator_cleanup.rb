@@ -124,24 +124,24 @@ else	#if not bookmaker_ready, clean up
 	#create outfolder:
 	FileUtils.mkdir_p outfolder
 
-	#if notices exist, collect and bundle them into warnings
-	notices = "NOTICES:\n"
-	if status_hash['epub_format'] == false
-		fixlayout_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='fixed_layout' then fixlayout_msg=h['message'] end}}
-		notices = "#{notices}- #{fixlayout_msg}\n"
-	end
-	if status_hash['msword_copyedit'] == false
-		paprcopyedit_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then paprcopyedit_msg=h['message'] end}}
-		notices = "#{notices}- #{paprcopyedit_msg}\n"
-	end
-	if !status_hash['document_styled']
-		unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
-		notices = "#{notices}- #{unstyled_msg}\n"
-	end
-	if notices != "NOTICES:\n"
-		new_warnings = "#{notices}#{status_hash['warnings']}"
-		status_hash['warnings'] = new_warnings
-	end
+	# #if notices exist, collect and bundle them into warnings
+	# notices = "NOTICES:\n"
+	# if status_hash['epub_format'] == false
+	# 	fixlayout_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='fixed_layout' then fixlayout_msg=h['message'] end}}
+	# 	notices = "#{notices}- #{fixlayout_msg}\n"
+	# end
+	# if status_hash['msword_copyedit'] == false
+	# 	paprcopyedit_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then paprcopyedit_msg=h['message'] end}}
+	# 	notices = "#{notices}- #{paprcopyedit_msg}\n"
+	# end
+	# if !status_hash['document_styled']
+	# 	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
+	# 	notices = "#{notices}- #{unstyled_msg}\n"
+	# end
+	# if notices != "NOTICES:\n"
+	# 	new_warnings = "#{notices}#{status_hash['warnings']}"
+	# 	status_hash['warnings'] = new_warnings
+	# end
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?

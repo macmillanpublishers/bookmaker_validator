@@ -248,7 +248,6 @@ if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
      status_hash['msword_copyedit'], status_hash['epub_format'] = '', ''
 else
-    puts Val::Posts.bookinfo
     #check for paper_copyedits
     status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
     if status_hash['msword_copyedit'] == false then logger.info {"This appears to be a paper_copyedit, will skip validator macro"} end
