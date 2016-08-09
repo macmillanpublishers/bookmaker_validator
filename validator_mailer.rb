@@ -53,23 +53,6 @@ else
 	logger.info {"Val::Files.contacts_file.json not present or unavailable, unable to send mails"}
 end
 
-#get info from bookinfo.json
-# if File.file?(Val::Files.bookinfo_file)
-# 	bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
-# 	work_id = bookinfo_hash['work_id']
-# 	author = bookinfo_hash['author']
-# 	title = bookinfo_hash['title']
-# 	imprint = bookinfo_hash['imprint']
-# 	product_type = bookinfo_hash['product_type']
-# 	bookinfo_isbn = bookinfo_hash['isbn']
-# 	bookinfo_pename = bookinfo_hash['production_editor']
-# 	bookinfo_pmname = bookinfo_hash['production_manager']
-# 	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
-# else
-# 	logger.info {"bookinfo.json not present or unavailable!"}
-# 	bookinfo=''
-# end
-
 
 #Prepare warning/error text
 warnings = "WARNINGS:\n"
