@@ -795,7 +795,7 @@ Private Sub ValidatorTest()
   Dim strFile As String
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
-  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
+'  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
 '  strFile = "04Brennan_STYLED_InText_2016-May-17"
 '  strFile = "05Jahn_STYLED_NotInText_2016-May-04"
 '  strFile = "06Black_UNSTYLED_InText_5-25-2016"
@@ -806,6 +806,7 @@ Private Sub ValidatorTest()
 '  strFile = "12Pomfret_UNSTYLED_InText2_match"
 '  strFile = "13Segre_UNSTYLED_InText2_noMatch"
 '  strFile = "14Meadows_less-than-half"
+  strFile = "validator-test_orig"
 
   Call Validator.Launch("C:\Users\erica.warren\Desktop\validator_test\" & strFile & ".docx", _
   "C:\Users\erica.warren\Desktop\validator_test\LOG_" & strFile & ".txt")
