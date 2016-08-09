@@ -530,20 +530,16 @@ Private Function ValidatorMain(DocPath As String) As Boolean
 '       ALWAYS CHECK ISBN and STYLES
 ' *****************************************************************************
 
-' ----- ISBN VALIDATION -------------------------------------------------------
-' Check ISBN first, because it can fail to find an ISBN in the body text but
-' still run successfully in Bookmaker if ISBN is in file name.
-
-' Actually don't check here, run separate IsbnSearch before calling validator
-'  strKey = "isbn"
-'  Set dictTests = genUtils.Reports.IsbnCheck
-'  Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
-
 ' ----- OVERALL STYLE CHECKS --------------------------------------------------
   strKey = "styled"
   Set dictTests = genUtils.Reports.StyleCheck()
   Call ReturnDict(strKey, dictTests)
 
+' ----- ISBN VALIDATION -------------------------------------------------------
+' Delete any ISBNS and replace with ISBN from book_info.json
+  strKey = "isbn"
+  Set dictTests = genUtils.Reports.IsbnCheck
+  Call ReturnDict(strKey, dictTests)
 
 ' *****************************************************************************
 '       CONTINUE IF MS IS STYLED
