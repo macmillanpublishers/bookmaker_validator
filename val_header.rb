@@ -2,6 +2,8 @@ require 'fileutils'
 require 'logger'
 require 'find'
 
+require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+
 module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
@@ -220,6 +222,29 @@ module Val
 		@@status_file = File.join(tmp_dir,'status_info.json')
 		def self.status_file
 			@@status_file
+		end
+		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
+				if Resources.thisscript =~ /post_/
+					info_file = Posts.bookinfo_file
+				else
+					info_file = Files.bookinfo_file
+				end
+				if File.file?(info_file)
+					bookinfo_hash = Mcmlln::Tools.readjson(info_file)
+					work_id = bookinfo_hash['work_id']
+					author = bookinfo_hash['author']
+					title = bookinfo_hash['title']
+					imprint = bookinfo_hash['imprint']
+					product_type = bookinfo_hash['product_type']
+					bookinfo_isbn = bookinfo_hash['isbn']
+					bookinfo_pename = bookinfo_hash['production_editor']
+					bookinfo_pmname = bookinfo_hash['production_manager']
+					bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
+				else
+					logger.info {"bookinfo.json not present or unavailable!"}
+					bookinfo=''
+				end
+				return bookinfo
 		end
 		@@working_file, @@val_infile_name, @@logfile_name = '','',Logs.logfilename
 		if Dir.exists?(tmp_dir)
