@@ -166,8 +166,8 @@ MESSAGE_END
 	end
 end
 
-#unstyled, no errors, notification to PM for Westchester egalley.
-if errors.empty? && !status_hash['document_styled'] && send_ok
+#unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
+if errors.empty? && !status_hash['document_styled'] && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
 	unless File.file?(Val::Paths.testing_value_file)
 		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, bookinfo)
 message_b = <<MESSAGE_END_B
