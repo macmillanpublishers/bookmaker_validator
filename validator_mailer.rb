@@ -60,11 +60,11 @@ if !status_hash['api_ok']
 	api_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='api' then api_msg = h['message'] end}}
 	warnings = "#{warnings}- #{api_msg}\n"
 end
-if status_hash['pm_lookup'] == 'not in biblio'
+if status_hash['pm_lookup'] =~ /not in biblio/
 	pmlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pm_lookup_fail' then pmlookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pmlookup_msg}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
-if status_hash['pe_lookup'] == 'not in biblio'
+if status_hash['pe_lookup'] =~ /not in biblio/
 	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
@@ -235,18 +235,14 @@ From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
 
-PE or PM lookup againt staff json failed for bookmaker_validator;
-or submitter's email didn't match staff_emails.json;
-or submitters division in staff_email.json doesn't match a division in defaults.json.
-(or Dropbox API failed!)
-See info below (and logs) for troubleshooting help
+PE or PM lookup error occurred; Note lookup status below (and logs) for help
 
 PE name (from data-warehouse): #{pe_name}
 pe lookup 'status': #{status_hash['pe_lookup']}
 PM name (from data-warehouse): #{pm_name}
 pm lookup 'status': #{status_hash['pm_lookup']}
 
-All emails for PM or PE will be emailed to workflows instead, please update json and re-run file.
+All emails for PM or PE will be emailed to workflows instead, please update json if needed and re-run file.
 MESSAGE_END
 
 	#now sending
