@@ -28,22 +28,22 @@ to_address = 'To: '
 
 
 #--------------------- RUN
-#get info from bookinfo.json so we can determine done_isbn_dir if its isbn doesn't match lookup_isbn
-if File.file?(Val::Posts.bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(Val::Posts.bookinfo_file)
-	work_id = bookinfo_hash['work_id']
-	bookinfo_author = bookinfo_hash['author']
-	bookinfo_title = bookinfo_hash['title']
-	bookinfo_imprint = bookinfo_hash['imprint']
-	product_type = bookinfo_hash['product_type']
-	bookinfo_isbn = bookinfo_hash['isbn']
-	bookinfo_pename = bookinfo_hash['production_editor']
-	bookinfo_pmname = bookinfo_hash['production_manager']
-	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\ntitle: \"#{bookinfo_title}\"\nauthor: \'#{bookinfo_author}\'\nimprint: \'#{bookinfo_imprint}\'\nproduct-type: \'#{product_type}\'\n"
-else
-	send_ok = false
-	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
-end
+# #get info from bookinfo.json so we can determine done_isbn_dir if its isbn doesn't match lookup_isbn
+# if File.file?(Val::Posts.bookinfo_file)
+# 	bookinfo_hash = Mcmlln::Tools.readjson(Val::Posts.bookinfo_file)
+# 	work_id = bookinfo_hash['work_id']
+# 	bookinfo_author = bookinfo_hash['author']
+# 	bookinfo_title = bookinfo_hash['title']
+# 	bookinfo_imprint = bookinfo_hash['imprint']
+# 	product_type = bookinfo_hash['product_type']
+# 	bookinfo_isbn = bookinfo_hash['isbn']
+# 	bookinfo_pename = bookinfo_hash['production_editor']
+# 	bookinfo_pmname = bookinfo_hash['production_manager']
+# 	bookinfo = "ISBN lookup for #{bookinfo_isbn}:\ntitle: \"#{bookinfo_title}\"\nauthor: \'#{bookinfo_author}\'\nimprint: \'#{bookinfo_imprint}\'\nproduct-type: \'#{product_type}\'\n"
+# else
+# 	send_ok = false
+# 	logger.info {"bookinfo.json not present or unavailable, unable to determine what to send"}
+# end
 
 #find our epubs, check for error files in bookmaker
 logger.info {"Verifying epub present..."}
@@ -63,7 +63,7 @@ if Dir.exist?(done_isbn_dir)
 	Find.find(done_isbn_dir) { |file|
 		if file =~ /ERROR.txt/
 			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
-			file = file.gsub(//,'.txt')
+			file = file.match(/bookmaker_bot.*$/)[0]
 			errtxt_files << file
 			send_ok = false
 		end
@@ -147,10 +147,10 @@ From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: validator_posts checks FAILED for #{Val::Doc.filename_normalized}
 
-Either epub creation failed or other error detected during #{Val::Posts.thisscript}
+Either epub creation failed or other error detected during #{Val::Resources.thisscript}
 No notification email was sent to PE/PMs/submitter.
 
-#{bookinfo}
+#{Val::Posts.bookinfo}
 #{errors}
 #{warnings}
 MESSAGE_END_B
