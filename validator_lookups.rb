@@ -110,8 +110,8 @@ def typeset_from_check(typesetfrom_file, isbn_array)
     file_xml = File.open(typesetfrom_file) { |f| Nokogiri::XML(f)}
     msword_copyedit = false
     isbn_array.each { |isbn|
-        check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from")
-        if check =~ /Copyedited Word File/ || check =~ /Word Styles File/ || check =~ /Unedited Word File/
+        check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from").to_s
+        if check =~ /Copyedited Word File/m || check =~ /Word Styles File/m || check =~ /Unedited Word File/m
             msword_copyedit = true
         end
     }
@@ -248,6 +248,7 @@ if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
      status_hash['msword_copyedit'], status_hash['epub_format'] = '', ''
 else
+    puts Val::Posts.bookinfo
     #check for paper_copyedits
     status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
     if status_hash['msword_copyedit'] == false then logger.info {"This appears to be a paper_copyedit, will skip validator macro"} end
@@ -271,8 +272,8 @@ else
     end
 
     #now email PM to tell them validator is beginning:
-    if status_hash['epub_format'] == true && status_hash['msword_copyedit'] == true && !contact_hash['submitter_name'].empty?
-        body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','','').gsub(/SUBMITTER/,contact_hash['submitter_name'])
+    if !contacts_hash['submitter_name'].empty?
+        body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','',Val::Posts.bookinfo).gsub(/SUBMITTER/,contacts_hash['submitter_name'])
 
         message_C = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>

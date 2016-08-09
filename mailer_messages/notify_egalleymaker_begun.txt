@@ -1,9 +1,9 @@
 Subject: PROJECT_NAME success: "FILENAME_SPLIT" is being processed by PROJECT_NAME
 
-File "FILENAME_SPLIT" has been submitted to PROJECT_NAME by SUBMITTER.
+SUBMITTER has submitted file "FILENAME_SPLIT" to 'PROJECT_NAME'.
 
-"FILENAME_SPLIT" is now being processed by PROJECT_NAME.
-You will receive another email once the process has finished.  It may take up to 30 minutes.
+"FILENAME_SPLIT" is now being processed by 'PROJECT_NAME'.
+You will receive another email once the process has finished (It may take up to 30 minutes).
 
 See below for book info.
 Please contact the Workflows team at workflows@macmillan.com with any questions!

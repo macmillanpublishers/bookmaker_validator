@@ -114,7 +114,7 @@ if send_ok
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
 	unless File.file?(Val::Paths.testing_value_file)
-		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, bookinfo)
+		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
 
 message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -127,7 +127,7 @@ MESSAGE_END
 		logger.info {"Sending success message for validator to PE/PM"}
 
 		#sending another email, for Patrick to QA epubs
-		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, bookinfo)
+		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, Val::Posts.bookinfo)
 
 message_epubQA = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
@@ -147,7 +147,7 @@ From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: validator_posts checks FAILED for #{Val::Doc.filename_normalized}
 
-Either epub creation failed or other error detected during #{Val::Resources.thisscript}
+Either epub creation failed or other error detected during #{Val::Posts.thisscript}
 No notification email was sent to PE/PMs/submitter.
 
 #{bookinfo}

@@ -54,21 +54,21 @@ else
 end
 
 #get info from bookinfo.json
-if File.file?(Val::Files.bookinfo_file)
-	bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
-	work_id = bookinfo_hash['work_id']
-	author = bookinfo_hash['author']
-	title = bookinfo_hash['title']
-	imprint = bookinfo_hash['imprint']
-	product_type = bookinfo_hash['product_type']
-	bookinfo_isbn = bookinfo_hash['isbn']
-	bookinfo_pename = bookinfo_hash['production_editor']
-	bookinfo_pmname = bookinfo_hash['production_manager']
-	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
-else
-	logger.info {"bookinfo.json not present or unavailable!"}
-	bookinfo=''
-end
+# if File.file?(Val::Files.bookinfo_file)
+# 	bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
+# 	work_id = bookinfo_hash['work_id']
+# 	author = bookinfo_hash['author']
+# 	title = bookinfo_hash['title']
+# 	imprint = bookinfo_hash['imprint']
+# 	product_type = bookinfo_hash['product_type']
+# 	bookinfo_isbn = bookinfo_hash['isbn']
+# 	bookinfo_pename = bookinfo_hash['production_editor']
+# 	bookinfo_pmname = bookinfo_hash['production_manager']
+# 	bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
+# else
+# 	logger.info {"bookinfo.json not present or unavailable!"}
+# 	bookinfo=''
+# end
 
 
 #Prepare warning/error text
@@ -113,6 +113,13 @@ if warnings == "WARNINGS:\n"
 	warnings = ''
 end
 
+#adding unstyled notice to Warnings for mailer
+if !status_hash['document_styled']
+	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
+	warnings = "#{warnings} \nNOTICES:\n- #{unstyled_msg}\n"
+end
+
+
 #Errors
 errheader_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='error_header' then errheader_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
 errors = "ERROR(s): #{errheader_msg}\n"
@@ -148,7 +155,7 @@ end
 if !errors.empty? && send_ok
 	unless File.file?(Val::Paths.testing_value_file)
 		to_address = "To: #{submitter_name} <#{submitter_mail}>"
-		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, bookinfo)
+		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
 		if addPEcc
@@ -169,7 +176,7 @@ end
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
 if errors.empty? && !status_hash['document_styled'] && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
 	unless File.file?(Val::Paths.testing_value_file)
-		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, bookinfo)
+		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, Val::Posts.bookinfo)
 message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
 To: #{pm_name} <#{pm_mail}>
@@ -183,7 +190,7 @@ end
 
 #paper_copyedit
 if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
-		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, bookinfo)
+		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, Val::Posts.bookinfo)
 message_c = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
 To: #{pm_name} <#{pm_mail}>
@@ -198,7 +205,7 @@ end
 
 #fixed layout
 if status_hash['epub_format'] == false && send_ok
-		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, bookinfo)
+		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, Val::Posts.bookinfo)
 message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
 To: #{pm_name} <#{pm_mail}>
