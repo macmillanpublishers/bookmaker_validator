@@ -97,17 +97,23 @@ if send_ok
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
 	unless File.file?(Val::Paths.testing_value_file)
+		if contacts_hash['ebooksDept_submitter'] == true
+        to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+        to_email = contacts_hash['submitter_email']
+    else
+        to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+        to_email = contacts_hash['production_manager_email']
+    end
 		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
-
-message = <<MESSAGE_END
+		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
 
-		Vldtr::Tools.sendmail(message, pm_mail, 'workflows@macmillan.com')
-		logger.info {"Sending success message for validator to PE/PM"}
+		Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
+		logger.info {"Sending epub success message to PM"}
 
 		#sending another email, for Patrick to QA epubs
 		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, Val::Posts.bookinfo)
@@ -119,7 +125,7 @@ MESSAGE_END_C
 
 		unless Val::Resources.testing == true || Val::Resources.testing_Prod == true
 			Vldtr::Tools.sendmail(message_epubQA, 'Patrick.Woodruff@macmillan.com', 'workflows@macmillan.com')
-			logger.info {"Sending success message for validator to PE/PM"}
+			logger.info {"Sending success message to Patrick in ebooksfor QA"}
 		end
 
 	end

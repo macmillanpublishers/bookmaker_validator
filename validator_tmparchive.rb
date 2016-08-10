@@ -21,6 +21,7 @@ logfile_for_macro = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
 
 root_metadata = ''
 contacts_hash = {}
+contacts_hash['ebooksDept_submitter'] = false
 status_hash = {}
 status_hash['api_ok'] = true
 status_hash['docfile'] = true
@@ -45,15 +46,25 @@ if root_metadata.nil? or root_metadata.empty? or !root_metadata or root_metadata
     status_hash['api_ok'] = false
     contacts_hash.merge!(submitter_name: 'Workflows')
     contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
-    logger.info('validator_mailer') {"dropbox api may have failed, not finding file metadata"}
+    logger.info {"dropbox api may have failed, not finding file metadata"}
 else
+		#check to see if submitter is in ebooks dept.:
+		staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)  		#read in our static pe/pm json
+		for i in 0..staff_hash.length - 1
+				if user_email == "#{staff_hash[i]['email']}"
+						if "#{staff_hash[i]['division']}" == 'Ebooks'
+								contacts_hash['ebooksDept_submitter'] = true
+								logger.info {"#{user_name} is a member of ebooks dept, flagging that to edit user comm. addressees"}
+						end
+				end
+		end
+
     #writing user info from Dropbox API to json
     contacts_hash.merge!(submitter_name: user_name)
     contacts_hash.merge!(submitter_email: user_email)
     Vldtr::Tools.write_json(contacts_hash,Val::Files.contacts_file)
-    logger.info('validator_mailer') {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
+    logger.info {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
 end
-
 
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
 if status_hash['api_ok'] && user_email =~ /@/
@@ -103,7 +114,8 @@ else
             status_hash['docisbn_string'] << line
         }
     end
-    logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
+    # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
+		logger.info {"finished running #{macro_name} macro"}
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

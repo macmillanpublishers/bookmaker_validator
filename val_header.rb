@@ -241,7 +241,6 @@ module Val
 					bookinfo_pmname = bookinfo_hash['production_manager']
 					bookinfo="ISBN lookup for #{bookinfo_isbn}:\nTITLE: \"#{title}\"\nAUTHOR: \'#{author}\'\nIMPRINT: \'#{imprint}\'\nPRODUCT-TYPE: \'#{product_type}\'\n"
 				else
-					logger.info {"bookinfo.json not present or unavailable!"}
 					bookinfo=''
 				end
 				return bookinfo

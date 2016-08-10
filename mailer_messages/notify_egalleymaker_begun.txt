@@ -1,4 +1,4 @@
-Subject: PROJECT_NAME success: "FILENAME_SPLIT" is being processed by PROJECT_NAME
+Subject: PROJECT_NAME underway: "FILENAME_SPLIT" has been received
 
 SUBMITTER has submitted file "FILENAME_SPLIT" to 'PROJECT_NAME'.
 

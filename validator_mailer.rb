@@ -55,16 +55,16 @@ end
 
 
 #Prepare warning/error text
-warnings = "WARNINGS:\n"
+warnings = "WARNING(s):\n"
 if !status_hash['api_ok']
 	api_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='api' then api_msg = h['message'] end}}
 	warnings = "#{warnings}- #{api_msg}\n"
 end
-if status_hash['pm_lookup'] == 'not in biblio'
+if status_hash['pm_lookup'] =~ /not in biblio/
 	pmlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pm_lookup_fail' then pmlookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pmlookup_msg}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
 end
-if status_hash['pe_lookup'] == 'not in biblio'
+if status_hash['pe_lookup'] =~ /not in biblio/
 	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
@@ -92,14 +92,29 @@ if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
 	docisbnmatch_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_match_fail' then docisbnmatch_msg = h['message'] end}}
 	warnings = "#{warnings}- #{docisbnmatch_msg} #{status_hash['docisbn_match_fail'].uniq}\n"
 end
-if warnings == "WARNINGS:\n"
+if warnings == "WARNING(s):\n"
 	warnings = ''
 end
 
-#adding unstyled notice to Warnings for mailer
+#adding notices to Warnings for mailer & cleanup (only unstyled should be attached ot mailers
+notices = "NOTICE(s):\n"
 if !status_hash['document_styled']
 	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
-	warnings = "#{warnings} \nNOTICES:\n- #{unstyled_msg}\n"
+	notices = "#{notices}- #{unstyled_msg}\n"
+end
+if status_hash['epub_format'] == false
+	fixlayout_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='fixed_layout' then fixlayout_msg=h['message'] end}}
+	notices = "#{notices}- #{fixlayout_msg}\n"
+end
+if status_hash['msword_copyedit'] == false
+	paprcopyedit_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then paprcopyedit_msg=h['message'] end}}
+	notices = "#{notices}- #{paprcopyedit_msg}\n"
+end
+if contacts_hash['ebooksDept_submitter'] == true
+	notices = "#{notices}- All email communications normally slated for PM or PE are being redirected to the submitter from Ebooks dept.\n"
+end
+if notices != "NOTICE(s):\n"
+	warnings = "#{notices}\n#{warnings}"
 end
 
 
@@ -141,11 +156,11 @@ if !errors.empty? && send_ok
 		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
-		if addPEcc
+		if addPEcc && contacts_hash['ebooksDept_submitter'] != true
 			cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 			cc_mails_err << pe_mail
 		end
-message = <<MESSAGE_END
+		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
 #{cc_address_err}
@@ -158,45 +173,66 @@ end
 
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
 if errors.empty? && !status_hash['document_styled'] && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
-	unless File.file?(Val::Paths.testing_value_file)
+		unless File.file?(Val::Paths.testing_value_file)
+		if contacts_hash['ebooksDept_submitter'] == true
+				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+				to_email = contacts_hash['submitter_email']
+		else
+				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+				to_email = contacts_hash['production_manager_email']
+		end
 		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, Val::Posts.bookinfo)
-message_b = <<MESSAGE_END_B
+		message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_B
-		Vldtr::Tools.sendmail(message_b, pm_mail, cc_mails)
+		Vldtr::Tools.sendmail(message_b, to_email, cc_mails)
 		logger.info {"sent message to submitter cc pe/pm for notify/request for egalley to Westchester"}
 	end
 end
 
 #paper_copyedit
 if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
+		if contacts_hash['ebooksDept_submitter'] == true
+				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+				to_email = contacts_hash['submitter_email']
+		else
+				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+				to_email = contacts_hash['production_manager_email']
+		end
 		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, Val::Posts.bookinfo)
-message_c = <<MESSAGE_END_C
+		message_c = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_C
 			unless File.file?(Val::Paths.testing_value_file)
-				Vldtr::Tools.sendmail(message_c, pm_mail, 'workflows@macmillan.com')
+				Vldtr::Tools.sendmail(message_c, to_email, 'workflows@macmillan.com')
 				logger.info {"sent message to pm notifying them of paper_copyedit (no egalley)"}
 		end
 end
 
 #fixed layout
 if status_hash['epub_format'] == false && send_ok
+		if contacts_hash['ebooksDept_submitter'] == true
+				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+				to_email = contacts_hash['submitter_email']
+		else
+				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+				to_email = contacts_hash['production_manager_email']
+		end
 		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, Val::Posts.bookinfo)
-message_d = <<MESSAGE_END_D
+		message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
 		unless File.file?(Val::Paths.testing_value_file)
-				Vldtr::Tools.sendmail(message_d, pm_mail, 'workflows@macmillan.com')
+				Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
 				logger.info {"sent message to pm notifying them of fixed_layout (no egalley)"}
 		end
 end
@@ -223,18 +259,14 @@ From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
 
-PE or PM lookup againt staff json failed for bookmaker_validator;
-or submitter's email didn't match staff_emails.json;
-or submitters division in staff_email.json doesn't match a division in defaults.json.
-(or Dropbox API failed!)
-See info below (and logs) for troubleshooting help
+PE or PM lookup error occurred; Note lookup status below (and logs) for help
 
 PE name (from data-warehouse): #{pe_name}
 pe lookup 'status': #{status_hash['pe_lookup']}
 PM name (from data-warehouse): #{pm_name}
 pm lookup 'status': #{status_hash['pm_lookup']}
 
-All emails for PM or PE will be emailed to workflows instead, please update json and re-run file.
+All emails for PM or PE will be emailed to workflows instead, please update json if needed and re-run file.
 MESSAGE_END
 
 	#now sending
