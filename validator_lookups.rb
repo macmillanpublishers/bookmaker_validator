@@ -118,39 +118,49 @@ def typeset_from_check(typesetfrom_file, isbn_array)
     return msword_copyedit
 end
 
-def staff_lookup(pm_or_pe, fullname, staff_hash, submitter_mail, staff_defaults_hash)
-	mail = 'not found'
-	if fullname == "not found"    #no name associated in biblio, lookup backup PM/PE via submitter division
-		status = "not in biblio"
+def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)   #no name associated in biblio, lookup backup PM/PE via submitter division
+    mail, newstatus = 'not found', status
 		for i in 0..staff_hash.length - 1
-			if submitter_mail == staff_hash[i]['email']
-				submitter_div = staff_hash[i]['division']
-				if staff_defaults_hash[submitter_div]
-					mail = staff_defaults_hash[submitter_div][pm_or_pe]
-					name = "#{mail.split('@')[0].split('.')[0].capitalize} #{mail.split('@')[0].split('.')[1].capitalize}"
-				else
-					status = "not in biblio and \'#{submitter_div}\' not present in defaults.json"
-					name = 'Workflows'
-					mail = 'workflows@macmillan.com'
-				end
-			end
+  			if submitter_mail == staff_hash[i]['email']
+    				submitter_div = staff_hash[i]['division']
+    				if staff_defaults_hash[submitter_div]
+      					mail = staff_defaults_hash[submitter_div][pm_or_pe]
+      					name = "#{mail.split('@')[0].split('.')[0].capitalize} #{mail.split('@')[0].split('.')[1].capitalize}"
+    				else
+      					newstatus = "#{newstatus}, and \'#{submitter_div}\' not present in defaults.json"
+      			    name, mail = 'Workflows', 'workflows@macmillan.com'
+    				end
+  			end
 		end
 		if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
-			 name = 'Workflows'
-			 mail = 'workflows@macmillan.com'
-			 status = "not in biblio and submitter email not in staff.json (or dbox-api failed)"
+  			 newstatus = "#{newstatus}, and submitter email not in staff.json"
+  			 name, mail = 'Workflows', 'workflows@macmillan.com'
 		end
-	else			#and here we have a name, just need to lookup email
-		name = fullname
-		for i in 0..staff_hash.length - 1
-			if fullname == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
-				mail = staff_hash[i]['email']
-				status = 'ok'
-			end
-		end
-		if mail == 'not found' then status = 'not in json'; mail = 'workflows@macmillan.com' end
-	end
-	return mail, name, status
+    return mail, name, newstatus
+end
+
+def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash)
+  	status, newname, mail = '', name, 'not found'
+    if newname == 'not found'
+        status = 'not in biblio'
+        mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
+    elsif newname.empty?
+        status = 'no bookinfo file?'
+        mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
+    else
+        status = '#{pm_or_pe} name in biblio'
+    		for i in 0..staff_hash.length - 1
+      			if newname == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
+        				mail = staff_hash[i]['email']
+        				status = "#{status}, found email in staff.json"
+      			end
+    		end
+    		if mail == 'not found'    #this means pm/pe's
+            status = "#{status}, their email is not in staff.json"
+			      newname, mail = 'Workflows', 'workflows@macmillan.com'
+        end
+    end
+  	return mail, newname, status
 end
 
 #--------------------- RUN
@@ -244,6 +254,22 @@ if !status_hash['isbn_match_ok']          #fatal mismatch, delete bookinfo file!
     Mcmlln::Tools.deleteFile(Val::Files.bookinfo_file)
 end
 
+#get info from bookinfo.json, do pe & pm lookups (& setting up handling for cc's)
+if File.file?(Val::Files.bookinfo_file)
+  bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
+  pm_name = bookinfo_hash['production_manager']
+  pe_name = bookinfo_hash['production_editor']
+  logger.info {"retrieved from book_info.json- pe_name:\"#{pe_name}\", pm_name:\"#{pm_name}\""}
+else
+  pm_name, pe_name = '',''
+end
+
+#lookup mails & status for PE's and PM's, add to submitter_file json
+contacts_hash['production_manager_email'], contacts_hash['production_manager_name'], status_hash['pm_lookup'] = staff_lookup(pm_name, 'PM', staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+contacts_hash['production_editor_email'], contacts_hash['production_editor_name'], status_hash['pe_lookup'] = staff_lookup(pe_name, 'PE', staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
+Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
+logger.info {"retrieved info--  PM mail:\"#{contacts_hash['production_manager_email']}\", status: \'#{status_hash['pm_lookup']}\'.  PE mail:\"#{contacts_hash['production_editor_email']}\", status: \'#{status_hash['pe_lookup']}\'"}
+
 if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
      status_hash['msword_copyedit'], status_hash['epub_format'] = '', ''
@@ -253,22 +279,6 @@ else
     if status_hash['msword_copyedit'] == false then logger.info {"This appears to be a paper_copyedit, will skip validator macro"} end
     #log re: fixed layout:
     if status_hash['epub_format'] == false then logger.info {"This looks like fixed layout, will skip validator macro"} end
-
-    #get info from bookinfo.json, do pe & pm lookups (& setting up handling for cc's)
-    if File.file?(Val::Files.bookinfo_file)
-    	bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
-    	pm_name = bookinfo_hash['production_manager']
-    	pe_name = bookinfo_hash['production_editor']
-    	logger.info {"retrieved from book_info.json- pe_name:\"#{pe_name}\", pm_name:\"#{pm_name}\""}
-    	#lookup mails & status for PE's and PM's, add to submitter_file json
-    	contacts_hash['production_manager_email'], contacts_hash['production_manager_name'], status_hash['pm_lookup'] = staff_lookup('PM', pm_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
-    	contacts_hash['production_editor_email'], contacts_hash['production_editor_name'], status_hash['pe_lookup'] = staff_lookup('PE', pe_name, staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
-    	Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
-    	logger.info {"retrieved info--  PM mail:\"#{contacts_hash['production_manager_email']}\", status: \'#{status_hash['pm_lookup']}\'.  PE mail:\"#{contacts_hash['production_editor_email']}\", status: \'#{status_hash['pe_lookup']}\'"}
-    else
-    	logger.info {"no book_info.json found, unable to retrieve pe/pm emails"}
-    	status_hash['pm_lookup'], status_hash['pe_lookup'] = 'no bookinfo_file', 'no bookinfo_file'
-    end
 
     #now email PM to tell them validator is beginning:
     if !contacts_hash['submitter_name'].empty?
