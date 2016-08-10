@@ -110,10 +110,14 @@ if status_hash['msword_copyedit'] == false
 	paprcopyedit_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then paprcopyedit_msg=h['message'] end}}
 	notices = "#{notices}- #{paprcopyedit_msg}\n"
 end
+if contacts_hash['ebooksDept_submitter'] == true
+	notices = "#{notices}- All email communications normally slated for PM or PE are being redirected to the submitter from Ebooks dept.\n"
+end
 if notices != "NOTICE(S):\n"
 	new_warnings = "#{notices}#{status_hash['warnings']}"
 	status_hash['warnings'] = new_warnings
 end
+
 
 #Errors
 errheader_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='error_header' then errheader_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
@@ -153,11 +157,11 @@ if !errors.empty? && send_ok
 		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
-		if addPEcc
+		if addPEcc && contacts_hash['ebooksDept_submitter'] != true
 			cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 			cc_mails_err << pe_mail
 		end
-message = <<MESSAGE_END
+		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 #{to_address}
 #{cc_address_err}
@@ -170,45 +174,66 @@ end
 
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
 if errors.empty? && !status_hash['document_styled'] && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
-	unless File.file?(Val::Paths.testing_value_file)
+		unless File.file?(Val::Paths.testing_value_file)
+		if contacts_hash['ebooksDept_submitter'] == true
+				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+				to_email = contacts_hash['submitter_email']
+		else
+				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+				to_email = contacts_hash['production_manager_email']
+		end
 		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, Val::Posts.bookinfo)
-message_b = <<MESSAGE_END_B
+		message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_B
-		Vldtr::Tools.sendmail(message_b, pm_mail, cc_mails)
+		Vldtr::Tools.sendmail(message_b, to_email, cc_mails)
 		logger.info {"sent message to submitter cc pe/pm for notify/request for egalley to Westchester"}
 	end
 end
 
 #paper_copyedit
 if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
+		if contacts_hash['ebooksDept_submitter'] == true
+				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+				to_email = contacts_hash['submitter_email']
+		else
+				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+				to_email = contacts_hash['production_manager_email']
+		end
 		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, Val::Posts.bookinfo)
-message_c = <<MESSAGE_END_C
+		message_c = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_C
 			unless File.file?(Val::Paths.testing_value_file)
-				Vldtr::Tools.sendmail(message_c, pm_mail, 'workflows@macmillan.com')
+				Vldtr::Tools.sendmail(message_c, to_email, 'workflows@macmillan.com')
 				logger.info {"sent message to pm notifying them of paper_copyedit (no egalley)"}
 		end
 end
 
 #fixed layout
 if status_hash['epub_format'] == false && send_ok
+		if contacts_hash['ebooksDept_submitter'] == true
+				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+				to_email = contacts_hash['submitter_email']
+		else
+				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+				to_email = contacts_hash['production_manager_email']
+		end
 		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, Val::Posts.bookinfo)
-message_d = <<MESSAGE_END_D
+		message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
-To: #{pm_name} <#{pm_mail}>
+To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
 		unless File.file?(Val::Paths.testing_value_file)
-				Vldtr::Tools.sendmail(message_d, pm_mail, 'workflows@macmillan.com')
+				Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
 				logger.info {"sent message to pm notifying them of fixed_layout (no egalley)"}
 		end
 end

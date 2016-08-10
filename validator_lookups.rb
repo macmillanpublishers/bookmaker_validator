@@ -193,10 +193,6 @@ else
 	logger.info {"contacts json not found?"}
 end
 
-#read in our static pe/pm json
-staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)
-staff_defaults_hash = Mcmlln::Tools.readjson(Val::Files.imprint_defaultPMs)
-
 #try lookup on filename isbn
 if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
@@ -264,6 +260,10 @@ else
   pm_name, pe_name = '',''
 end
 
+#read in our static pe/pm json
+staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)
+staff_defaults_hash = Mcmlln::Tools.readjson(Val::Files.imprint_defaultPMs)
+
 #lookup mails & status for PE's and PM's, add to submitter_file json
 contacts_hash['production_manager_email'], contacts_hash['production_manager_name'], status_hash['pm_lookup'] = staff_lookup(pm_name, 'PM', staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
 contacts_hash['production_editor_email'], contacts_hash['production_editor_name'], status_hash['pe_lookup'] = staff_lookup(pe_name, 'PE', staff_hash, contacts_hash['submitter_email'], staff_defaults_hash)
@@ -281,20 +281,23 @@ else
     if status_hash['epub_format'] == false then logger.info {"This looks like fixed layout, will skip validator macro"} end
 
     #now email PM to tell them validator is beginning:
-    if !contacts_hash['submitter_name'].empty?
-        body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','',Val::Posts.bookinfo).gsub(/SUBMITTER/,contacts_hash['submitter_name'])
-
-        message_C = <<MESSAGE_END_C
+    if contacts_hash['ebooksDept_submitter'] == true
+        to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+        to_email = contacts_hash['submitter_email']
+    else
+        to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+        to_email = contacts_hash['production_manager_email']
+    end
+    body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','',Val::Posts.bookinfo).gsub(/SUBMITTER/,contacts_hash['submitter_name'])
+    message_C = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
-To: #{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>
+To: #{to_header}
 CC: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_C
-
-      	unless File.file?(Val::Paths.testing_value_file)
-      		Vldtr::Tools.sendmail("#{message_C}",contacts_hash['production_manager_email'],'workflows@macmillan.com')
-      	end
-    end
+  	unless File.file?(Val::Paths.testing_value_file)
+  		Vldtr::Tools.sendmail("#{message_C}",to_email,'workflows@macmillan.com')
+  	end
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
