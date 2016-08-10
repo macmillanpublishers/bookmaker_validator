@@ -32,6 +32,7 @@ if ($fileext -eq ".doc" -Or $fileext -eq ".docx") {
 #	$word.run($macroName, $working_file, $logfile) 				#this one for calling direct from cmd line
 	$doc.close([ref]$word.WdSaveOptions.wdDoNotSaveChanges)
 	$word.quit()
+  Start-Sleep 1
 	$TimestampB=(Get-Date).tostring("yyyy-MM-dd hh:mm:ss")
 	LogWrite "$($TimestampB)      : run_macro -- Macro ""$($macroName)"" completed, exiting .ps1"
 } else {

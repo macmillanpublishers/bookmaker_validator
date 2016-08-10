@@ -55,7 +55,7 @@ end
 
 
 #Prepare warning/error text
-warnings = "WARNINGS:\n"
+warnings = "WARNING(s):\n"
 if !status_hash['api_ok']
 	api_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='api' then api_msg = h['message'] end}}
 	warnings = "#{warnings}- #{api_msg}\n"
@@ -92,12 +92,12 @@ if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
 	docisbnmatch_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_match_fail' then docisbnmatch_msg = h['message'] end}}
 	warnings = "#{warnings}- #{docisbnmatch_msg} #{status_hash['docisbn_match_fail'].uniq}\n"
 end
-if warnings == "WARNINGS:\n"
+if warnings == "WARNING(s):\n"
 	warnings = ''
 end
 
 #adding notices to Warnings for mailer & cleanup (only unstyled should be attached ot mailers
-notices = "NOTICE(S):\n"
+notices = "NOTICE(s):\n"
 if !status_hash['document_styled']
 	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
 	notices = "#{notices}- #{unstyled_msg}\n"
@@ -113,9 +113,8 @@ end
 if contacts_hash['ebooksDept_submitter'] == true
 	notices = "#{notices}- All email communications normally slated for PM or PE are being redirected to the submitter from Ebooks dept.\n"
 end
-if notices != "NOTICE(S):\n"
-	new_warnings = "#{notices}#{status_hash['warnings']}"
-	status_hash['warnings'] = new_warnings
+if notices != "NOTICE(s):\n"
+	warnings = "#{notices}\n#{warnings}"
 end
 
 

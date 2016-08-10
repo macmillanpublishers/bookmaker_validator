@@ -54,7 +54,7 @@ else
 				if user_email == "#{staff_hash[i]['email']}"
 						if "#{staff_hash[i]['division']}" == 'Ebooks'
 								contacts_hash['ebooksDept_submitter'] = true
-								logger.info {"#{user_name} is a member of ebooks dept, flagging that toedit usercomm addressees"}
+								logger.info {"#{user_name} is a member of ebooks dept, flagging that to edit user comm. addressees"}
 						end
 				end
 		end
@@ -115,7 +115,7 @@ else
         }
     end
     # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
-		logger.info {"finished running #{macro_name} IsbnSearch macro"}
+		logger.info {"finished running #{macro_name} macro"}
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
