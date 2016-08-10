@@ -198,11 +198,11 @@ if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
     testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
-    logger.info {testlog}
+    if !testlog.empty? then logger.info {testlog} end
     if testlookup == true
         logger.info {"isbn \"#{filename_isbn}\" checked out, proceeding with getting book info"}
         lookuplog, alt_isbn_array, status_hash['epub_format'] = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
-		    logger.info {lookuplog}
+        if !lookuplog.empty? then logger.info {lookuplog} end
     end
 else
     logger.info {"no isbn in filename"}
@@ -221,12 +221,12 @@ if File.file?(Val::Files.isbn_file)
                     status_hash['docisbns'] << i
                 else
                     testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
-                    logger.info {testlog_b}
+                    if !testlog_b.empty? then logger.info {testlog_b} end
                     if testlookup_b == true
                         if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
                             logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
                             lookuplog_b, alt_isbn_array, status_hash['epub_format'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
-                    		    logger.info {lookuplog}
+                            if !lookuplog_b.empty? then logger.info {lookuplog_b} end
                             status_hash['docisbns'] << i
                         else            #since an isbn array exists that we don't match, we have a mismatch;
                             logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}

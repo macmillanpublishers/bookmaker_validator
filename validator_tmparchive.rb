@@ -114,7 +114,8 @@ else
             status_hash['docisbn_string'] << line
         }
     end
-    logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
+    # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
+		logger.info {"finished running #{macro_name} IsbnSearch macro"}
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
