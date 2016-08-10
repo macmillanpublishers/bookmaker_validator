@@ -67,7 +67,13 @@ MESSAGE_END
 			 sum=sum+int
 			 i+=1
 		}
-		if isbn.length==13 && ((10-(sum%10)) == isbn[12].to_i) then cd=true else cd=false end
+    if isbn.length==13 && ((10-(sum%10)) == isbn[12].to_i)
+			cd=true
+		elsif isbn.length==13 && (sum%10) == 0 && isbn[12].to_i == 0
+			cd=true
+		else
+			cd=false
+		end
 		cd
 	end
 
