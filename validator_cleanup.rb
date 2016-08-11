@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'find'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
@@ -11,8 +12,8 @@ logger = Val::Logs.logger
 logfile = "#{Val::Logs.logfolder}/#{Val::Logs.logfilename}"
 
 outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalized)
-err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
-warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
+err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}.txt")
+warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}.txt")
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
@@ -123,7 +124,13 @@ if status_hash['bookmaker_ready']
 else	#if not bookmaker_ready, clean up
 	#create outfolder:
 	FileUtils.mkdir_p outfolder
-
+	#if old warn_notice &/or err_notice exist, let's delete 'em
+	Find.find(outfolder) { |file|
+		if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
+			logger.info {"deleting old warn or err notice"}
+			FileUtils.rm file
+		end
+	}
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?

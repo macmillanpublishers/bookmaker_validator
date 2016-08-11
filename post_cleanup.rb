@@ -26,8 +26,8 @@ end
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE_#{Val::Posts.index}$/,'')
-warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}--validator_completed_with_warnings.txt")
-err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}--Validator_Failed.txt")
+warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}.txt")
+err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}.txt")
 validator_infile = File.join(et_project_dir,'IN',Val::Posts.val_infile_name)
 errFile = File.join(et_project_dir, "ERROR_RUNNING_#{Val::Posts.val_infile_name}#{Val::Doc.extension}.txt")
 
@@ -49,6 +49,13 @@ end
 
 #create outfolder:
 FileUtils.mkdir_p outfolder
+#if old warn_notice &/or err_notice exist, let's delete 'em
+Find.find(outfolder) { |file|
+	if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
+		logger.info {"deleting old warn or err notice"}
+		FileUtils.rm file
+	end
+}
 
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
 if !File.file?(epub) && !File.file?(epub_firstpass)

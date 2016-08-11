@@ -16,7 +16,7 @@ logger = Val::Logs.logger
 if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
 	status_hash['validator_macro_complete'] = false
-	status_hash['document_styled'] = false
+	status_hash['document_styled'] = ''
 	status_hash['bookmaker_ready'] = false
 else
 	logger.info {"status.json not present or unavailable"}
@@ -52,7 +52,7 @@ if Dir.exist?(Val::Paths.tmp_dir)
 end
 
 #if file is ready for bookmaker to run, tag it in status.json so the deploy.rb can scoop it up
-if File.file?(Val::Files.bookinfo_file) && status_hash['validator_macro_complete'] && status_hash['document_styled']
+if File.file?(Val::Files.bookinfo_file) && status_hash['validator_macro_complete'] && status_hash['document_styled'] == true
 	status_hash['bookmaker_ready'] = true
 end
 

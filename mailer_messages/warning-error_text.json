@@ -6,11 +6,6 @@
       "description": "Egalleymaker uses Dropbox account information to figure out who originally submitted the file for conversion (typically, the designer does this. However, for some reason Egalleymaker could not get this information from Dropbox this time."
     },
     {
-      "name": "no_filename_isbn",
-      "message": "No ISBN was included in the filename.",
-      "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename. If the ISBN doesn't appear in either location, Egalleymaker will fail."
-    },
-    {
       "name": "filename_isbn_checkdigit_fail",
       "message": "The ISBN included in the filename is invalid (checkdigit does not match):",
       "description": "Every ISBN meets a particular format, and includes a special number as the last digit--called the check digit--that you can validate against a formula. The ISBN in the filename for this title might have a typo, because the check digit does not conform to the special ISBN formula."

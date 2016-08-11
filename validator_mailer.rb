@@ -68,10 +68,6 @@ if status_hash['pe_lookup'] =~ /not in biblio/
 	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
-if status_hash['filename_isbn']['isbn'].empty?
-	nofileisbn_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='no_filename_isbn' then nofileisbn_msg = h['message'] end}}
-	warnings = "#{warnings}- #{nofileisbn_msg}\n"
-end
 if !status_hash['filename_isbn']["checkdigit"]
 	fileisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_checkdigit_fail' then fileisbncd_msg = h['message'] end}}
 	warnings = "#{warnings}- #{fileisbncd_msg} #{status_hash['filename_isbn']['isbn']}\n"
@@ -98,7 +94,7 @@ end
 
 #adding notices to Warnings for mailer & cleanup (only unstyled should be attached ot mailers
 notices = "NOTICE(s):\n"
-if !status_hash['document_styled']
+if status_hash['document_styled'] == false
 	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
 	notices = "#{notices}- #{unstyled_msg}\n"
 end
@@ -156,9 +152,15 @@ if !errors.empty? && send_ok
 		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
-		if addPEcc && contacts_hash['ebooksDept_submitter'] != true
-			cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
-			cc_mails_err << pe_mail
+		if contacts_hash['ebooksDept_submitter'] != true
+			if addPEcc == true
+				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
+				cc_mails_err << pe_mail
+			end
+			if File.file?(Val::Files.bookinfo_file)
+				cc_address_err = "#{cc_address}, #{pm_name} <#{pm_mail}>"
+				cc_mails_err << pm_mail
+			end
 		end
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -172,7 +174,7 @@ MESSAGE_END
 end
 
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
-if errors.empty? && !status_hash['document_styled'] && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
+if errors.empty? && status_hash['document_styled'] == false && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
 		unless File.file?(Val::Paths.testing_value_file)
 		if contacts_hash['ebooksDept_submitter'] == true
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
@@ -237,7 +239,7 @@ MESSAGE_END_D
 		end
 end
 
-if errors.empty? && status_hash['document_styled'] && send_ok
+if errors.empty? && status_hash['document_styled'] == true && send_ok
 	logger.info {"this file looks bookmaker_ready, no mailer at this point"}
 	if !warnings.empty?
 		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
