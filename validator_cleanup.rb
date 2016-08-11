@@ -123,7 +123,9 @@ if status_hash['bookmaker_ready']
 else	#if not bookmaker_ready, clean up
 	#create outfolder:
 	FileUtils.mkdir_p outfolder
-
+	#if old warn_notice &/or err_notice exist, let's delete 'em
+	if File.file?(warn_notice) then FileUtils.rm warn_notice end
+	if File.file?(err_notice) then FileUtils.rm err_notice end
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?

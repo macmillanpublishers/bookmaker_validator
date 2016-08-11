@@ -49,6 +49,9 @@ end
 
 #create outfolder:
 FileUtils.mkdir_p outfolder
+#if old warn_notice &/or err_notices exist, let's delete 'em
+if File.file?(warn_notice) then FileUtils.rm warn_notice end
+if File.file?(err_notice) then FileUtils.rm err_notice end
 
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
 if !File.file?(epub) && !File.file?(epub_firstpass)

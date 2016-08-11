@@ -156,9 +156,15 @@ if !errors.empty? && send_ok
 		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
-		if addPEcc && contacts_hash['ebooksDept_submitter'] != true
-			cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
-			cc_mails_err << pe_mail
+		if contacts_hash['ebooksDept_submitter'] != true
+			if addPEcc == true
+				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
+				cc_mails_err << pe_mail
+			end
+			if File.file?(Val::Files.bookinfo_file)
+				cc_address_err = "#{cc_address}, #{pm_name} <#{pm_mail}>"
+				cc_mails_err << pm_mail
+			end
 		end
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
