@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'open3'
 require 'process'
+require 'time'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
@@ -74,7 +75,7 @@ Process.detach(pid)
 #the rest of the validator:
 begin
 	run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
-	run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)	
+	run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
 
 	#now we make sure the macro needs to be run:
 	if File.file?(Val::Files.status_file)				#get info from status.json
@@ -106,11 +107,15 @@ rescue Exception => e
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 		puts "sent alertmail"
 	end
+ensure
+	if output_hash.key?('validator_cleanup completion time') && output_hash.key?('validator_tmparchive start time')
+		timespent=((Time.parse(output_hash['validator_cleanup completion time'])-Time.parse(output_hash['validator_tmparchive start time'])).to_i/60).round(2)
+		output_hash["minutes_elapsed"] = timespent
+	end
 	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
 	#https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
 	kill_output = `taskkill /f /pid #{pid}`
-	puts "pid termination return: #{kill_output}"
-ensure
+	output_hash["pid #{pid} termination return"] = kill_output
 	Vldtr::Tools.write_json(output_hash, json_logfile)
 	#generate some (more) human readable output
 	humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}
