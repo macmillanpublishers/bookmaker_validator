@@ -122,7 +122,7 @@ module Val
 		def self.testing_Prod
 			@@testing_Prod
 		end
-		@@pilot = false			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
+		@@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
 		def self.pilot
 			@@pilot
 		end
