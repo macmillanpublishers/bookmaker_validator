@@ -79,16 +79,15 @@ rescue Exception => e
 	p e   #puts e.inspect
 	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"
 	output_hash['validator_rescue_err'] = e
-	#Process.kill(pid)
-	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
-	#https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
 	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 		puts "sent alertmail"
 	end
-	kill_output = `taskkill /f /pid #{pid}`
-	puts "pid termination return: #{kill_output}"
 ensure
+	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
+	#https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
+	kill_output = `taskkill /f /pid #{pid}`
+	output_hash["pid #{pid} termination return"] = kill_output
 	Vldtr::Tools.write_json(output_hash, json_logfile)
 	#generate some (more) human readable output
 	humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}
