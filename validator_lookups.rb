@@ -125,7 +125,7 @@ def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_h
     				submitter_div = staff_hash[i]['division']
     				if staff_defaults_hash[submitter_div]
       					mail = staff_defaults_hash[submitter_div][pm_or_pe]
-      					name = "#{mail.split('@')[0].split('.')[0].capitalize} #{mail.split('@')[0].split('.')[1].capitalize}"
+      					name = staff_defaults_hash[submitter_div]["#{pm_or_pe}_name"] #{}"#{mail.split('@')[0].split('.')[0].capitalize} #{mail.split('@')[0].split('.')[1].capitalize}"
     				else
       					newstatus = "#{newstatus}, and \'#{submitter_div}\' not present in defaults.json"
       			    name, mail = 'Workflows', 'workflows@macmillan.com'
