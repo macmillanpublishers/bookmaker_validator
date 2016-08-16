@@ -87,7 +87,7 @@ ensure
 	#process.kill apparently is inconsistent on windows:  trying shell "taskkill" instead:
 	#https://blog.simplificator.com/2016/01/18/how-to-kill-processes-on-windows-using-ruby/
 	kill_output = `taskkill /f /pid #{pid}`
-	puts "pid termination return: #{kill_output}"
+	output_hash["pid #{pid} termination return"] = kill_output
 	Vldtr::Tools.write_json(output_hash, json_logfile)
 	#generate some (more) human readable output
 	humanreadie = output_hash.map{|k,v| "#{k} = #{v}"}
