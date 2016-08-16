@@ -110,6 +110,7 @@ def typeset_from_check(typesetfrom_file, isbn_array)
     file_xml = File.open(typesetfrom_file) { |f| Nokogiri::XML(f)}
     msword_copyedit = false
     isbn_array.each { |isbn|
+      	next if isbn.empty?
         check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from").to_s
         if check =~ /Copyedited Word File/m || check =~ /Word Styles File/m
             msword_copyedit = true
