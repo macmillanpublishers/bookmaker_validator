@@ -105,7 +105,7 @@ if send_ok
         to_email = contacts_hash['production_manager_email']
     end
 		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
-		body = body.gsub(/_DONE_[0-9]+.docx?$/,'.doc')
+		body = body.gsub(/_DONE_[0-9]+.docx?$/,'\1')
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -117,7 +117,7 @@ MESSAGE_END
 
 		#sending another email, for Patrick to QA epubs
 		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, Val::Posts.bookinfo)
-		body_b = body_b.gsub(/_DONE_[0-9]+.docx?$/,'.doc')
+		body_b = body_b.gsub(/_DONE_[0-9]+.docx?$/,'\1')
 message_epubQA = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
 #{body_b}
