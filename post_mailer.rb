@@ -7,7 +7,6 @@ require_relative './validator_tools.rb'
 require_relative './val_header.rb'
 
 
-
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup(Val::Posts.logfile_name)
 logger = Val::Logs.logger
@@ -21,10 +20,7 @@ alert_hash = Mcmlln::Tools.readjson(alerts_file)
 epub, epub_firstpass = '', ''
 send_ok = true
 errtxt_files = []
-# cc_mails = ['workflows@macmillan.com']
-# cc_address = 'Cc: Workflows <workflows@macmillan.com>'
 to_address = 'To: '
-
 
 
 #--------------------- RUN
@@ -105,7 +101,7 @@ if send_ok
         to_email = contacts_hash['production_manager_email']
     end
 		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
-		body = body.gsub(/_DONE_[0-9]+.docx?$/,'\1')
+		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -117,7 +113,7 @@ MESSAGE_END
 
 		#sending another email, for Patrick to QA epubs
 		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, Val::Posts.bookinfo)
-		body_b = body_b.gsub(/_DONE_[0-9]+.docx?$/,'\1')
+		body_b = body_b.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
 message_epubQA = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
 #{body_b}
