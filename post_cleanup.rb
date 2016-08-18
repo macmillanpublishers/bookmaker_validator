@@ -99,10 +99,11 @@ end
 #update Val::Logs.permalog
 if File.file?(Val::Logs.permalog)
 	permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
-	permalog_hash[Val::Posts.index]['bookmaker_ran'] = true
-	permalog_hash[Val::Posts.index]['epub_found'] = true
-	if !epub_found
-		permalog_hash[Val::Posts.index]['epub_found'] = false
+	permalog_hash[Val::Posts.index]['epub_found'] = epub_found
+	if epub_found && status_hash['errors'].empty?
+		permalog_hash[Val::Posts.index]['status'] = 'In-house egalley'
+	else
+		permalog_hash[Val::Posts.index]['status'] = 'bookmaker error'
 	end
 	#write to json Val::Logs.permalog!
     Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
