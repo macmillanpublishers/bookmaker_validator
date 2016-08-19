@@ -52,9 +52,9 @@ else
 		staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)  		#read in our static pe/pm json
 		for i in 0..staff_hash.length - 1
 				if user_email == "#{staff_hash[i]['email']}"
-						if "#{staff_hash[i]['division']}" == 'Ebooks'
+						if "#{staff_hash[i]['division']}" == 'Ebooks' || "#{staff_hash[i]['division']}" == 'Workflow'
 								contacts_hash['ebooksDept_submitter'] = true
-								logger.info {"#{user_name} is a member of ebooks dept, flagging that to edit user comm. addressees"}
+								logger.info {"#{user_name} is a member of ebooks or Workflow dept, flagging that to edit user comm. addressees"}
 						end
 				end
 		end

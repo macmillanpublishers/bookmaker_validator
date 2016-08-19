@@ -45,7 +45,8 @@ permalog_hash[index]['date'] = timestamp
 
 if File.file?(Val::Files.contacts_file)
 	contacts_hash = Mcmlln::Tools.readjson(Val::Files.contacts_file)
-	permalog_hash[index]['submitter'] = contacts_hash['submitter_name']
+	permalog_hash[index]['submitter_name'] = contacts_hash['submitter_name']
+	permalog_hash[index]['submitter_email'] = contacts_hash['submitter_email']
 	#dump json to logfile
 	human_contacts = contacts_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}
@@ -56,6 +57,9 @@ if File.file?(Val::Files.bookinfo_file)
 	bookinfo_hash = Mcmlln::Tools.readjson(Val::Files.bookinfo_file)
 	permalog_hash[index]['isbn'] = bookinfo_hash['isbn']
 	permalog_hash[index]['title'] = bookinfo_hash['title']
+	permalog_hash[index]['author'] = bookinfo_hash['author']
+	permalog_hash[index]['imprint'] = bookinfo_hash['imprint']
+	permalog_hash[index]['product_type'] = bookinfo_hash['product_type']
 	isbn = bookinfo_hash['isbn']
 	#dump json to logfile
 	human_bookinfo = bookinfo_hash.map{|k,v| "#{k} = #{v}"}
@@ -68,6 +72,7 @@ if File.file?(Val::Files.status_file)
 	permalog_hash[index]['errors'] = status_hash['errors']
 	permalog_hash[index]['warnings'] = status_hash['warnings']
 	permalog_hash[index]['bookmaker_ready'] = status_hash['bookmaker_ready']
+	permalog_hash[index]['status'] = status_hash['status']
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}

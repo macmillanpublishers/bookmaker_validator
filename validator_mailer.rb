@@ -34,6 +34,7 @@ if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
 	status_hash['warnings'] = ''
 	status_hash['errors'] = ''
+	status_hash['status'] = ''
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
@@ -107,7 +108,7 @@ if status_hash['msword_copyedit'] == false
 	notices = "#{notices}- #{paprcopyedit_msg}\n"
 end
 if contacts_hash['ebooksDept_submitter'] == true
-	notices = "#{notices}- All email communications normally slated for PM or PE are being redirected to the submitter from Ebooks dept.\n"
+	notices = "#{notices}- All email communications normally slated for PM or PE are being redirected to a submitter from Ebooks or Workflow dept.\n"
 end
 if notices != "NOTICE(s):\n"
 	warnings = "#{notices}\n#{warnings}"
@@ -120,7 +121,7 @@ errors = "ERROR(s): #{errheader_msg}\n"
 if !status_hash['isbn_match_ok']
 	isbnmatch_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='isbn_match_fail' then isbnmatch_msg = h['message'] end}}
 	errors = "#{errors}- #{isbnmatch_msg} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
-	addPEcc = true
+	status_hash['status'] = 'isbn error'
 end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
 	nogoodisbn = true
@@ -128,17 +129,19 @@ end
 if nogoodisbn
 	nogoodisbn_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='no_good_isbn' then nogoodisbn_msg = h['message'] end}}
 	errors = "#{errors}- #{nogoodisbn_msg}\n"
+	status_hash['status'] = 'isbn error'
 end
 if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
 	validatorerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='validator_error' then validatorerr_msg = h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
 	errors = "#{errors}- #{validatorerr_msg}\n"
-	addPEcc = true
+	status_hash['status'] = 'validator error'
 end
 if !status_hash['docfile']
 	#reset warnings & errors for a simpler message
 	warnings, errors = '',"ERROR(s): #{errheader_msg}\n"
 	docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
 	errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
+	status_hash['status'] = 'not a .doc(x)'
 end
 if errors == "ERROR(s): #{errheader_msg}\n"
 	errors = ''
@@ -153,7 +156,7 @@ if !errors.empty? && send_ok
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
 		if contacts_hash['ebooksDept_submitter'] != true
-			if addPEcc == true
+			if status_hash['status'] == 'isbn error'  #add the PE to the email for isbn errors
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 				cc_mails_err << pe_mail
 			end
@@ -175,6 +178,7 @@ end
 
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
 if errors.empty? && status_hash['document_styled'] == false && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
+		status_hash['status'] = 'Westchester egalley'
 		unless File.file?(Val::Paths.testing_value_file)
 		if contacts_hash['ebooksDept_submitter'] == true
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
@@ -197,6 +201,7 @@ end
 
 #paper_copyedit
 if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
+		status_hash['status'] = 'paper copyedit'
 		if contacts_hash['ebooksDept_submitter'] == true
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 				to_email = contacts_hash['submitter_email']
@@ -219,6 +224,7 @@ end
 
 #fixed layout
 if status_hash['epub_format'] == false && send_ok
+		status_hash['status'] = 'fixed layout'
 		if contacts_hash['ebooksDept_submitter'] == true
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 				to_email = contacts_hash['submitter_email']
