@@ -149,7 +149,7 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
         status = 'no bookinfo file?'
         mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
     else
-        status = '#{pm_or_pe} name in biblio'
+        status = "#{pm_or_pe} name in biblio"
     		for i in 0..staff_hash.length - 1
       			if newname == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
         				mail = staff_hash[i]['email']
