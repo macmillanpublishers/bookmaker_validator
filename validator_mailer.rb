@@ -14,6 +14,7 @@ error_text = File.read(File.join(Val::Paths.mailer_dir,'error_occurred.txt'))
 unstyled_notify = File.read(File.join(Val::Paths.mailer_dir,'unstyled_notify.txt'))
 notify_paper_copyedit = File.read(File.join(Val::Paths.mailer_dir,'notify_paper_copyedit.txt'))
 notify_fixed_layout = File.read(File.join(Val::Paths.mailer_dir,'notify_fixed_layout.txt'))
+error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
@@ -148,31 +149,41 @@ if errors == "ERROR(s): #{errheader_msg}\n"
 end
 
 
-#send submitter an error notification
+#send error emails
 if !errors.empty? && send_ok
 	unless File.file?(Val::Paths.testing_value_file)
-		to_address = "To: #{submitter_name} <#{submitter_mail}>"
-		body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
-		if contacts_hash['ebooksDept_submitter'] != true
+		if status_hash['status'] == 'validator error'
+		#send submitter an error notification to submitter for errors prior to validator
+			if contacts_hash['ebooksDept_submitter'] == true
+					to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+					to_email = contacts_hash['submitter_email']
+			else
+					to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+					to_email = contacts_hash['production_manager_email']
+			end
+			body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
+			body = body.gsub(/PMNAME/,contacts_hash['production_manager_name']name.split(' ')[0])
+			logger.info {"sending message to PE re: fatal validator errors encountered"}
+		else
+		#send PM an error notification for validator errors
+			to_header = "To: #{submitter_name} <#{submitter_mail}>"
+			to_email = contacts_hash['submitter_email']
+			body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 			if status_hash['status'] == 'isbn error'  #add the PE to the email for isbn errors
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 				cc_mails_err << pe_mail
 			end
-			if File.file?(Val::Files.bookinfo_file)
-				cc_address_err = "#{cc_address}, #{pm_name} <#{pm_mail}>"
-				cc_mails_err << pm_mail
-			end
+			logger.info {"sent message to submitter re: fatal isbn/doc errors encountered"}
 		end
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
-#{to_address}
+#{to_header}
 #{cc_address_err}
 #{body}
 MESSAGE_END
-		Vldtr::Tools.sendmail(message, submitter_mail, cc_mails_err)
-		logger.info {"sent message to submitter re: fatal ERRORS encountered"}
+		Vldtr::Tools.sendmail(message, to_email, cc_mails_err)
 	end
 end
 
