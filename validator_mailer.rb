@@ -172,7 +172,8 @@ if !errors.empty? && send_ok
 			to_header = "#{submitter_name} <#{submitter_mail}>"
 			to_email = contacts_hash['submitter_email']
 			body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
-			if status_hash['status'] == 'isbn error'  #add the PE to the email for isbn errors
+			#add the PE to the email for isbn errors
+			if status_hash['status'] == 'isbn error' && contacts_hash['ebooksDept_submitter'] != true
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 				cc_mails_err << pe_mail
 			end
