@@ -153,8 +153,9 @@ MESSAGE_END_B
       to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
       to_email = contacts_hash['production_manager_email']
   end
+	firstname = to_header.split(' ')[0]
 	body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
-	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/PMNAME/,contacts_hash['production_manager_name']name.split(' ')[0])
+	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/PMNAME/,firstname)
 	message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}

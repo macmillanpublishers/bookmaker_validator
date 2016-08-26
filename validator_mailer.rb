@@ -163,12 +163,13 @@ if !errors.empty? && send_ok
 					to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 					to_email = contacts_hash['production_manager_email']
 			end
+			firstname = to_header.split(' ')[0]
 			body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
-			body = body.gsub(/PMNAME/,contacts_hash['production_manager_name']name.split(' ')[0])
+			body = body.gsub(/PMNAME/,firstname)
 			logger.info {"sending message to PE re: fatal validator errors encountered"}
 		else
 		#send PM an error notification for validator errors
-			to_header = "To: #{submitter_name} <#{submitter_mail}>"
+			to_header = "#{submitter_name} <#{submitter_mail}>"
 			to_email = contacts_hash['submitter_email']
 			body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
 			if status_hash['status'] == 'isbn error'  #add the PE to the email for isbn errors
@@ -179,7 +180,7 @@ if !errors.empty? && send_ok
 		end
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
-#{to_header}
+To: #{to_header}
 #{cc_address_err}
 #{body}
 MESSAGE_END
