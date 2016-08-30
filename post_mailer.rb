@@ -14,6 +14,7 @@ logger = Val::Logs.logger
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 epubQA_request_txt = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
+error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
@@ -139,9 +140,31 @@ No notification email was sent to PE/PMs/submitter.
 #{errors}
 #{warnings}
 MESSAGE_END_B
-
 	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
 		logger.info {"send_ok is FALSE, something's wrong"}
 	end
+
+	#sending a failure notice to PM
+	if contacts_hash['ebooksDept_submitter'] == true
+      to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+      to_email = contacts_hash['submitter_email']
+  else
+      to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+      to_email = contacts_hash['production_manager_email']
+  end
+	firstname = to_header.split(' ')[0]
+	body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
+	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/PMNAME/,firstname)
+	message_d = <<MESSAGE_END_D
+From: Workflows <workflows@macmillan.com>
+To: #{to_header}
+Cc: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END_D
+	unless File.file?(Val::Paths.testing_value_file)
+		Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
+		logger.info {"Sending epub error notification to PM"}
+	end
+
 end

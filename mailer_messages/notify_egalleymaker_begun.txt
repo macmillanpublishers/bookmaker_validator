@@ -3,7 +3,7 @@ Subject: PROJECT_NAME underway: "FILENAME_SPLIT" has been submitted
 SUBMITTER has submitted file "FILENAME_SPLIT" to 'PROJECT_NAME'.
 
 "FILENAME_SPLIT" is now being processed by 'PROJECT_NAME'.
-You will receive another email once the process has finished (it may take up to 30 minutes), telling you whether or not an eGalley needs to be ordered from Westchester and added to the PO. Please wait to send the PO to Westchester until you receive that notice that the process has finished. 
+You will receive another email once the process has finished (it may take up to 30 minutes), telling you whether or not an eGalley needs to be ordered from Westchester and added to the PO. Please wait to send the PO to Westchester until you receive notice that the process has finished. 
 
 The full book info is below. Please contact the eBooks team at ebook.production@macmillanusa.com with any questions!
 
