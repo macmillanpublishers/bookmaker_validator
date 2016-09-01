@@ -793,6 +793,10 @@ Private Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strFile As String
+  Dim strDir As String
+  
+  strDir = "C:\Users\erica.warren\Desktop\validator\"
+  strFile = "validator-test"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
 '  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
@@ -806,10 +810,10 @@ Private Sub ValidatorTest()
 '  strFile = "12Pomfret_UNSTYLED_InText2_match"
 '  strFile = "13Segre_UNSTYLED_InText2_noMatch"
 '  strFile = "14Meadows_less-than-half"
-  strFile = "validator-test_orig"
 
-  Call Validator.Launch("C:\Users\erica.warren\Desktop\validator_test\" & strFile & ".docx", _
-  "C:\Users\erica.warren\Desktop\validator_test\LOG_" & strFile & ".txt")
+
+  Call Validator.Launch(strDir & strFile & ".docx", _
+  strDir & "LOG_" & strFile & ".txt")
   Exit Sub
 
 TestError:
