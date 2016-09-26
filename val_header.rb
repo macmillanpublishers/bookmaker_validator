@@ -7,6 +7,11 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
+			if @unescapeargv.match(/'/)
+				@new_infile = @unescapeargv.gsub(/'/,"")
+				File.rename(@unescapeargv,@new_infile)
+				if File.file?(@new_infile) then @unescapeargv = @new_infile end
+			end
   		@input_file = File.expand_path(@unescapeargv)
   		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 		def self.input_file
