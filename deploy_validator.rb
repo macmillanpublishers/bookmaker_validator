@@ -67,6 +67,9 @@ Vldtr::Tools.write_json(output_hash, json_logfile)
 
 
 #--------------------- RUN
+if !Val::Doc.filenametest.empty?
+		output_hash['bad_filename'] = Val::Doc.filenametest
+end
 #launch process-watcher
 log_time(output_hash,'process_watcher','start time',json_logfile)
 pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} \'#{Val::Doc.input_file}\' #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[p_logfile, "a"])

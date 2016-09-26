@@ -6,9 +6,16 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 
 module Val
 	class Doc
+		@@filenametest = ""
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-  		@input_file = File.expand_path(@unescapeargv)
-  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
+		if @unescapeargv.match(/'/)
+			@new_infile = @unescapeargv.gsub(/'/,"")
+			File.rename(@unescapeargv,@new_infile)
+			@unescapeargv = @new_infile
+			@@filenametest = "the filename contained a single quote and was renamed in-place."
+		end
+		@input_file = File.expand_path(@unescapeargv)
+		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 		def self.input_file
 			@@input_file
 		end
@@ -27,6 +34,9 @@ module Val
 		@@extension = File.extname(filename_normalized)
 		def self.extension
 			@@extension
+		end
+		def self.filenametest
+			@@filenametest
 		end
 	end
 	class Paths
