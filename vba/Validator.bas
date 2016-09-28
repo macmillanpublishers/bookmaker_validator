@@ -223,11 +223,14 @@ Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
   End If
 
 ' Only save doc if macro completed w/o error AND correctly styled
+' And not if we're debugging
   Dim saveValue As Boolean
-  If blnCompleted = True And blnStyled = True Then
-    saveValue = True
-  Else
-    saveValue = False
+  If Environ("VbaDebug") <> "True" Then
+    If blnCompleted = True And blnStyled = True Then
+      saveValue = True
+    Else
+      saveValue = False
+    End If
   End If
   
 ' Close all open documents
@@ -560,7 +563,7 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   Set dictTests = genUtils.Reports.HeadingCheck
   Call ReturnDict(strKey, dictTests)
   
-' ----- ILLUSTRATION VALIDATION -----------------------------------------------
+'' ----- ILLUSTRATION VALIDATION -----------------------------------------------
   strKey = "illustrations"
   Set dictTests = genUtils.Reports.IllustrationCheck
   Call ReturnDict(strKey, dictTests)
@@ -570,13 +573,13 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   strKey = "cleanupMacro"
   Set dictTests = genUtils.CleanupMacro.MacmillanManuscriptCleanup
   Call ReturnDict(strKey, dictTests)
-  
+
 ' ----- RUN CHAR STYLES MACRO -------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
   strKey = "characterStyles"
   Set dictTests = genUtils.CharacterStyles.MacmillanCharStyles
   Call ReturnDict(strKey, dictTests)
-  
+'
   Set dictTests = Nothing
   
   ValidatorMain = True
@@ -789,14 +792,14 @@ End Sub
 '          FOR TESTING
 ' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Private Sub ValidatorTest()
+Public Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strFile As String
   Dim strDir As String
   
   strDir = "C:\Users\erica.warren\Desktop\validator\"
-  strFile = "validator-test"
+  strFile = "Nordbak"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
 '  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
@@ -824,7 +827,7 @@ End Sub
 Private Sub IsbnTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
-  Dim strDir As String: strDir = "C:\Users\erica.warren\Desktop\validator_test\"
+  Dim strDir As String: strDir = "C:\Users\erica.warren\Desktop\validator\"
   Dim strLog As String
   Dim strThisFile As String
   Dim strReturnedIsbn As String
