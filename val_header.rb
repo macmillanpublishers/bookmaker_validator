@@ -245,7 +245,7 @@ module Val
 				end
 				return bookinfo
 		end
-		@@working_file, @@val_infile_name, @@logfile_name = '','',Logs.logfilename
+		@@working_file, @@val_infile_name, @@logfile_name = '','infile_not_present',Logs.logfilename
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
 			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
