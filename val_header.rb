@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'logger'
 require 'find'
+require 'json'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 
@@ -12,21 +13,19 @@ module Val
 		def self.input_file
 			@@input_file
 		end
-		@@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
-		def self.filename_split
-			@@filename_split
-		end
-		@@filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
-		def self.filename_normalized
-			@@filename_normalized
-		end
-		@@basename_normalized = File.basename(filename_normalized, ".*")
+		@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
+		@basename = File.basename(@filename_split, ".*")
+		@@basename_normalized = @basename.gsub(/\W/,"")
 		def self.basename_normalized
 			@@basename_normalized
 		end
-		@@extension = File.extname(filename_normalized)
+		@@extension = File.extname(@filename_split)
 		def self.extension
 			@@extension
+		end
+		@@filename_normalized = "#{@@basename_normalized}#{@@extension}"
+		def self.filename_normalized
+			@@filename_normalized
 		end
 	end
 	class Paths
@@ -38,7 +37,11 @@ module Val
 		def self.working_dir
 			@@working_dir
 		end
-		@@scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts', 'bookmaker_validator')
+		if RUBY_PLATFORM =~ /darwin/
+			@@scripts_dir = File.dirname(__FILE__)
+		else
+			@@scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts', 'bookmaker_validator')
+		end
 		def self.scripts_dir
 			@@scripts_dir
 		end
@@ -113,6 +116,36 @@ module Val
 			@@errFile
 		end
 	end
+	class Hashes
+		@@status_hash = Vldtr::Tools.readjson(Files.status_file)
+		def self.status_hash
+			@@status_hash
+		end
+		@@contacts_hash = Vldtr::Tools.readjson(Files.contacts_file)
+		def self.contacts_hash
+			@@contacts_hash
+		end
+		@@bookinfo_hash = Vldtr::Tools.readjson(Files.bookinfo_file)
+		def self.bookinfo_hash
+			@@bookinfo_hash
+		end
+		@@stylecheck_hash = Vldtr::Tools.readjson(Files.stylecheck_file)
+		def self.stylecheck_hash
+			@@stylecheck_hash
+		end
+		@@isbn_hash = Vldtr::Tools.readjson(Files.isbn_file)
+		def self.isbn_hash
+			@@isbn_hash
+		end
+		@@staff_hash = Vldtr::Tools.readjson(Files.staff_emails)
+		def self.staff_hash
+			@@staff_hash
+		end
+		@@staff_defaults_hash = Vldtr::Tools.readjson(Files.imprint_defaultPMs)
+		def self.staff_defaults_hash
+			@@staff_defaults_hash
+		end
+	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
@@ -130,15 +163,19 @@ module Val
 		def self.thisscript
 			@@thisscript
 		end
-		@@run_macro = File.join(Paths.scripts_dir,'run_macro.ps1')
-		def self.run_macro
-			@@run_macro
+		@@run_macro_ps = File.join(Paths.scripts_dir,'run_macro.ps1')
+		def self.run_macro_ps
+			@@run_macro_ps
 		end
 		@@powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
 		def self.powershell_exe
 			@@powershell_exe
 		end
-		@@ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
+		if RUBY_PLATFORM =~ /darwin/
+			@@ruby_exe = 'ruby'
+		else
+			@@ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
+		end
 		def self.ruby_exe
 			@@ruby_exe
 		end
@@ -147,16 +184,18 @@ module Val
 			@@authkeys_repo
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_split).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 				updated_txt
 		end
 	end
 	class Logs
 		@@dropbox_logfolder = ''
 		if File.file?(Paths.testing_value_file) || Resources.testing == true
-			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
+			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', "#{Paths.project_name}_stg")
+		elsif RUBY_PLATFORM =~ /darwin/  #for testing runs on Mac OS
+			@@dropbox_logfolder = File.join(ENV['HOME'],'Dropbox (Macmillan Publishers)','bookmaker_logs',"#{Paths.project_name}_test")
 		else
-			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
+			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', Paths.project_name)
 		end
 		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
 		def self.logfolder
@@ -166,8 +205,12 @@ module Val
 		def self.logfilename
 			@@logfilename
 		end
+		@@std_logfile = ""
 		def self.log_setup(file=logfilename,folder=logfolder)		#can be overwritten in function call
+			if !File.directory?(folder)	then FileUtils.mkdir_p(folder) end
 			logfile = File.join(folder,file)
+			$stderr.reopen(logfile, 'a')
+			$stdout.reopen(logfile, 'a')
 			@@logger = Logger.new(logfile)
 			def self.logger
 				@@logger
@@ -175,19 +218,25 @@ module Val
 			logger.formatter = proc do |severity, datetime, progname, msg|
 			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
 			end
+			@@std_logfile = logfile
+			def self.std_logfile
+				@@std_logfile
+			end
 		end
 		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
 		def self.permalog
 			@@permalog
 		end
 		@@deploy_logfolder = File.join(@@dropbox_logfolder, 'std_out-err_logs')
+		if !File.directory?(@@deploy_logfolder)	then FileUtils.mkdir_p(@@deploy_logfolder) end
 		def self.deploy_logfolder
 			@@deploy_logfolder
 		end
-		@@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
-		def self.process_logfolder
-			@@process_logfolder
-		end
+		# @@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
+		# if !File.directory?(@@process_logfolder)	then FileUtils.mkdir_p(@@process_logfolder) end
+		# def self.process_logfolder
+		# 	@@process_logfolder
+		# end
 		@@json_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 		def self.json_logfile
 			@@json_logfile
@@ -196,10 +245,10 @@ module Val
 		def self.human_logfile
 			@@human_logfile
 		end
-		@@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
-		def self.p_logfile
-			@@p_logfile
-		end
+		# @@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
+		# def self.p_logfile
+		# 	@@p_logfile
+		# end
 	end
 	class Posts
 		@lookup_isbn = Doc.basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)

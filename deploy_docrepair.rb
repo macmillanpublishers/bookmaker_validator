@@ -7,7 +7,8 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
 require_relative './val_header.rb'
 
-# ---------------------- LOCAL DECLARATIONS
+
+# ---------------------- DECLARATIONS
 Val::Logs.log_setup()
 logger = Val::Logs.logger
 log_suffix = "_#{Time.now.strftime('%Y-%m-%d_%H-%M-%S')}"
@@ -18,10 +19,10 @@ process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
 
 # ---------------------- Settings for this Deploy file
 validator_tmparchive = File.join(Val::Paths.scripts_dir,'validator_tmparchive.rb')
-validator_filecheck = File.join(Val::Paths.scripts_dir,'validator_filecheck.rb')
+docrepair_filecheck = File.join(Val::Paths.scripts_dir,'docrepair_filecheck.rb')
 validator_lookups = File.join(Val::Paths.scripts_dir,'validator_lookups.rb')
-validator_macro = File.join(Val::Paths.scripts_dir,'validator_macro.rb')
-validator_macrocheck = File.join(Val::Paths.scripts_dir,'validator_macrocheck.rb')
+validator_lookups = File.join(Val::Paths.scripts_dir,'docrepair_macro.rb')
+validator_checker = File.join(Val::Paths.scripts_dir,'validator_checker.rb')
 validator_mailer = File.join(Val::Paths.scripts_dir,'validator_mailer.rb')
 validator_cleanup = File.join(Val::Paths.scripts_dir,'validator_cleanup.rb')
 processwatch_sleep_min = 30
@@ -34,14 +35,16 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive}", output_hash, "validator_tmparchive", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_lookups}", output_hash, "validator_lookups", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_macro}", output_hash, "validator_macro", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_macrocheck}", output_hash, "validator_checker", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_mailer}", output_hash, "validator_mailer", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_cleanup}", output_hash, "validator_cleanup", json_logfile)
-	#mark the process done for process watcher
-	output_hash['completed'] = true
+	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
+	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{docrepair_filecheck} \'#{Val::Doc.input_file}\'", output_hash, "docrepair_filecheck", json_logfile)
+	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
+	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{docrepair_macro} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
+
+# 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
+# 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_mailer} \'#{Val::Doc.input_file}\'", output_hash, "validator_mailer", json_logfile)
+# 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "validator_cleanup", json_logfile)
+# 	#mark the process done for process watcher
+# 	output_hash['completed'] = true
 rescue Exception => e
 	p e   #puts e.inspect
 	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"
