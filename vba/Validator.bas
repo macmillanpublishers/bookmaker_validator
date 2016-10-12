@@ -567,6 +567,11 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   strKey = "illustrations"
   Set dictTests = genUtils.Reports.IllustrationCheck
   Call ReturnDict(strKey, dictTests)
+  
+'' ----- ENDNOTE UNLINKING ----------------------------------------------------
+  strKey = "endnotes"
+  Set dictTests = genUtils.Endnotes.EndnoteCheck
+  Call ReturnDict(strKey, dictTests)
 
 ' ----- RUN CLEANUP MACRO -----------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
@@ -579,7 +584,7 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   strKey = "characterStyles"
   Set dictTests = genUtils.CharacterStyles.MacmillanCharStyles
   Call ReturnDict(strKey, dictTests)
-'
+''
   Set dictTests = Nothing
   
   ValidatorMain = True
@@ -799,7 +804,7 @@ Public Sub ValidatorTest()
   Dim strDir As String
   
   strDir = "C:\Users\erica.warren\Desktop\validator\"
-  strFile = "Nordbak"
+  strFile = "validator-test"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
 '  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
