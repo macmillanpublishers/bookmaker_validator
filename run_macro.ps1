@@ -1,12 +1,5 @@
 ﻿#------------------------VARIABLES
-param([string]$inputFile, [string]$macroName, [string]$logfile)
-$filename=split-path $inputFile -Leaf			#file name without path
-$filename_normalized=$filename -replace '[^a-zA-Z0-9-_.]',''
-$filebasename=([io.fileinfo]$filename_normalized).basename
-$fileext=([io.fileinfo]$filename_normalized).extension
-$WorkingDir='S:\validator_tmp'
-$tmpDir="$($WorkingDir)\$($filebasename)"
-$working_file="$($tmpDir)\$($filename_normalized)"
+param([string]$working_file, [string]$macroName, [string]$logfile)
 
 ##### Notes on running macros from server:
 ## the Template with the Macro needs to be in the Word Start folder on the server

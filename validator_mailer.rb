@@ -293,6 +293,6 @@ MESSAGE_END
 	#now sending
 	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
-		logger.info {"sent email re failed lookup, now exiting validator_checker"}
+		logger.info {"sent email re failed lookup, now exiting validator_mailer"}
 	end
 end
