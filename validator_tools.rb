@@ -63,46 +63,32 @@ MESSAGE_END
       	currenthash.merge!(newhash)
       	Vldtr::Tools.write_json(currenthash,json)
   	end
-    def self.readjson(inputfile)
-      json_hash = {}
-      if File.file?(inputfile)
-        file = File.open(inputfile, "r:utf-8")
-        content = file.read
-        file.close
-        json_hash = JSON.parse(content)
-      end
-      json_hash
-    end
   	def self.sendrescue_mail(orig_to,orig_ccs,orig_header)
-  		begin
-        message = Mailtexts.rescuemail(orig_to,orig_ccs,orig_header)
-  			Net::SMTP.start('10.249.0.12') do |smtp|
-  	  	  	smtp.send_message message, 'workflows@macmillan.com',
-  		                              	'workflows@macmillan.com'
-  		  	end
-  	  	rescue Exception => e
-  			p e   #puts e.inspect
-  	  	end
-  	end
+      message = Mailtexts.rescuemail(orig_to,orig_ccs,orig_header)
+			Net::SMTP.start('10.249.0.12') do |smtp|
+	  	  	smtp.send_message message, 'workflows@macmillan.com',
+		                              	'workflows@macmillan.com'
+		  	end
+	  rescue Exception => e
+			p e   #puts e.inspect
+	  end
   	def self.sendmail(message, to_email, cc_emails)
-  		begin
-  			if cc_emails.empty?
-  		  		Net::SMTP.start('10.249.0.12') do |smtp|
-  	  	  		smtp.send_message message, 'workflows@macmillan.com',
-  		                              		to_email
-  		  		end
-  			else
-  		  		Net::SMTP.start('10.249.0.12') do |smtp|
-  	  	  		smtp.send_message message, 'workflows@macmillan.com',
-  		                              		to_email, cc_emails
-  		  		end
+			if cc_emails.empty?
+		  		Net::SMTP.start('10.249.0.12') do |smtp|
+	  	  		smtp.send_message message, 'workflows@macmillan.com',
+		                              		to_email
+		  		end
+			else
+		  		Net::SMTP.start('10.249.0.12') do |smtp|
+	  	  		smtp.send_message message, 'workflows@macmillan.com',
+		                              		to_email, cc_emails
   		  	end
-  	  	rescue Exception => e
-  			p e   #puts e.inspect
-  			puts "Original mail failed, now attempting to send alertmail to workflows:"
-  			Vldtr::Tools.sendrescue_mail(to_email,cc_emails,message.lines[0..3])
-  		end
-  	end
+      end
+	  rescue Exception => e
+			p e   #puts e.inspect
+			puts "Original mail failed, now attempting to send alertmail to workflows:"
+			sendrescue_mail(to_email,cc_emails,message.lines[0..3])
+		end
     def self.ebooks_mail_check()  #alternate will always be submitter, so far om is std_recipient in all cases
     	if Val::Hashes.contacts_hash['ebooksDept_submitter'] == true
     		user_name = Val::Hashes.contacts_hash['submitter_name']
@@ -111,7 +97,7 @@ MESSAGE_END
     		user_name = Val::Hashes.contacts_hash["production_manager_name"]
     		user_email = Val::Hashes.contacts_hash["production_manager_email"]
     	end
-    	user_name, user_email
+    	return user_name, user_email
     end
   	def self.checkisbn(isbn)
   		isbn.gsub!(/[^0-9,]/,'')

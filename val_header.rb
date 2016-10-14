@@ -4,6 +4,7 @@ require 'find'
 require 'json'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative './validator_tools.rb'
 
 module Val
 	class Doc
@@ -125,31 +126,41 @@ module Val
 		end
 	end
 	class Hashes
-		@@status_hash = Vldtr::Tools.readjson(Files.status_file)
+		def self.readjson(inputfile)
+			json_hash = {}
+			if File.file?(inputfile)
+				file = File.open(inputfile, "r:utf-8")
+				content = file.read
+				file.close
+				json_hash = JSON.parse(content)
+			end
+			json_hash
+		end
+		@@status_hash = readjson(Files.status_file)
 		def self.status_hash
 			@@status_hash
 		end
-		@@contacts_hash = Vldtr::Tools.readjson(Files.contacts_file)
+		@@contacts_hash = readjson(Files.contacts_file)
 		def self.contacts_hash
 			@@contacts_hash
 		end
-		@@bookinfo_hash = Vldtr::Tools.readjson(Files.bookinfo_file)
+		@@bookinfo_hash = readjson(Files.bookinfo_file)
 		def self.bookinfo_hash
 			@@bookinfo_hash
 		end
-		@@stylecheck_hash = Vldtr::Tools.readjson(Files.stylecheck_file)
+		@@stylecheck_hash = readjson(Files.stylecheck_file)
 		def self.stylecheck_hash
 			@@stylecheck_hash
 		end
-		@@isbn_hash = Vldtr::Tools.readjson(Files.isbn_file)
+		@@isbn_hash = readjson(Files.isbn_file)
 		def self.isbn_hash
 			@@isbn_hash
 		end
-		@@staff_hash = Vldtr::Tools.readjson(Files.staff_emails)
+		@@staff_hash = readjson(Files.staff_emails)
 		def self.staff_hash
 			@@staff_hash
 		end
-		@@staff_defaults_hash = Vldtr::Tools.readjson(Files.imprint_defaultPMs)
+		@@staff_defaults_hash = readjson(Files.imprint_defaultPMs)
 		def self.staff_defaults_hash
 			@@staff_defaults_hash
 		end
