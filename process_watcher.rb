@@ -29,7 +29,6 @@ else
 end
 
 if !json_exist
-
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
@@ -40,7 +39,6 @@ Subject: #{Val::Paths.project_name} ERROR for #{Val::Doc.filename_normalized}
 No json log is found.
 (should be at: #{json_logfile})
 MESSAGE_END
-
 	#now sending
 	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')

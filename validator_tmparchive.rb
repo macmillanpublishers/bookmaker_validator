@@ -65,9 +65,11 @@ def nondoc(logger,status_hash)
 	}
 end
 def movedoc(logger)
-	#if its a .doc(x) lets go ahead and move it to tmpdir
+	#if its a .doc(x) lets go ahead and move it to tmpdir, keep a pristing copy in subfolder
 	FileUtils.mkdir_p Val::Paths.tmp_dir
-	Mcmlln::Tools.moveFile(Val::Doc.input_file, Val::Files.working_file)
+	FileUtils.mkdir_p Val::Paths.tmp_original_dir
+	Mcmlln::Tools.moveFile(Val::Doc.input_file, Val::Files.original_file)
+	Mcmlln::Tools.copyFile(Val::Doc.original_file, Val::Files.working_file)
 	if Val::Doc.filename_split == Val::Doc.filename_normalized
 		logger.info {"moved #{Val::Doc.filename_split} to tmpdir"}
 	else

@@ -65,13 +65,21 @@ module Val
 		def self.tmp_dir
 			@@tmp_dir
 		end
+		@@tmp_original_dir=File.join(@@tmp_dir, 'original_file')
+		def self.tmp_original_dir
+			@@tmp_original_dir
+		end
 		@@mailer_dir = File.join(scripts_dir,'mailer_messages')
 		def self.mailer_dir
 			@@mailer_dir
 		end
 	end
 	class Files
-		@@working_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
+		@@working_file = File.join(Paths.tmp_original_dir, Doc.filename_normalized)
+		def self.working_file
+			@@working_file
+		end
+		@@woriginal_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
 		def self.working_file
 			@@working_file
 		end
@@ -184,7 +192,7 @@ module Val
 			@@authkeys_repo
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo).gsub(/SUBMITTER/,Hashes.contacts_hash['submitter_name'])
 				updated_txt
 		end
 	end
@@ -259,6 +267,10 @@ module Val
 		@@tmp_dir = File.join(Paths.working_dir, "#{@lookup_isbn}_to_bookmaker_#{@@index}")
 		def self.tmp_dir
 			@@tmp_dir
+		end
+		@@tmp_original_dir=File.join(@@tmp_dir, 'original_file')
+		def self.tmp_original_dir
+			@@tmp_original_dir
 		end
 		@@bookinfo_file = File.join(tmp_dir,'book_info.json')
 		def self.bookinfo_file
