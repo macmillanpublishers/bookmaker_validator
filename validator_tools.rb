@@ -137,7 +137,8 @@ MESSAGE_END
     	update_json(outputhash, hash, jsonlog)
     	log_time(hash,scriptname,'completion time',jsonlog)
     end
-    def run_macro(logger,macro_name)
+    def self.run_macro(logger,macro_name)
+      macro_output = ''
       #run macro
       Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro_ps} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
           stdin.close
@@ -148,7 +149,7 @@ MESSAGE_END
     	logger.info {"finished running #{macro_name} macro"}
       macro_output
     end
-    def move_old_outfiles(outfolder,newfolder)
+    def self.move_old_outfiles(outfolder,newfolder)
     	prev_runs=File.join(outfolder,'previous_runs')
     	new_prevrun=File.join(prev_runs,Val::Doc.basename_normalized)
     	FileUtils.mkdir_p newfolder
@@ -159,7 +160,7 @@ MESSAGE_END
     		end
     	}
     end
-    def setup_outfolder(outfolder)
+    def self.setup_outfolder(outfolder)
     	prev_runs=File.join(outfolder,'previous_runs')
     	new_prevrun=File.join(prev_runs,Val::Doc.basename_normalized)
     	if File.directory?(outfolder)

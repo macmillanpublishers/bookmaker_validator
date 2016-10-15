@@ -278,7 +278,7 @@ if (File.file?(Val::Files.bookinfo_file) && (status_hash['pm_lookup']=~/not in j
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
+Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_normalized}"
 
 PE or PM lookup error occurred; Note lookup status below (and logs) for help
 

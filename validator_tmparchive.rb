@@ -5,7 +5,6 @@ require 'open3'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
 require_relative './val_header.rb'
-require_relative './mailer_messages/validator_mail_templates'
 
 
 # ---------------------- LOCAL DECLARATIONS
@@ -29,7 +28,7 @@ def dropbox_api_call(generated_access_token,dropbox_filepath)
 	root_metadata = client.metadata(dropbox_filepath)
 	user_email = root_metadata["modifier"]["email"]
 	user_name = root_metadata["modifier"]["display_name"]
-	user_email, user_name
+	return user_email, user_name
 rescue Exception => e
 	p e   #puts e.inspect
 end
@@ -66,10 +65,9 @@ def nondoc(logger,status_hash)
 end
 def movedoc(logger)
 	#if its a .doc(x) lets go ahead and move it to tmpdir, keep a pristing copy in subfolder
-	FileUtils.mkdir_p Val::Paths.tmp_dir
 	FileUtils.mkdir_p Val::Paths.tmp_original_dir
 	Mcmlln::Tools.moveFile(Val::Doc.input_file, Val::Files.original_file)
-	Mcmlln::Tools.copyFile(Val::Doc.original_file, Val::Files.working_file)
+	Mcmlln::Tools.copyFile(Val::Files.original_file, Val::Files.working_file)
 	if Val::Doc.filename_split == Val::Doc.filename_normalized
 		logger.info {"moved #{Val::Doc.filename_split} to tmpdir"}
 	else
@@ -79,7 +77,10 @@ end
 
 #--------------------- RUN
 logger.info "############################################################################"
-logger.info {"file \"#{Val::Doc.input file}\" was dropped into the #{Val::Paths.project_name} folder"}
+logger.info {"file \"#{Val::Doc.input_file}\" was dropped into the #{Val::Paths.project_name} folder"}
+
+#make tmpdir
+FileUtils.mkdir_p Val::Paths.tmp_dir
 
 #get submitter info (Dropbox document 'modifier' via api)
 user_email, user_name = dropbox_api_call(generated_access_token,dropbox_filepath)
@@ -106,6 +107,7 @@ else
 	movedoc(logger)
 	#run isbnsearch macro if this is for egalleymaker
 	if Val::Paths.project_name =~ /egalleymaker/
+		logger.info {"we are running egalleymaker, here goes isbnsearch macro"}
 		status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name)
 	end
 end

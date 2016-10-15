@@ -14,13 +14,16 @@ module Val
 		def self.input_file
 			@@input_file
 		end
-		@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
-		@basename = File.basename(@filename_split, ".*")
+		@@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
+		def self.filename_split
+			@@filename_split
+		end
+		@basename = File.basename(@@filename_split, ".*")
 		@@basename_normalized = @basename.gsub(/\W/,"")
 		def self.basename_normalized
 			@@basename_normalized
 		end
-		@@extension = File.extname(@filename_split)
+		@@extension = File.extname(@@filename_split)
 		def self.extension
 			@@extension
 		end
@@ -76,11 +79,11 @@ module Val
 		end
 	end
 	class Files
-		@@working_file = File.join(Paths.tmp_original_dir, Doc.filename_normalized)
-		def self.working_file
-			@@working_file
+		@@original_file = File.join(Paths.tmp_original_dir, Doc.filename_normalized)
+		def self.original_file
+			@@original_file
 		end
-		@@woriginal_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
+		@@working_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
 		def self.working_file
 			@@working_file
 		end
@@ -209,9 +212,7 @@ module Val
 	end
 	class Logs
 		@@dropbox_logfolder = ''
-		if File.file?(Paths.testing_value_file) || Resources.testing == true
-			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', "#{Paths.project_name}_stg")
-		elsif RUBY_PLATFORM =~ /darwin/  #for testing runs on Mac OS
+		if RUBY_PLATFORM =~ /darwin/  #for testing runs on Mac OS
 			@@dropbox_logfolder = File.join(ENV['HOME'],'Dropbox (Macmillan Publishers)','bookmaker_logs',"#{Paths.project_name}_test")
 		else
 			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', Paths.project_name)
