@@ -8,11 +8,16 @@ module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
   		@input_file = File.expand_path(@unescapeargv)
-  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
+  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)#.gsub(/\+\+\+S\+QUOTE\+\+\+/, "'") #"'"
+			#the last gsub from above is to re-insert single quotes into filename string (they were tagged to make it past the .bat)
 		def self.input_file
 			@@input_file
 		end
-		@@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
+		@@input_file_preserveSQ =
+		def self.input_file_preserveSQ
+			@@input_file_preserveSQ
+		end
+		@@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop.gsub(/\+\+\+S\+QUOTE\+\+\+/, "\\\\'")
 		def self.filename_split
 			@@filename_split
 		end

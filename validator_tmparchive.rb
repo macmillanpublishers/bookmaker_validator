@@ -30,14 +30,15 @@ status_hash['docisbn_string'] = ''
 #--------------------- RUN
 logger.info "############################################################################"
 logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Paths.project_name} folder"}
-logger.info {Val::Doc.input_file}
+logger.info {"#{Val::Doc.input_file}"}
+logger.info {"dropbox filepath is #{dropbox_filepath}"}
 
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
 #try to get submitter info (Dropbox document 'modifier' via api)
 begin
 	client = DropboxClient.new(generated_access_token)
-	root_metadata = client.metadata(dropbox_filepath)
+	root_metadata = client.metadata('/egalleymaker_stg/IN/DangeroustoKnow_Patrick_FINALEDITED_978065381866.docx')
 	user_email = root_metadata["modifier"]["email"]
 	user_name = root_metadata["modifier"]["display_name"]
 rescue Exception => e
@@ -67,12 +68,12 @@ else
     logger.info {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
 end
 
-puts user_name, user_email
+puts user_name, user_email, Val::Doc.input_file, 'Val::Doc.input_file', "#{Val::Doc.input_file}"
 
-newfile= File.join(Val::Paths.tmp_dir, Val::Doc.filename_normalized)
-puts newfile
-puts Val::Doc.input_file
-Mcmlln::Tools.moveFile("#{Val::Doc.input_file}","#{newfile}")
+# newfile= File.join(Val::Paths.tmp_dir, Val::Doc.filename_normalized)
+# puts newfile
+# puts Val::Doc.input_file
+# Mcmlln::Tools.moveFile("#{Val::Doc.input_file}","#{newfile}")
 
 # FileUtils.cp "C:\Users\padwoadmin\Dropbox (Macmillan Publishers)\egalleymaker_stg\IN\DangeroustoKnow_Patrick_FINALEDITED_978065381866.docx", 'S:\validator_tmp\DangeroustoKnow_Patrick_FINALEDITED_978065381866'
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
