@@ -29,7 +29,8 @@ status_hash['docisbn_string'] = ''
 
 #--------------------- RUN
 logger.info "############################################################################"
-logger.info {"file \"#{Val::Doc.filename_normalized}\" was dropped into the #{Val::Paths.project_name} folder"}
+logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Paths.project_name} folder"}
+logger.info {Val::Doc.input_file}
 
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
@@ -66,56 +67,64 @@ else
     logger.info {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
 end
 
+puts user_name, user_email
+
+newfile= File.join(Val::Paths.tmp_dir, Val::Doc.filename_normalized)
+puts newfile
+puts Val::Doc.input_file
+Mcmlln::Tools.moveFile("#{Val::Doc.input_file}","#{newfile}")
+
+# FileUtils.cp "C:\Users\padwoadmin\Dropbox (Macmillan Publishers)\egalleymaker_stg\IN\DangeroustoKnow_Patrick_FINALEDITED_978065381866.docx", 'S:\validator_tmp\DangeroustoKnow_Patrick_FINALEDITED_978065381866'
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
-if status_hash['api_ok'] && user_email =~ /@/
-    body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
-
-message = <<MESSAGE_END
-From: Workflows <workflows@macmillan.com>
-To: #{user_name} <#{user_email}>
-CC: Workflows <workflows@macmillan.com>
-#{body}
-MESSAGE_END
-
-	unless File.file?(Val::Paths.testing_value_file)
-		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
-	end
-else
-
-message_b = <<MESSAGE_B_END
-From: Workflows <workflows@macmillan.com>
-To: Workflows <workflows@macmillan.com>
-Subject: ERROR: dropbox api lookup failure
-
-Dropbox api lookup failed for file: #{Val::Doc.filename_split}. (found email address: \"#{user_email}\")
-MESSAGE_B_END
-
-	unless File.file?(Val::Paths.testing_value_file)
-		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
-	end
-end
-
-
-#test fileext for =~ .doc
-if Val::Doc.extension !~ /.doc($|x$)/
-    status_hash['docfile'] = false
-    logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
-    File.open(Val::Files.errFile, 'w') { |f|
-        f.puts "Unable to process \"#{Val::Doc.filename_normalized}\". Your document is not a .doc or .docx file."
-    }
-else
-    #if its a .doc(x) lets go ahead and make a working copy
-    Mcmlln::Tools.copyFile(Val::Doc.input_file, Val::Files.working_file)
-
-    #get isbns from Manuscript via macro
-    Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{logfile_for_macro}\'\"") do |stdin, stdouterr, wait_thr|
-        stdin.close
-        stdouterr.each { |line|
-            status_hash['docisbn_string'] << line
-        }
-    end
-    # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
-		logger.info {"finished running #{macro_name} macro"}
-end
-
-Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
+# if status_hash['api_ok'] && user_email =~ /@/
+#     body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
+#
+# message = <<MESSAGE_END
+# From: Workflows <workflows@macmillan.com>
+# To: #{user_name} <#{user_email}>
+# CC: Workflows <workflows@macmillan.com>
+# #{body}
+# MESSAGE_END
+#
+# 	unless File.file?(Val::Paths.testing_value_file)
+# 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
+# 	end
+# else
+#
+# message_b = <<MESSAGE_B_END
+# From: Workflows <workflows@macmillan.com>
+# To: Workflows <workflows@macmillan.com>
+# Subject: ERROR: dropbox api lookup failure
+#
+# Dropbox api lookup failed for file: #{Val::Doc.filename_split}. (found email address: \"#{user_email}\")
+# MESSAGE_B_END
+#
+# 	unless File.file?(Val::Paths.testing_value_file)
+# 		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
+# 	end
+# end
+#
+#
+# #test fileext for =~ .doc
+# if Val::Doc.extension !~ /.doc($|x$)/
+#     status_hash['docfile'] = false
+#     logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
+#     File.open(Val::Files.errFile, 'w') { |f|
+#         f.puts "Unable to process \"#{Val::Doc.filename_normalized}\". Your document is not a .doc or .docx file."
+#     }
+# else
+#     #if its a .doc(x) lets go ahead and make a working copy
+#     Mcmlln::Tools.copyFile(Val::Doc.input_file, Val::Files.working_file)
+#
+#     #get isbns from Manuscript via macro
+#     Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{logfile_for_macro}\'\"") do |stdin, stdouterr, wait_thr|
+#         stdin.close
+#         stdouterr.each { |line|
+#             status_hash['docisbn_string'] << line
+#         }
+#     end
+#     # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
+# 		logger.info {"finished running #{macro_name} macro"}
+# end
+#
+# Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

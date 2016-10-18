@@ -74,31 +74,32 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
+	puts "#{Val::Doc.input_file}"
 	run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
-	run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
-
-	#now we make sure the macro needs to be run:
-	if File.file?(Val::Files.status_file)				#get info from status.json
-			status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
-			# run validator macro or log err depending on criteria
-			if !File.file?(Val::Files.bookinfo_file)
-					output_hash['Val::Files.bookinfo_file'] = false ; output_hash['deploy.rb'] = 'skipping macro, no bookinfo file'
-			elsif status_hash['msword_copyedit'] == false
-					output_hash['msword_copyedit'] = false ; output_hash['deploy.rb'] = 'skipping macro, paper-copyedit'
-			elsif status_hash['epub_format'] == false
-					output_hash['epub_format'] = false ; output_hash['deploy.rb'] = 'skipping macro, no EPUB format epub edition'
-			else
-					run_script("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{std_logfile}\'\"", output_hash, "Val::Resources.run_macro", json_logfile)
-			end
-	else
-			output_hash['Val::Files.bookinfo_file'] = false ; output_hash['deploy.rb'] = 'skipping macro, no status.json file'
-	end
-
-	run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
-	run_script("#{Val::Resources.ruby_exe} #{validator_mailer} \'#{Val::Doc.input_file}\'", output_hash, "validator_mailer", json_logfile)
-	run_script("#{Val::Resources.ruby_exe} #{validator_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "validator_cleanup", json_logfile)
-	#mark the process done for process watcher
-	output_hash['completed'] = true
+	# run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
+	#
+	# #now we make sure the macro needs to be run:
+	# if File.file?(Val::Files.status_file)				#get info from status.json
+	# 		status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
+	# 		# run validator macro or log err depending on criteria
+	# 		if !File.file?(Val::Files.bookinfo_file)
+	# 				output_hash['Val::Files.bookinfo_file'] = false ; output_hash['deploy.rb'] = 'skipping macro, no bookinfo file'
+	# 		elsif status_hash['msword_copyedit'] == false
+	# 				output_hash['msword_copyedit'] = false ; output_hash['deploy.rb'] = 'skipping macro, paper-copyedit'
+	# 		elsif status_hash['epub_format'] == false
+	# 				output_hash['epub_format'] = false ; output_hash['deploy.rb'] = 'skipping macro, no EPUB format epub edition'
+	# 		else
+	# 				run_script("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{std_logfile}\'\"", output_hash, "Val::Resources.run_macro", json_logfile)
+	# 		end
+	# else
+	# 		output_hash['Val::Files.bookinfo_file'] = false ; output_hash['deploy.rb'] = 'skipping macro, no status.json file'
+	# end
+	#
+	# run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
+	# run_script("#{Val::Resources.ruby_exe} #{validator_mailer} \'#{Val::Doc.input_file}\'", output_hash, "validator_mailer", json_logfile)
+	# run_script("#{Val::Resources.ruby_exe} #{validator_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "validator_cleanup", json_logfile)
+	# #mark the process done for process watcher
+	# output_hash['completed'] = true
 rescue Exception => e
 	p e   #puts e.inspect
 	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"
