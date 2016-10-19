@@ -8,30 +8,39 @@ module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
   		@input_file = File.expand_path(@unescapeargv)
-  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)#.gsub(/\+\+\+S\+QUOTE\+\+\+/, "'") #"'"
-			#the last gsub from above is to re-insert single quotes into filename string (they were tagged to make it past the .bat)
+  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 		def self.input_file
 			@@input_file
 		end
-		@@input_file_preserveSQ =
-		def self.input_file_preserveSQ
-			@@input_file_preserveSQ
+		#reinsert !'s and "'" that the .bat replaced with tags
+		@@input_file_untag_chars = @@input_file.gsub(/\+\+\+S\+QUOTE\+\+\+/,"'").gsub(/\+\+\+EXCLM\+\+\+/, "!")
+		#replace smart quotes that the .bat ignored / mis-substituted with mystery chars
+		@infile_char_array = @@input_file_untag_chars.encode!("utf-8").unpack("U*")
+		@infile_char_array.each_with_index { |c,index|
+			if 230 == c.to_i then @@input_file_untag_chars[index]="‘" end
+			if 198 == c.to_i then @@input_file_untag_chars[index]="’" end
+			if 244 == c.to_i then @@input_file_untag_chars[index]="“" end
+			if 246 == c.to_i then @@input_file_untag_chars[index]="”" end
+		}
+		def self.input_file_untag_chars
+			@@input_file_untag_chars
 		end
-		@@filename_split = input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop.gsub(/\+\+\+S\+QUOTE\+\+\+/, "\\\\'")
+		@@filename_split = input_file_untag_chars.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 		def self.filename_split
 			@@filename_split
 		end
-		@@filename_normalized = filename_split.gsub(/[^[:alnum:]\._-]/,'')
-		def self.filename_normalized
-			@@filename_normalized
-		end
-		@@basename_normalized = File.basename(filename_normalized, ".*")
+		@basename = File.basename(@@filename_split, ".*")
+		@@basename_normalized = @basename.gsub(/\W/,"")
 		def self.basename_normalized
 			@@basename_normalized
 		end
-		@@extension = File.extname(filename_normalized)
+		@@extension = File.extname(@@filename_split)
 		def self.extension
 			@@extension
+		end
+		@@filename_normalized = "#{@@basename_normalized}#{@@extension}"
+		def self.filename_normalized
+			@@filename_normalized
 		end
 	end
 	class Paths
@@ -67,12 +76,20 @@ module Val
 		def self.tmp_dir
 			@@tmp_dir
 		end
+		@@tmp_original_dir=File.join(@@tmp_dir, 'original_file')
+		def self.tmp_original_dir
+			@@tmp_original_dir
+		end
 		@@mailer_dir = File.join(scripts_dir,'mailer_messages')
 		def self.mailer_dir
 			@@mailer_dir
 		end
 	end
 	class Files
+		@@original_file = File.join(Paths.tmp_original_dir, Doc.filename_normalized)
+		def self.original_file
+			@@original_file
+		end
 		@@working_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
 		def self.working_file
 			@@working_file
@@ -152,7 +169,7 @@ module Val
 			@@authkeys_repo
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_split).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 				updated_txt
 		end
 	end
@@ -179,6 +196,10 @@ module Val
 			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
 			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
+			end
+			@@std_logfile = logfile
+			def self.std_logfile
+				@@std_logfile
 			end
 		end
 		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
