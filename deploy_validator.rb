@@ -74,13 +74,6 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	puts "#{Val::Doc.input_file}"
-	puts "Dangerous to Know_Patrick_FINAL EDITED_97806538186'6.docx"
-	puts "argv0 is #{ARGV[0]}", ARGV[0][119]
-	if Val::Doc.filename_split =~ /'/
-
-
-	end
 	run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
 	# run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
 	#
