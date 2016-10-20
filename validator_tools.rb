@@ -1,6 +1,8 @@
 require 'fileutils'
 require 'net/smtp'
 require 'json'
+require 'open3'
+require 'find'
 
 module Vldtr
   class Tools
@@ -76,6 +78,47 @@ MESSAGE_END
 		end
 		cd
 	end
-
+  def self.move_old_outfiles(outfolder,newfolder)
+   	prev_runs=File.join(outfolder,'previous_runs')
+   	new_prevrun=File.join(prev_runs,Val::Doc.basename_normalized)
+   	FileUtils.mkdir_p newfolder
+   	Find.find(outfolder) { |f|
+   		Find.prune if f=~/#{prev_runs}/
+   		if f != outfolder
+   			FileUtils.mv f, newfolder
+   		end
+   	}
+   end
+   def self.setup_outfolder(outfolder)
+   	prev_runs=File.join(outfolder,'previous_runs')
+   	new_prevrun=File.join(prev_runs,Val::Doc.basename_normalized)
+   	if File.directory?(outfolder)
+   		if !(Dir.entries(outfolder) - %w{ . .. previous_runs }).empty?
+   			if !File.directory?(prev_runs)
+   				move_old_outfiles(outfolder,new_prevrun)
+   			else
+   				pr_counts, first_pr_present = [1], false
+   				Find.find(prev_runs) { |f|
+   					if File.directory?(f)
+   						Find.prune if f=~/#{new_prevrun}.*[\\\/]./
+   						if f == new_prevrun
+   							first_pr_present=true
+   						elsif f =~ /#{new_prevrun}_/
+   							pr_counts << f.match(/_(\d+)$/)[1].to_i
+   						end
+   					end
+   				}
+   				if !first_pr_present && pr_counts.size == 1
+   					move_old_outfiles(outfolder,new_prevrun)
+   				else
+   					runcount = pr_counts.sort.pop + 1
+   					move_old_outfiles(outfolder,"#{new_prevrun}_#{runcount}")
+   				end
+   			end
+   		end
+   	else
+   		FileUtils.mkdir_p outfolder
+   	end
+   end
   end
 end

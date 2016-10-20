@@ -93,7 +93,7 @@ Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 
 
 #get ready for bookmaker to run on good docs!
-if status_hash['bookmaker_ready']
+if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 	#change file & folder name to isbn if its available,keep a DONE file with orig filename
 	if !isbn.empty?
 		#rename Val::Paths.tmp_dir so it doesn't get re-used and has index #s
@@ -127,15 +127,18 @@ if status_hash['bookmaker_ready']
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end
 else	#if not bookmaker_ready, clean up
+
+
 	#create outfolder:
-	FileUtils.mkdir_p outfolder
-	#if old warn_notice &/or err_notice exist, let's delete 'em
-	Find.find(outfolder) { |file|
-		if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
-			logger.info {"deleting old warn or err notice"}
-			FileUtils.rm file
-		end
-	}
+	Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
+ 	# FileUtils.mkdir_p outfolder
+ 	# #if old warn_notice &/or err_notice exist, let's delete 'em
+ 	# Find.find(outfolder) { |file|
+ 	# 	if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
+ 	# 		logger.info {"deleting old warn or err notice"}
+ 	# 		FileUtils.rm file
+ 	# 	end
+ # }
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?
@@ -159,7 +162,12 @@ else	#if not bookmaker_ready, clean up
 	end
 
 	#let's move the original to outbox!
-	Mcmlln::Tools.moveFile(Val::Doc.input_file, outfolder)
+	if File.file?(Val::Doc.input_file_untag_chars) && status_hash['docfile'] = false
+		Mcmlln::Tools.moveFile(Val::Doc.input_file, outfolder)
+	else
+		Mcmlln::Tools.copyAllFiles(Val::Paths.tmp_original_dir, outfolder)
+	end
+
 	logger.info {"moved the original doc to outfolder, now cleaning up!"}
 	#and delete tmp files
 	if Dir.exists?(Val::Paths.tmp_dir)	then FileUtils.rm_rf Val::Paths.tmp_dir end
