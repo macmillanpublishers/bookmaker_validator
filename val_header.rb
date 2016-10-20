@@ -168,6 +168,10 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
+		@@generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt'))
+		def self.generated_access_token
+			@@generated_access_token
+		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
    			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 				updated_txt
