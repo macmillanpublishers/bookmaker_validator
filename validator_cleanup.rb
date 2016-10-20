@@ -122,23 +122,14 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		new_workingfile = working_file_updated.gsub(/#{Val::Doc.extension}$/,"_workingfile#{Val::Doc.extension}")
 		File.rename(working_file_updated, new_workingfile)
 		#make a copy of infile so we have a reference to it for posts
-	  Mcmlln::Tools.copyFile(Val::Doc.input_file, tmp_dir_new)
+	  Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
 	else
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end
 else	#if not bookmaker_ready, clean up
 
-
 	#create outfolder:
 	Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
- 	# FileUtils.mkdir_p outfolder
- 	# #if old warn_notice &/or err_notice exist, let's delete 'em
- 	# Find.find(outfolder) { |file|
- 	# 	if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
- 	# 		logger.info {"deleting old warn or err notice"}
- 	# 		FileUtils.rm file
- 	# 	end
- # }
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?
@@ -164,11 +155,15 @@ else	#if not bookmaker_ready, clean up
 	#let's move the original to outbox!
 	if File.file?(Val::Doc.input_file_untag_chars) && status_hash['docfile'] = false
 		Mcmlln::Tools.moveFile(Val::Doc.input_file, outfolder)
-	else
+	elsif Val::Paths.project_name =~ /egalleymaker/ && File.file?(Val::Files.original_file)
 		Mcmlln::Tools.copyAllFiles(Val::Paths.tmp_original_dir, outfolder)
+	elsif File.file?(Val::Files.original_file)
+		FileUtils.cp_r(Val::Paths.tmp_original_dir, outfolder)
+	else
+		logger.info {"unable to move original file to outfolder, it was not present where it should have been"}
 	end
-
 	logger.info {"moved the original doc to outfolder, now cleaning up!"}
+
 	#and delete tmp files
 	if Dir.exists?(Val::Paths.tmp_dir)	then FileUtils.rm_rf Val::Paths.tmp_dir end
 	if File.file?(Val::Files.errFile) then FileUtils.rm Val::Files.errFile end

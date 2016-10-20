@@ -80,40 +80,35 @@ MESSAGE_END
 	end
   def self.move_old_outfiles(outfolder,newfolder)
    	prev_runs=File.join(outfolder,'previous_runs')
-   	new_prevrun=File.join(prev_runs,Val::Doc.basename_normalized)
    	FileUtils.mkdir_p newfolder
    	Find.find(outfolder) { |f|
-   		Find.prune if f=~/#{prev_runs}/
-   		if f != outfolder
-   			FileUtils.mv f, newfolder
-   		end
+      #the regex below is necessary to strip out parens- otherwise the match fails even with the regexp.escape. Ditto line 104)
+      Find.prune if f.gsub(/(\(|\))/,"") =~ /#{Regexp.escape(prev_runs.gsub(/(\(|\))/,""))}/
+      if f != outfolder
+        FileUtils.mv f, newfolder
+      end
    	}
    end
    def self.setup_outfolder(outfolder)
    	prev_runs=File.join(outfolder,'previous_runs')
-   	new_prevrun=File.join(prev_runs,Val::Doc.basename_normalized)
+    pr_prefix='run'
+   	new_prevrun=File.join(prev_runs,pr_prefix)
    	if File.directory?(outfolder)
-   		if !(Dir.entries(outfolder) - %w{ . .. previous_runs }).empty?
+   		if !(Dir.entries(outfolder) - %w{ . .. .DS_Store previous_runs }).empty?
    			if !File.directory?(prev_runs)
-   				move_old_outfiles(outfolder,new_prevrun)
+     			move_old_outfiles(outfolder,"#{new_prevrun}_1")  #may or may not work
    			else
-   				pr_counts, first_pr_present = [1], false
-   				Find.find(prev_runs) { |f|
+   				pr_counts = [0]
+          Find.find(prev_runs) { |f|
    					if File.directory?(f)
-   						Find.prune if f=~/#{new_prevrun}.*[\\\/]./
-   						if f == new_prevrun
-   							first_pr_present=true
-   						elsif f =~ /#{new_prevrun}_/
-   							pr_counts << f.match(/_(\d+)$/)[1].to_i
-   						end
+   						Find.prune if f.gsub(/(\(|\))/,"") =~ /#{Regexp.escape(new_prevrun.gsub(/(\(|\))/,""))}.*[\\\/]./
+              if f =~ /(\/|\\)#{pr_prefix}_\d+$/
+  							pr_counts << f.match(/#{pr_prefix}_(\d+)$/)[1].to_i
+  						end
    					end
    				}
-   				if !first_pr_present && pr_counts.size == 1
-   					move_old_outfiles(outfolder,new_prevrun)
-   				else
-   					runcount = pr_counts.sort.pop + 1
-   					move_old_outfiles(outfolder,"#{new_prevrun}_#{runcount}")
-   				end
+ 					runcount = pr_counts.sort.pop + 1
+ 					move_old_outfiles(outfolder,"#{new_prevrun}_#{runcount}")
    			end
    		end
    	else

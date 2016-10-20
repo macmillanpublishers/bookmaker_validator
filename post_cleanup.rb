@@ -78,7 +78,7 @@ end
 #let's move the original to outbox!
 logger.info {"moving original file to outfolder.."}
 # Mcmlln::Tools.moveFile(validator_infile, outfolder)
-Mcmlln::Tools.copyAllFiles(Val::Paths.tmp_original_dir, outfolder)
+Mcmlln::Tools.copyAllFiles(Val::Posts.tmp_original_dir, outfolder)
 
 #deal with errors & warnings!
 if File.file?(Val::Posts.status_file)

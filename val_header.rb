@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'logger'
 require 'find'
+require 'json'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 
@@ -192,19 +193,23 @@ module Val
 		def self.logfilename
 			@@logfilename
 		end
+		@@std_logfile = ""
 		def self.log_setup(file=logfilename,folder=logfolder)		#can be overwritten in function call
+			if !File.directory?(folder)	then FileUtils.mkdir_p(folder) end
 			logfile = File.join(folder,file)
+			$stderr.reopen(logfile, 'a')
+			$stdout.reopen(logfile, 'a')
 			@@logger = Logger.new(logfile)
 			def self.logger
 				@@logger
 			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
-			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
+				"#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
 			end
 			@@std_logfile = logfile
-			def self.std_logfile
-				@@std_logfile
-			end
+		end
+		def self.std_logfile
+			@@std_logfile
 		end
 		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
 		def self.permalog
@@ -240,6 +245,10 @@ module Val
 		@@tmp_dir = File.join(Paths.working_dir, "#{@lookup_isbn}_to_bookmaker_#{@@index}")
 		def self.tmp_dir
 			@@tmp_dir
+		end
+		@@tmp_original_dir=File.join(@@tmp_dir, 'original_file')
+		def self.tmp_original_dir
+			@@tmp_original_dir
 		end
 		@@bookinfo_file = File.join(tmp_dir,'book_info.json')
 		def self.bookinfo_file
