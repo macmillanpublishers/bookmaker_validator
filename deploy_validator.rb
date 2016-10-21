@@ -90,7 +90,7 @@ begin
 					output_hash['epub_format'] = false ; output_hash['deploy.rb'] = 'skipping macro, no EPUB format epub edition'
 			else
 					Val::Logs.return_stdOutErr
-					run_script("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"", output_hash, "Val::Resources.run_macro", json_logfile)
+					run_script("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro_ps} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"", output_hash, "Val::Resources.run_macro", json_logfile)
 					Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)
 			end
 	else

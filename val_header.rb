@@ -136,6 +136,46 @@ module Val
 			@@errFile
 		end
 	end
+	class Hashes
+		def self.readjson(inputfile)
+			json_hash = {}
+			if File.file?(inputfile)
+				file = File.open(inputfile, "r:utf-8")
+				content = file.read
+				file.close
+				json_hash = JSON.parse(content)
+			end
+			json_hash
+		end
+		@@status_hash = readjson(Files.status_file)
+		def self.status_hash
+			@@status_hash
+		end
+		@@contacts_hash = readjson(Files.contacts_file)
+		def self.contacts_hash
+			@@contacts_hash
+		end
+		@@bookinfo_hash = readjson(Files.bookinfo_file)
+		def self.bookinfo_hash
+			@@bookinfo_hash
+		end
+		@@stylecheck_hash = readjson(Files.stylecheck_file)
+		def self.stylecheck_hash
+			@@stylecheck_hash
+		end
+		@@isbn_hash = readjson(Files.isbn_file)
+		def self.isbn_hash
+			@@isbn_hash
+		end
+		@@staff_hash = readjson(Files.staff_emails)
+		def self.staff_hash
+			@@staff_hash
+		end
+		@@staff_defaults_hash = readjson(Files.imprint_defaultPMs)
+		def self.staff_defaults_hash
+			@@staff_defaults_hash
+		end
+	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
@@ -153,9 +193,9 @@ module Val
 		def self.thisscript
 			@@thisscript
 		end
-		@@run_macro = File.join(Paths.scripts_dir,'run_macro.ps1')
-		def self.run_macro
-			@@run_macro
+		@@run_macro_ps = File.join(Paths.scripts_dir,'run_macro.ps1')
+		def self.run_macro_ps
+			@@run_macro_ps
 		end
 		@@powershell_exe = 'PowerShell -NoProfile -ExecutionPolicy Bypass -Command'
 		def self.powershell_exe
@@ -179,12 +219,12 @@ module Val
 		end
 	end
 	class Logs
-		@@dropbox_logfolder = ''
-		if File.file?(Paths.testing_value_file) || Resources.testing == true
-			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
-		else
-			@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator')
-		end
+		# @@dropbox_logfolder = ''
+		# if File.file?(Paths.testing_value_file) || Resources.testing == true
+		# 	@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
+		# else
+		@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', Paths.project_name)
+		# end
 		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
 		def self.logfolder
 			@@logfolder
@@ -207,7 +247,9 @@ module Val
 			$stdout.sync = true
 			$stderr.reopen($stdout)
 		end
+		@@std_logfile = ''
 		def self.log_setup(file=logfilename,folder=logfolder)		#can be overwritten in function call
+			if !File.directory?(folder)	then FileUtils.mkdir_p(folder) end
 			logfile = File.join(folder,file)
 			#part II: redirecting console output to logfile
 			Val::Logs.redirect_stdOutErr(logfile)
@@ -228,13 +270,14 @@ module Val
 			@@permalog
 		end
 		@@deploy_logfolder = File.join(@@dropbox_logfolder, 'std_out-err_logs')
+		if !File.directory?(@@deploy_logfolder)	then FileUtils.mkdir_p(@@deploy_logfolder)
 		def self.deploy_logfolder
 			@@deploy_logfolder
 		end
-		@@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
-		def self.process_logfolder
-			@@process_logfolder
-		end
+		# @@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
+		# def self.process_logfolder
+		# 	@@process_logfolder
+		# end
 		@@json_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 		def self.json_logfile
 			@@json_logfile
@@ -243,10 +286,10 @@ module Val
 		def self.human_logfile
 			@@human_logfile
 		end
-		@@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
-		def self.p_logfile
-			@@p_logfile
-		end
+		# @@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
+		# def self.p_logfile
+		# 	@@p_logfile
+		# end
 	end
 	class Posts
 		@lookup_isbn = Doc.basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)

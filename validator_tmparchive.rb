@@ -126,7 +126,7 @@ else
 	#run isbnsearch macro if this is for egalleymaker
 	if Val::Paths.project_name =~ /egalleymaker/
 		Val::Logs.return_stdOutErr
-	  Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
+	  Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro_ps} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
 	      stdin.close
 	      stdouterr.each { |line|
 	          status_hash['docisbn_string'] << line
