@@ -108,12 +108,16 @@ else
     Mcmlln::Tools.copyFile(Val::Doc.input_file, Val::Files.working_file)
 
     #get isbns from Manuscript via macro
-    Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Doc.input_file}\' \'#{macro_name}\' \'#{logfile_for_macro}\'\"") do |stdin, stdouterr, wait_thr|
+		Val::Logs.return_stdOutErr
+		puts "rerutn XXXXXX"
+    Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
         stdin.close
         stdouterr.each { |line|
             status_hash['docisbn_string'] << line
         }
     end
+		Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)
+		puts "redirect YYYYYY"
     # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
 		logger.info {"finished running #{macro_name} macro"}
 end

@@ -166,14 +166,34 @@ module Val
 		def self.logfilename
 			@@logfilename
 		end
+		@@orig_std_out = $stdout.clone   #part I: redirecting console output to logfile
+		def self.orig_std_out
+			@@orig_std_out
+		end
+		def self.redirect_stdOutErr(logfile)
+			$stdout.reopen(File.open(logfile, 'a'))
+			$stdout.sync = true
+			$stderr.reopen($stdout)
+		end
+		def self.return_stdOutErr
+			$stdout.reopen(@@orig_std_out)
+			$stdout.sync = true
+			$stderr.reopen($stdout)
+		end
 		def self.log_setup(file=logfilename,folder=logfolder)		#can be overwritten in function call
 			logfile = File.join(folder,file)
+			#part II: redirecting console output to logfile
+			Val::Logs.redirect_stdOutErr(logfile)
 			@@logger = Logger.new(logfile)
 			def self.logger
 				@@logger
 			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
 			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
+			end
+			@@std_logfile = logfile
+			def self.std_logfile
+				@@std_logfile
 			end
 		end
 		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
