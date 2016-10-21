@@ -125,12 +125,14 @@ else
 	movedoc(logger)
 	#run isbnsearch macro if this is for egalleymaker
 	if Val::Paths.project_name =~ /egalleymaker/
+		Val::Logs.return_stdOutErr
 	  Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
 	      stdin.close
 	      stdouterr.each { |line|
 	          status_hash['docisbn_string'] << line
 	      }
 	  end
+		Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)
 	  # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
 		logger.info {"finished running #{macro_name} macro"}
 	end
