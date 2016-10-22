@@ -277,24 +277,25 @@ else
     #log re: fixed layout:
     if status_hash['epub_format'] == false then logger.info {"This looks like fixed layout, will skip validator macro"} end
 
-    #now email PM to tell them validator is beginning:
-    if contacts_hash['ebooksDept_submitter'] == true
-        to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-        to_email = contacts_hash['submitter_email']
-    else
-        to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-        to_email = contacts_hash['production_manager_email']
-    end
-    body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','',Val::Posts.bookinfo).gsub(/SUBMITTER/,contacts_hash['submitter_name'])
-    message_C = <<MESSAGE_END_C
-From: Workflows <workflows@macmillan.com>
-To: #{to_header}
-CC: Workflows <workflows@macmillan.com>
-#{body}
-MESSAGE_END_C
-  	unless File.file?(Val::Paths.testing_value_file)
-  		Vldtr::Tools.sendmail("#{message_C}",to_email,'workflows@macmillan.com')
-  	end
+## * The below mailer has been moved to validator_macro, will delete pending tests
+#     #now email PM to tell them validator is beginning:
+#     if contacts_hash['ebooksDept_submitter'] == true
+#         to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+#         to_email = contacts_hash['submitter_email']
+#     else
+#         to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+#         to_email = contacts_hash['production_manager_email']
+#     end
+#     body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','',Val::Posts.bookinfo).gsub(/SUBMITTER/,contacts_hash['submitter_name'])
+#     message_C = <<MESSAGE_END_C
+# From: Workflows <workflows@macmillan.com>
+# To: #{to_header}
+# CC: Workflows <workflows@macmillan.com>
+# #{body}
+# MESSAGE_END_C
+#   	unless File.file?(Val::Paths.testing_value_file)
+#   		Vldtr::Tools.sendmail("#{message_C}",to_email,'workflows@macmillan.com')
+#   	end
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

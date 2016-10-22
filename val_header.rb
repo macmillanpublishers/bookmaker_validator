@@ -223,15 +223,35 @@ module Val
 		# if File.file?(Paths.testing_value_file) || Resources.testing == true
 		# 	@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
 		# else
-		@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', Paths.project_name)
-		# end
-		@@logfolder = File.join(@@dropbox_logfolder, 'logs')		#defaults for logging
-		def self.logfolder
-			@@logfolder
-		end
 		@@logfilename = "#{Doc.basename_normalized}_log.txt"
 		def self.logfilename
 			@@logfilename
+		end
+		def self.setlogfolders(projectname)
+			@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', projectname)
+			@logfolder = File.join(@dropbox_logfolder, 'logs')
+			@permalog = File.join(@dropbox_logfolder,'validator_history_report.json')
+			@deploy_logfolder = File.join(@dropbox_logfolder, 'std_out-err_logs')
+			# if !File.directory?(@deploy_logfolder)	then FileUtils.mkdir_p(@deploy_logfolder) end
+			@json_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
+			@human_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
+			return @logfolder, @permalog, @deploy_logfolder, @json_logfile, @human_logfile
+		end
+		@@logfolder, @@permalog, @@deploy_logfolder, @@json_logfile, @@human_logfile = setlogfolders(Paths.project_name)
+		def self.logfolder
+			@@logfolder
+		end
+		def self.permalog
+			@@permalog
+		end
+		def self.deploy_logfolder
+			@@deploy_logfolder
+		end
+		def self.json_logfile
+			@@json_logfile
+		end
+		def self.human_logfile
+			@@human_logfile
 		end
 		@@orig_std_out = $stdout.clone   #part I: redirecting console output to logfile
 		def self.orig_std_out
@@ -265,27 +285,24 @@ module Val
 				@@std_logfile
 			end
 		end
-		@@permalog = File.join(@@dropbox_logfolder,'validator_history_report.json')
-		def self.permalog
-			@@permalog
-		end
-		@@deploy_logfolder = File.join(@@dropbox_logfolder, 'std_out-err_logs')
-		if !File.directory?(@@deploy_logfolder)	then FileUtils.mkdir_p(@@deploy_logfolder)
-		def self.deploy_logfolder
-			@@deploy_logfolder
-		end
-		# @@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
-		# def self.process_logfolder
-		# 	@@process_logfolder
+		# def self.permalog
+		# 	@@permalog
 		# end
-		@@json_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
-		def self.json_logfile
-			@@json_logfile
-		end
-		@@human_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
-		def self.human_logfile
-			@@human_logfile
-		end
+		# def self.deploy_logfolder
+		# 	@@deploy_logfolder
+		# end
+		# # @@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
+		# # def self.process_logfolder
+		# # 	@@process_logfolder
+		# # end
+		# # @@json_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
+		# def self.json_logfile
+		# 	@@json_logfile
+		# end
+		# # @@human_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
+		# def self.human_logfile
+		# 	@@human_logfile
+		# end
 		# @@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
 		# def self.p_logfile
 		# 	@@p_logfile
@@ -359,6 +376,22 @@ module Val
 			@@logfile_name = File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt')
 			def self.logfile_name
 				@@logfile_name
+			end
+			@projectname = ''
+			if File.file?(Paths.testing_value_file) || Resources.testing == true
+				@projectname = 'egalleymaker_stg'
+			else
+				@projectname = 'egalleymaker'
+			end
+			@@logfolder, @@permalog, @deploy_logfolder, @@json_logfile, @human_logfile = setlogfolders(Paths.project_name)
+			def self.logfolder
+				@@logfolder
+			end
+			def self.json_logfile
+				@@json_logfile
+			end
+			def self.permalog
+				@@permalog
 			end
 		end
 	end

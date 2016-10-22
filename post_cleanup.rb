@@ -8,7 +8,7 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name)
+Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
 logger = Val::Logs.logger
 
 et_project_dir, coresource_dir  = '', ''		#'et' for egalleymaker :)
@@ -98,8 +98,8 @@ else
 end
 
 #update Val::Logs.permalog
-if File.file?(Val::Logs.permalog)
-	permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
+if File.file?(Val::Posts.permalog)
+	permalog_hash = Mcmlln::Tools.readjson(Val::Posts.permalog)
 	permalog_hash[Val::Posts.index]['epub_found'] = epub_found
 	if epub_found && status_hash['errors'].empty?
 		permalog_hash[Val::Posts.index]['status'] = 'In-house egalley'
@@ -107,7 +107,7 @@ if File.file?(Val::Logs.permalog)
 		permalog_hash[Val::Posts.index]['status'] = 'bookmaker error'
 	end
 	#write to json Val::Logs.permalog!
-    Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
+    Vldtr::Tools.write_json(permalog_hash,Val::Posts.permalog)
 end
 
 

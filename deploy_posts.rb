@@ -7,10 +7,10 @@ require_relative './validator_tools.rb'
 require_relative './val_header.rb'
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name)			#Note:  different for Posts.deploy
+Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)			#Note:  different for Posts.deploy
 logger = Val::Logs.logger
 log_suffix = "POSTS_#{Time.now.strftime('%Y-%m-%d_%H-%M-%S')}"		#Note:  different for Posts.deploy
-json_logfile = Val::Logs.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
+json_logfile = Val::Posts.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
 output_hash = { 'completed' => false }
 Vldtr::Tools.write_json(output_hash, json_logfile)   #create jsonlogfile
 
