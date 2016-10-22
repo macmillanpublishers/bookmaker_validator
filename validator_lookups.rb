@@ -6,14 +6,10 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
 require_relative './val_header.rb'
 
-
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
 logger = Val::Logs.logger
-
-notify_egalleymaker_begun = File.read(File.join(Val::Paths.mailer_dir,'notify_egalleymaker_begun.txt'))
 alt_isbn_array = []
-
 
 #---------------------  FUNCTIONS
 #this function quick verifies an isbn: checkdigit, ean lookup.

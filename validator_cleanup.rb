@@ -129,7 +129,7 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 else	#if not bookmaker_ready, clean up
 
 	#create outfolder:
-	Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
+	Vldtr::Tools.setup_outfolder(outfolder)
 
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?

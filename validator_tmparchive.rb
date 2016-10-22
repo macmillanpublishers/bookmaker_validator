@@ -10,7 +10,6 @@ require_relative './val_header.rb'
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
 logger = Val::Logs.logger
-
 dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split)
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
@@ -20,19 +19,8 @@ contacts_hash['ebooksDept_submitter'] = false
 status_hash = {}
 status_hash['api_ok'] = true
 status_hash['docfile'] = true
-status_hash['docisbn_string'] = ''  #can we get rid of this?
 
 #---------------------  METHODS
-def dropbox_api_call(dropbox_filepath)
-	user_email, user_name = "", ""
-	client = DropboxClient.new(Val::Resources.generated_access_token)
-	root_metadata = client.metadata(dropbox_filepath)
-	user_email = root_metadata["modifier"]["email"]
-	user_name = root_metadata["modifier"]["display_name"]
-	return user_email, user_name
-rescue Exception => e
-	p e   #puts e.inspect
-end
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 	if user_email.nil? or user_email.empty? or !user_email
 	    status_hash['api_ok'] = false
@@ -83,40 +71,52 @@ logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Pa
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
 #try to get submitter info (Dropbox document 'modifier' via api)
-user_email, user_name = dropbox_api_call(dropbox_filepath)
+user_email, user_name = Vldtr::Tools.dropbox_api_call(dropbox_filepath)
 
 #set_submitter_info in contacts_hash
 set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 
+# #send email upon file receipt, different mails depending on whether drpobox api succeeded:
+# if status_hash['api_ok'] && user_email =~ /@/
+#     body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
+#
+# message = <<MESSAGE_END
+# From: Workflows <workflows@macmillan.com>
+# To: #{user_name} <#{user_email}>
+# CC: Workflows <workflows@macmillan.com>
+# #{body}
+# MESSAGE_END
+#
+# 	unless File.file?(Val::Paths.testing_value_file)
+# 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
+# 	end
+# else
+#
+# message_b = <<MESSAGE_B_END
+# From: Workflows <workflows@macmillan.com>
+# To: Workflows <workflows@macmillan.com>
+# Subject: ERROR: dropbox api lookup failure
+#
+# Dropbox api lookup failed for file: #{Val::Doc.filename_normalized}. (found email address: \"#{user_email}\")
+# MESSAGE_B_END
+#
+# 	unless File.file?(Val::Paths.testing_value_file)
+# 		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
+# 	end
+# end
+
+# ATTN: need to add a mailtxt for standalone validator
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
-if status_hash['api_ok'] && user_email =~ /@/
+unless File.file?(Val::Paths.testing_value_file)
+	if status_hash['api_ok'] && user_email =~ /@/
     body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
-
-message = <<MESSAGE_END
-From: Workflows <workflows@macmillan.com>
-To: #{user_name} <#{user_email}>
-CC: Workflows <workflows@macmillan.com>
-#{body}
-MESSAGE_END
-
-	unless File.file?(Val::Paths.testing_value_file)
+		message = Vldtr::Mailtexts.generic(user_name,user_email,body) #or "#{body}" ?
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
-	end
-else
-
-message_b = <<MESSAGE_B_END
-From: Workflows <workflows@macmillan.com>
-To: Workflows <workflows@macmillan.com>
-Subject: ERROR: dropbox api lookup failure
-
-Dropbox api lookup failed for file: #{Val::Doc.filename_normalized}. (found email address: \"#{user_email}\")
-MESSAGE_B_END
-
-	unless File.file?(Val::Paths.testing_value_file)
-		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
+	else
+		message = Vldtr::Mailtexts.apifail(user_email)
+		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 	end
 end
-
 
 #test fileext for =~ .doc
 if Val::Doc.extension !~ /.doc($|x$)/
@@ -125,16 +125,8 @@ else
 	movedoc(logger)
 	#run isbnsearch macro if this is for egalleymaker
 	if Val::Paths.project_name =~ /egalleymaker/
-		Val::Logs.return_stdOutErr
-	  Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro_ps} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
-	      stdin.close
-	      stdouterr.each { |line|
-	          status_hash['docisbn_string'] << line
-	      }
-	  end
-		Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)
-	  # logger.info {"pulled isbnstring from manuscript & added to status.json: #{status_hash['docisbn_string']}"}
-		logger.info {"finished running #{macro_name} macro"}
+		logger.info {"we are running egalleymaker, here goes isbnsearch macro"}
+		status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
 	end
 end
 
