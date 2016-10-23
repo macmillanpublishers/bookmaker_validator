@@ -235,9 +235,10 @@ module Val
 			# if !File.directory?(@deploy_logfolder)	then FileUtils.mkdir_p(@deploy_logfolder) end
 			@json_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 			@human_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
-			return @logfolder, @permalog, @deploy_logfolder, @json_logfile, @human_logfile
+			@process_logfile = File.join(@deploy_logfolder,"#{projectname}--processlog.txt")
+			return @logfolder, @permalog, @deploy_logfolder, @json_logfile, @human_logfile, @process_logfile
 		end
-		@@logfolder, @@permalog, @@deploy_logfolder, @@json_logfile, @@human_logfile = setlogfolders(Paths.project_name)
+		@@logfolder, @@permalog, @@deploy_logfolder, @@json_logfile, @@human_logfile, @@process_logfile = setlogfolders(Paths.project_name)
 		def self.logfolder
 			@@logfolder
 		end
@@ -252,6 +253,9 @@ module Val
 		end
 		def self.human_logfile
 			@@human_logfile
+		end
+		def self.process_logfile
+			@@process_logfile
 		end
 		@@orig_std_out = $stdout.clone   #part I: redirecting console output to logfile
 		def self.orig_std_out
@@ -383,7 +387,7 @@ module Val
 			else
 				@projectname = 'egalleymaker'
 			end
-			@@logfolder, @@permalog, @deploy_logfolder, @@json_logfile, @human_logfile = Logs.setlogfolders(@projectname)
+			@@logfolder, @@permalog, @deploy_logfolder, @@json_logfile, @human_logfile, @process_logfile = Logs.setlogfolders(@projectname)
 			def self.logfolder
 				@@logfolder
 			end
@@ -392,6 +396,10 @@ module Val
 			end
 			def self.permalog
 				@@permalog
+			end
+			@@process_logfile = @process_logfile.gsub(/--processlog.txt/,'-posts-processlog.txt')
+			def self.process_logfile
+				@@process_logfile
 			end
 		end
 	end

@@ -28,7 +28,7 @@ processwatch_sleep_min = 30
 #--------------------- RUN
 #launch process-watcher
 Vldtr::Tools.log_time(output_hash,'process_watcher','start time',json_logfile)
-pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[Val::Logs.std_logfile, "a"])
+pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[Val::Logs.process_logfile, "w"])
 Process.detach(pid)
 
 #the rest of the validator:
