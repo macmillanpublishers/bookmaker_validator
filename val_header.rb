@@ -383,7 +383,7 @@ module Val
 			else
 				@projectname = 'egalleymaker'
 			end
-			@@logfolder, @@permalog, @deploy_logfolder, @@json_logfile, @human_logfile = setlogfolders(Paths.project_name)
+			@@logfolder, @@permalog, @deploy_logfolder, @@json_logfile, @human_logfile = Logs.setlogfolders(@projectname)
 			def self.logfolder
 				@@logfolder
 			end
