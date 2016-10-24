@@ -137,12 +137,10 @@ else	#if not bookmaker_ready, clean up
 		text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
 		Mcmlln::Tools.overwriteFile(err_notice, text)
 		#save the Val::Paths.tmp_dir for review
-		if Dir.exists?(Val::Paths.tmp_dir)
+		if Dir.exists?(Val::Paths.tmp_dir) && status_hash['docfile'] == true
 			FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
 			FileUtils.cp_r "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder
 			logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
-		else
-			logger.info {"no tmpdir exists, this was probably not a .doc file"}
 		end
 	end
 	if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
@@ -153,8 +151,8 @@ else	#if not bookmaker_ready, clean up
 	end
 
 	#let's move the original to outbox!
-	if File.file?(Val::Doc.input_file_untag_chars) && status_hash['docfile'] = false
-		Mcmlln::Tools.moveFile(Val::Doc.input_file, outfolder)
+	if File.file?("#{Val::Doc.input_file_untag_chars}") && status_hash['docfile'] == false
+		Mcmlln::Tools.moveFile(Val::Doc.input_file_untag_chars, outfolder)
 	elsif Val::Paths.project_name =~ /egalleymaker/ && File.file?(Val::Files.original_file)
 		Mcmlln::Tools.copyAllFiles(Val::Paths.tmp_original_dir, outfolder)
 	elsif File.file?(Val::Files.original_file)
