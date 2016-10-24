@@ -49,14 +49,6 @@ end
 
 #create outfolder:
 Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
-# FileUtils.mkdir_p outfolder
-# #if old warn_notice &/or err_notice exist, let's delete 'em
-# Find.find(outfolder) { |file|
-# 	if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
-# 		logger.info {"deleting old warn or err notice"}
-# 		FileUtils.rm file
-# 	end
-# }
 
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
 if !File.file?(epub) && !File.file?(epub_firstpass)

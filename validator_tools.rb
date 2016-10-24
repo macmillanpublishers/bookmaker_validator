@@ -22,7 +22,8 @@ MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: ERROR: dropbox api lookup failure
-Dropbox api lookup failed for file: #{Val::Doc.filename_normalized}. (found email address: \"#{user_email}\")
+Dropbox api lookup failed for file \"#{Val::Doc.filename_normalized}\"
+(found email address \"#{user_email}\").
 MESSAGE_END
       message
     end
@@ -39,14 +40,14 @@ MESSAGE_END
       message
     end
     def self.deploy_err_text
-      deploy_err_text =<<MESSAGE_END
+      deploy_err_text = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 Subject: ALERT: #{Val::Paths.project_name} process crashed
 #{Val::Resources.thisscript}.rb has crashed during #{Val::Paths.project_name} run.
-Please see the following logfiles for assistance in troubleshooting:
-#{Val::Logs.logfolder}/#{Val::Logs.logfilename}
-#{Val::Logs.deploy_logfolder}/#{Val::Logs.json_logfile}
+Please see the following logfiles for assistance in troubleshooting
+- #{Val::Logs.logfolder}/#{Val::Logs.logfilename}
+- #{Val::Logs.deploy_logfolder}/#{Val::Logs.json_logfile}
 MESSAGE_END
       deploy_err_text
     end

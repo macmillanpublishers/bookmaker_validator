@@ -19,6 +19,7 @@ contacts_hash['ebooksDept_submitter'] = false
 status_hash = {}
 status_hash['api_ok'] = true
 status_hash['docfile'] = true
+user_email = ''
 
 #---------------------  METHODS
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
@@ -76,36 +77,7 @@ user_email, user_name = Vldtr::Tools.dropbox_api_call(dropbox_filepath)
 #set_submitter_info in contacts_hash
 set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 
-# #send email upon file receipt, different mails depending on whether drpobox api succeeded:
-# if status_hash['api_ok'] && user_email =~ /@/
-#     body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
-#
-# message = <<MESSAGE_END
-# From: Workflows <workflows@macmillan.com>
-# To: #{user_name} <#{user_email}>
-# CC: Workflows <workflows@macmillan.com>
-# #{body}
-# MESSAGE_END
-#
-# 	unless File.file?(Val::Paths.testing_value_file)
-# 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
-# 	end
-# else
-#
-# message_b = <<MESSAGE_B_END
-# From: Workflows <workflows@macmillan.com>
-# To: Workflows <workflows@macmillan.com>
-# Subject: ERROR: dropbox api lookup failure
-#
-# Dropbox api lookup failed for file: #{Val::Doc.filename_normalized}. (found email address: \"#{user_email}\")
-# MESSAGE_B_END
-#
-# 	unless File.file?(Val::Paths.testing_value_file)
-# 		Vldtr::Tools.sendmail(message_b,'workflows@macmillan.com','')
-# 	end
-# end
-
-# ATTN: need to add a mailtxt for standalone validator
+# ATTN: need to add a generic mailtxt for standalone validator
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
 unless File.file?(Val::Paths.testing_value_file)
 	if status_hash['api_ok'] && user_email =~ /@/
@@ -113,8 +85,7 @@ unless File.file?(Val::Paths.testing_value_file)
 		message = Vldtr::Mailtexts.generic(user_name,user_email,body) #or "#{body}" ?
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
 	else
-		message = Vldtr::Mailtexts.apifail(user_email)
-		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
+		Vldtr::Tools.sendmail(Vldtr::Mailtexts.apifail(user_email),'workflows@macmillan.com','')
 	end
 end
 

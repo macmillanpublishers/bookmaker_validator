@@ -289,28 +289,6 @@ module Val
 				@@std_logfile
 			end
 		end
-		# def self.permalog
-		# 	@@permalog
-		# end
-		# def self.deploy_logfolder
-		# 	@@deploy_logfolder
-		# end
-		# # @@process_logfolder = File.join(@@dropbox_logfolder, 'process_Logs')
-		# # def self.process_logfolder
-		# # 	@@process_logfolder
-		# # end
-		# # @@json_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
-		# def self.json_logfile
-		# 	@@json_logfile
-		# end
-		# # @@human_logfile = File.join(deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
-		# def self.human_logfile
-		# 	@@human_logfile
-		# end
-		# @@p_logfile = File.join(process_logfolder,"#{Doc.filename_normalized}-validator-plog.txt")
-		# def self.p_logfile
-		# 	@@p_logfile
-		# end
 	end
 	class Posts
 		@lookup_isbn = Doc.basename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
