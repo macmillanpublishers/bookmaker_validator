@@ -137,6 +137,11 @@ if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_
 	errors = "#{errors}- #{validatorerr_msg}\n"
 	status_hash['status'] = 'validator error'
 end
+if status_hash['password_protected'] == true
+	protecteddoc_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='protected_doc' then protecteddoc_msg = h['message'] end}}
+	errors = "#{errors}- #{protecteddoc_msg}\n"
+	status_hash['status'] = 'protected .doc(x)'
+end
 if !status_hash['docfile']
 	#reset warnings & errors for a simpler message
 	warnings, errors = '',"ERROR(s): #{errheader_msg}\n"

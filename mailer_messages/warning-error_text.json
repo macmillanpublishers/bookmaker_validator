@@ -57,6 +57,11 @@
       "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename, but neither was present for this book. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
     },
     {
+      "name": "protected_doc",
+      "message": "This document is password protected.",
+      "description":"This document is password protected, which prevents Egalleymaker from running. Please remove the password protection and resubmit your document."
+    },
+    {
       "name": "validator_error",
       "message": "An error occurred while running PROJECT, please contact workflows@macmillan.com.",
       "description": "Egalleymaker does its best to format the manuscript so it meets the Bookmaker requirements. However, there was a problem with the manuscript formatting that Egalleymaker didn't know how to handle, and so it wasn't able to run. The Ebooks team should be able to help you identify (and fix) this formatting problem."
