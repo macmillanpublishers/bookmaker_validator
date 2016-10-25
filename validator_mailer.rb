@@ -70,7 +70,7 @@ if status_hash['pe_lookup'] =~ /not in biblio/
 	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
-if !status_hash['filename_isbn']["checkdigit"]
+if status_hash['filename_isbn']["checkdigit"] != true
 	fileisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_checkdigit_fail' then fileisbncd_msg = h['message'] end}}
 	warnings = "#{warnings}- #{fileisbncd_msg} #{status_hash['filename_isbn']['isbn']}\n"
 end
@@ -278,7 +278,7 @@ if (File.file?(Val::Files.bookinfo_file) && (status_hash['pm_lookup']=~/not in j
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_split}"
+Subject: "PE/PM lookup failed: #{Val::Paths.project_name} on #{Val::Doc.filename_normalized}"
 
 PE or PM lookup error occurred; Note lookup status below (and logs) for help
 
