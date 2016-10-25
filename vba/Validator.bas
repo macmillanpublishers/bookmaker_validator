@@ -472,27 +472,40 @@ Private Function IsbnMain(FilePath As String) As String
 ' Set reference to correct document
   Set activeDoc = Documents(FilePath)
 
-' Create dictionary object to receive from IsbnCheck function
+' ----- Start checking document -----------------------------------------------
+  Dim strKey As String
+  Dim dictTests As genUtils.Dictionary
+  
+' ----- Various startup checks, including doc password check ------------------
+  strKey = "initialize"
+  Set dictTests = genUtils.Reports.ReportsStartup(FilePath, strAlertPath)
+  Call ReturnDict(strKey, dictTests)
+
+' ----- Search for ISBNs ------------------------------------------------------
   Dim dictIsbn As genUtils.Dictionary
+  strKey = "isbn"
   Set dictIsbn = IsbnCheck(AddFromJson:=False)
+  Call ReturnDict(strKey, dictIsbn)
 
   If Not dictIsbn Is Nothing Then
-  ' JsonToLog function expects this format
-    Dim dictOutput As genUtils.Dictionary
-    Set dictOutput = genUtils.ClassHelpers.NewDictionary
-    dictOutput.Add "isbn", dictIsbn
-    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictOutput)
+'  ' JsonToLog function expects this format
+'    Dim dictOutput As genUtils.Dictionary
+'    Set dictOutput = genUtils.ClassHelpers.NewDictionary
+'    dictOutput.Add "isbn", dictIsbn
+'    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictOutput)
+
+  ' If ISBNs were found, they will be in the "list" element
+    If dictIsbn.Exists("list") = True Then
+    ' Reduce array elements to a comma-delimited string
+      IsbnMain = genUtils.Reduce(dictIsbn.Item("list"), ",")
+    Else
+      IsbnMain = vbNullString
+    End If
   Else
     Err.Raise ValidatorError.err_IsbnMainFail
   End If
 
-' If ISBNs were found, they will be in the "list" element
-  If dictIsbn.Exists("list") = True Then
-  ' Reduce array elements to a comma-delimited string
-    IsbnMain = genUtils.Reduce(dictIsbn.Item("list"), ",")
-  Else
-    IsbnMain = vbNullString
-  End If
+
 
   Exit Function
   
@@ -569,9 +582,9 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   Call ReturnDict(strKey, dictTests)
   
 '' ----- ENDNOTE UNLINKING ----------------------------------------------------
-  strKey = "endnotes"
-  Set dictTests = genUtils.Endnotes.EndnoteCheck
-  Call ReturnDict(strKey, dictTests)
+'  strKey = "endnotes"
+'  Set dictTests = genUtils.Endnotes.EndnoteCheck
+'  Call ReturnDict(strKey, dictTests)
 
 ' ----- RUN CLEANUP MACRO -----------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
@@ -804,7 +817,8 @@ Public Sub ValidatorTest()
   Dim strDir As String
   
   strDir = "C:\Users\erica.warren\Desktop\validator\"
-  strFile = "validator-test"
+'  strFile = "validator-test"
+  strFile = "CocozzamswithUKeditsfromPEtoDes10182"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
 '  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
@@ -829,7 +843,7 @@ TestError:
 End Sub
 
 
-Private Sub IsbnTest()
+Public Sub IsbnTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strDir As String: strDir = "C:\Users\erica.warren\Desktop\validator\"
