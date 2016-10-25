@@ -636,14 +636,22 @@ Private Function ValidatorCleanup(CompleteSuccess As Boolean) As Boolean
     Set activeDoc = Nothing
   End If
   
-  
-' Write our final element to `style_check.json` file
-  Call genUtils.AddToJson(strJsonPath, "completed", CompleteSuccess)
-  
 ' Read style_check.json into dictionary in order to access styled info
   Dim dictJson As genUtils.Dictionary
   Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
 
+' Check if all subsections passed
+  Dim strKey As Variant
+  For Each strKey In dictJson.Keys
+    If dictJson(strKey).Item("pass") = False Then
+      CompleteSuccess = False
+      Exit For
+    End If
+  Next strKey
+
+' Write our final element to JSON file
+  Call genUtils.AddToJson(strJsonPath, "completed", CompleteSuccess)
+  
 ' Determine if doc is styled or not. If errored before checking styles, item
 ' won't exist.
   ValidatorCleanup = False
