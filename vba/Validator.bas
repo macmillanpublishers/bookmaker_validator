@@ -480,7 +480,7 @@ Private Function IsbnMain(FilePath As String) As String
   strKey = "initialize"
   Set dictTests = genUtils.Reports.ReportsStartup(DocPath:=FilePath, _
     AlertPath:=strAlertPath, BookInfoReqd:=False)
-  Call ReturnDict(strKey, dictTests)
+  Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
 
 ' ----- Search for ISBNs ------------------------------------------------------
   Dim dictIsbn As genUtils.Dictionary
