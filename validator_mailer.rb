@@ -137,17 +137,18 @@ if (!status_hash['validator_macro_complete'] || Val::Hashes.isbn_hash['completed
 	errors = "#{errors}- #{validatorerr_msg}\n"
 	status_hash['status'] = 'validator error'
 end
-if status_hash['password_protected'] == true
-	protecteddoc_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='protected_doc' then protecteddoc_msg = h['message'] end}}
-	errors = "#{errors}- #{protecteddoc_msg}\n"
-	status_hash['status'] = 'protected .doc(x)'
-end
-if !status_hash['docfile']
+if !status_hash['docfile'] || status_hash['password_protected'] == true
 	#reset warnings & errors for a simpler message
 	warnings, errors = '',"ERROR(s): #{errheader_msg}\n"
-	docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
-	errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
-	status_hash['status'] = 'not a .doc(x)'
+	if !status_hash['docfile']
+		docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
+		errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
+		status_hash['status'] = 'not a .doc(x)'
+	elsif status_hash['password_protected'] == true
+		protecteddoc_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='protected_doc' then protecteddoc_msg = h['message'] end}}
+		errors = "#{errors}- #{protecteddoc_msg}\n"
+		status_hash['status'] = 'protected .doc(x)'
+	end
 end
 if errors == "ERROR(s): #{errheader_msg}\n"
 	errors = ''
