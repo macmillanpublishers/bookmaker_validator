@@ -478,7 +478,8 @@ Private Function IsbnMain(FilePath As String) As String
   
 ' ----- Various startup checks, including doc password check ------------------
   strKey = "initialize"
-  Set dictTests = genUtils.Reports.ReportsStartup(FilePath, strAlertPath)
+  Set dictTests = genUtils.Reports.ReportsStartup(DocPath:=FilePath, _
+    AlertPath:=strAlertPath, BookInfoReqd:=False)
   Call ReturnDict(strKey, dictTests)
 
 ' ----- Search for ISBNs ------------------------------------------------------
