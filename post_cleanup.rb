@@ -8,7 +8,7 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name)
+Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
 logger = Val::Logs.logger
 
 et_project_dir, coresource_dir  = '', ''		#'et' for egalleymaker :)
@@ -28,7 +28,7 @@ done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE_#{Val::Posts.index}$/,'')
 warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}.txt")
 err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}.txt")
-validator_infile = File.join(et_project_dir,'IN',Val::Posts.val_infile_name)
+# validator_infile = File.join(et_project_dir,'IN',Val::Posts.val_infile_name)
 errFile = File.join(et_project_dir, "ERROR_RUNNING_#{Val::Posts.val_infile_name}#{Val::Doc.extension}.txt")
 
 epub_found = true
@@ -48,14 +48,7 @@ if Dir.exist?(done_isbn_dir)
 end
 
 #create outfolder:
-FileUtils.mkdir_p outfolder
-#if old warn_notice &/or err_notice exist, let's delete 'em
-Find.find(outfolder) { |file|
-	if file =~ /WARNING--.*\.txt$/ || file =~ /ERROR--.*\.txt$/
-		logger.info {"deleting old warn or err notice"}
-		FileUtils.rm file
-	end
-}
+Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
 
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
 if !File.file?(epub) && !File.file?(epub_firstpass)
@@ -76,8 +69,8 @@ end
 
 #let's move the original to outbox!
 logger.info {"moving original file to outfolder.."}
-Mcmlln::Tools.moveFile(validator_infile, outfolder)
-
+# Mcmlln::Tools.moveFile(validator_infile, outfolder)
+Mcmlln::Tools.copyAllFiles(Val::Posts.tmp_original_dir, outfolder)
 
 #deal with errors & warnings!
 if File.file?(Val::Posts.status_file)
@@ -97,8 +90,8 @@ else
 end
 
 #update Val::Logs.permalog
-if File.file?(Val::Logs.permalog)
-	permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
+if File.file?(Val::Posts.permalog)
+	permalog_hash = Mcmlln::Tools.readjson(Val::Posts.permalog)
 	permalog_hash[Val::Posts.index]['epub_found'] = epub_found
 	if epub_found && status_hash['errors'].empty?
 		permalog_hash[Val::Posts.index]['status'] = 'In-house egalley'
@@ -106,7 +99,7 @@ if File.file?(Val::Logs.permalog)
 		permalog_hash[Val::Posts.index]['status'] = 'bookmaker error'
 	end
 	#write to json Val::Logs.permalog!
-    Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
+    Vldtr::Tools.write_json(permalog_hash,Val::Posts.permalog)
 end
 
 

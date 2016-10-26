@@ -6,8 +6,8 @@ require_relative './val_header.rb'
 
 
 #--------------------- LOCAL DECLARATIONS
-log_suffix = ARGV[1]
-sleepmin = ARGV[2].to_i
+log_suffix = ARGV[0]
+sleepmin = ARGV[1].to_i
 sleeptime = sleepmin*60
 #For testing: can deliberately hang  ps1 script by commenting out line in open3 call: ("stdin.close")
 
@@ -16,7 +16,6 @@ human_logfile = Val::Logs.human_logfile.gsub(/.txt$/,"#{log_suffix}.txt")
 
 json_exist = true
 deploy_complete = true
-
 
 #--------------------- RUN
 sleep(sleeptime)
@@ -29,9 +28,7 @@ else
 	json_exist = false
 end
 
-
 if !json_exist
-
 	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
@@ -42,7 +39,6 @@ Subject: #{Val::Paths.project_name} ERROR for #{Val::Doc.filename_normalized}
 No json log is found.
 (should be at: #{json_logfile})
 MESSAGE_END
-
 	#now sending
 	unless File.file?(Val::Paths.testing_value_file)
 		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')

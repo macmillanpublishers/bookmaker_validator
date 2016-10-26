@@ -8,7 +8,7 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name)
+Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
 logger = Val::Logs.logger
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
