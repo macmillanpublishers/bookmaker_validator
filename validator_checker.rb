@@ -18,7 +18,6 @@ if File.file?(Val::Files.status_file)
 	status_hash['validator_macro_complete'] = false
 	status_hash['document_styled'] = ''
 	status_hash['bookmaker_ready'] = false
-	status_hash['password_protected'] = false
 else
 	logger.info {"status.json not present or unavailable"}
 end
@@ -30,9 +29,6 @@ if File.file?(Val::Files.stylecheck_file)
 	if stylecheck_hash['completed'].nil?
 		status_hash['validator_macro_complete'] = false
 		logger.info {"stylecheck.json present, but 'complete' value not present, looks like macro crashed"}
-	elsif stylecheck_hash['initialize']['password_protected'] == true
-		status_hash['password_protected'] = true
-		logger.info {"stylecheck.json present, but document is password protected."}
 	else
 		#set vars for status.json fro stylecheck.json
   	status_hash['validator_macro_complete'] = stylecheck_hash['completed']

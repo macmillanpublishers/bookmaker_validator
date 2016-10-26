@@ -191,7 +191,7 @@ else
 end
 
 #try lookup on filename isbn
-if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/
+if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'] == false
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
     testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
@@ -207,7 +207,7 @@ else
 end
 
 #get isbns from json, verify checkdigit, create array of good isbns
-if File.file?(Val::Files.isbn_file)
+if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'] == false
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
   	docisbn_array = isbn_hash['isbn']['list']
     if docisbn_array.length < 10 && !docisbn_array.empty?

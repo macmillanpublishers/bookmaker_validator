@@ -182,7 +182,7 @@ if !errors.empty? && send_ok
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 				cc_mails_err << pe_mail
 			end
-			logger.info {"sent message to submitter re: fatal isbn/doc errors encountered"}
+			logger.info {"sent message to submitter re: fatal isbn/doctype/password_protected errors encountered"}
 		end
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
