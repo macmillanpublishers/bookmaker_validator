@@ -480,7 +480,10 @@ Private Function IsbnMain(FilePath As String) As String
   strKey = "initialize"
   Set dictTests = genUtils.Reports.ReportsStartup(DocPath:=FilePath, _
     AlertPath:=strAlertPath, BookInfoReqd:=False)
-  Call ReturnDict(strKey, dictTests, QuitIfFailed:=False)
+  ' Can't use QuitIfFailed:=False below, IsbnCheck (below) doesn't work
+  ' if a doc is password protected. Could probably fix but might be a
+  ' lot of work.
+  Call ReturnDict(strKey, dictTests)
 
 ' ----- Search for ISBNs ------------------------------------------------------
   Dim dictIsbn As genUtils.Dictionary
@@ -629,8 +632,9 @@ End Function
 Private Function ValidatorCleanup(CompleteSuccess As Boolean) As Boolean
   On Error GoTo ValidatorCleanupError
 
+' BUG: Can't run zz_clearFind if doc is pw protected
 ' run before set activeDoc = Nothing
-  genUtils.zz_clearFind
+'  genUtils.zz_clearFind
 
 ' just to keep things tidy
   If Not activeDoc Is Nothing Then
@@ -825,9 +829,9 @@ Public Sub ValidatorTest()
   Dim strFile As String
   Dim strDir As String
   
-  strDir = "C:\Users\erica.warren\Desktop\validator\"
-'  strFile = "validator-test"
-  strFile = "CocozzamswithUKeditsfromPEtoDes10182"
+  strDir = Environ("USERPROFILE") & "\Desktop\validator\"
+  strFile = "validator-test_orig"
+'  strFile = "CocozzamswithUKeditsfromPEtoDes10182"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
 '  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
@@ -855,45 +859,18 @@ End Sub
 Public Sub IsbnTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
-  Dim strDir As String: strDir = "C:\Users\erica.warren\Desktop\validator\"
+  Dim strDir As String
   Dim strLog As String
   Dim strThisFile As String
   Dim strReturnedIsbn As String
-  Dim A As Long
-  
-'  Dim strFile(1 To 13) As String
-'  strFile(1) = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
-'  strFile(2) = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
-'  strFile(3) = "03Leigh_STYLED_InText_978-0-312-38912-3"
-'  strFile(4) = "04Brennan_STYLED_InText_2016-May-17"
-'  strFile(5) = "05Jahn_STYLED_NotInText_2016-May-04"
-'  strFile(6) = "06Black_UNSTYLED_InText_5-25-2016"
-'  strFile(7) = "08Newell_UNSTYLED_NotInText_6-29-16"
-'  strFile(8) = "09Chaput_UNSTYLED_inText_styles-added"
-'  strFile(9) = "10Dietrich_STYLED_InText2_match"
-'  strFile(10) = "11Klages_STYLED_InText2_noMatch"
-'  strFile(11) = "12Pomfret_UNSTYLED_InText2_match"
-'  strFile(12) = "13Segre_UNSTYLED_InText2_noMatch"
-'  strFile(13) = "14Meadows_less-than-half"
-'
-'  For A = 1 To UBound(strFile)
-'    DebugPrint A & ": " & strFile(A)
-'    strLog = strDir & strFile(A) & ".txt"
-'    strThisFile = strDir & strFile(A) & ".docx"
-'    strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
-'    lngCleanupCount = 0
-'    If strReturnedIsbn = vbNullString Then
-'      DebugPrint "No Isbn found"
-'    Else
-'      DebugPrint "Found Isbns: " & strReturnedIsbn
-'    End If
-'    DebugPrint "COMPLETED!" & vbNewLine
-'  Next A
-  
-  
   Dim strFile As String
+  Dim A As Long
+
+  
+  strDir = Environ("USERPROFILE") & "\Desktop\validator\"
+
 '  strFile = "09Chaput_UNSTYLED_inText_styles-added"
-  strFile = "validator-test_orig"
+  strFile = "validator-test"
   strLog = strDir & strFile & ".txt"
   strThisFile = strDir & strFile & ".docx"
   strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
