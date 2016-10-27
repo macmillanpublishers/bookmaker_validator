@@ -589,9 +589,9 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   Call ReturnDict(strKey, dictTests)
   
 '' ----- ENDNOTE UNLINKING ----------------------------------------------------
-'  strKey = "endnotes"
-'  Set dictTests = genUtils.Endnotes.EndnoteCheck
-'  Call ReturnDict(strKey, dictTests)
+  strKey = "endnotes"
+  Set dictTests = genUtils.Endnotes.EndnoteCheck
+  Call ReturnDict(strKey, dictTests)
 
 ' ----- RUN CLEANUP MACRO -----------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
