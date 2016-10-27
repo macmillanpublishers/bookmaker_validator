@@ -464,6 +464,9 @@ End Sub
 Private Function IsbnMain(FilePath As String) As String
   On Error GoTo IsbnMainError
   
+' ----- START JSON FILE -------------------------------------------------------
+  Call genUtils.ClassHelpers.AddToJson(strJsonPath, "completed", False)
+  
 ' Make sure relevant file exists, is open
   If genUtils.GeneralHelpers.IsOpen(FilePath) = False Then
     Documents.Open FilePath
@@ -646,13 +649,15 @@ Private Function ValidatorCleanup(CompleteSuccess As Boolean) As Boolean
   Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
 
 ' Check if all subsections passed
-  Dim strKey As Variant
-  For Each strKey In dictJson.Keys
-    If dictJson(strKey).Item("pass") = False Then
-      CompleteSuccess = False
-      Exit For
+  Dim key1 As Variant
+  For Each key1 In dictJson.Keys
+    If VBA.IsObject(dictJson(key1)) = True Then
+      If dictJson(key1).Item("pass") = False Then
+        CompleteSuccess = False
+        Exit For
+      End If
     End If
-  Next strKey
+  Next key1
 
 ' Write our final element to JSON file
   Call genUtils.AddToJson(strJsonPath, "completed", CompleteSuccess)
@@ -870,7 +875,8 @@ Public Sub IsbnTest()
   strDir = Environ("USERPROFILE") & "\Desktop\validator\"
 
 '  strFile = "09Chaput_UNSTYLED_inText_styles-added"
-  strFile = "validator-test"
+'  strFile = "9781627790031_The_Book_of_Shadows_FINAL"
+strFile = "validator-test_orig"
   strLog = strDir & strFile & ".txt"
   strThisFile = strDir & strFile & ".docx"
   strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
