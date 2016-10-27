@@ -10,7 +10,6 @@ require_relative './val_header.rb'
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
 logger = Val::Logs.logger
-dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split)
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
 
@@ -72,7 +71,7 @@ logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Pa
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
 #try to get submitter info (Dropbox document 'modifier' via api)
-user_email, user_name = Vldtr::Tools.dropbox_api_call(dropbox_filepath)
+user_email, user_name = Vldtr::Tools.dropbox_api_call
 
 #set_submitter_info in contacts_hash
 set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
