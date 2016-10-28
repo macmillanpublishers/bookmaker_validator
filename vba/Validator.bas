@@ -835,7 +835,7 @@ Public Sub ValidatorTest()
   Dim strDir As String
   
   strDir = Environ("USERPROFILE") & "\Desktop\validator\"
-  strFile = "validator-test_orig"
+  strFile = "validatortest_orig"
 '  strFile = "CocozzamswithUKeditsfromPEtoDes10182"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
@@ -876,7 +876,7 @@ Public Sub IsbnTest()
 
 '  strFile = "09Chaput_UNSTYLED_inText_styles-added"
 '  strFile = "9781627790031_The_Book_of_Shadows_FINAL"
-strFile = "validator-test_orig"
+strFile = "validatortest_orig"
   strLog = strDir & strFile & ".txt"
   strThisFile = strDir & strFile & ".docx"
   strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
