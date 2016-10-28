@@ -59,7 +59,7 @@ MESSAGE_END
       py_script = File.join(Val::Paths.scripts_dir,'dboxapi2.py')
       dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/([\(\)\$\'`& ])/,'\\\\\1')
       #run python api script
-      submitter = `python #{py_script} #{dropbox_filepath} #{Val::Resources.generated_access_token}`
+      dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
       user_email = submitter.split(' ', 2)[0]
       user_name = submitter.split(' ', 2)[1]
     	return user_email, user_name
