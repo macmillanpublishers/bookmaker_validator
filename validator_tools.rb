@@ -6,6 +6,7 @@ require 'find'
 
 require_relative './val_header.rb'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
+require_relative '../bookmaker/core/header.rb'
 
 module Vldtr
   class Mailtexts
@@ -60,8 +61,8 @@ MESSAGE_END
       dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/([\(\)\$\'`& ])/,'\\\\\1')
       #run python api script
       dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
-      user_email = submitter.split(' ', 2)[0]
-      user_name = submitter.split(' ', 2)[1]
+      user_email = dropboxmodifier.split(' ', 2)[0]
+      user_name = dropboxmodifier.split(' ', 2)[1]
     	return user_email, user_name
     rescue Exception => e
     	p e   #puts e.inspect
