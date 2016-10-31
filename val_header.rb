@@ -147,33 +147,26 @@ module Val
 			end
 			json_hash
 		end
-		@@status_hash = readjson(Files.status_file)
 		def self.status_hash
-			@@status_hash
+			readjson(Files.status_file)
 		end
-		@@contacts_hash = readjson(Files.contacts_file)
 		def self.contacts_hash
-			@@contacts_hash
+			readjson(Files.contacts_file)
 		end
-		@@bookinfo_hash = readjson(Files.bookinfo_file)
 		def self.bookinfo_hash
-			@@bookinfo_hash
+			readjson(Files.bookinfo_file)
 		end
-		@@stylecheck_hash = readjson(Files.stylecheck_file)
 		def self.stylecheck_hash
-			@@stylecheck_hash
+			readjson(Files.stylecheck_file)
 		end
-		@@isbn_hash = readjson(Files.isbn_file)
 		def self.isbn_hash
-			@@isbn_hash
+			readjson(Files.isbn_file)
 		end
-		@@staff_hash = readjson(Files.staff_emails)
 		def self.staff_hash
-			@@staff_hash
+			readjson(Files.staff_emails)
 		end
-		@@staff_defaults_hash = readjson(Files.imprint_defaultPMs)
 		def self.staff_defaults_hash
-			@@staff_defaults_hash
+			readjson(Files.imprint_defaultPMs)
 		end
 	end
 	class Resources
@@ -219,10 +212,6 @@ module Val
 		end
 	end
 	class Logs
-		# @@dropbox_logfolder = ''
-		# if File.file?(Paths.testing_value_file) || Resources.testing == true
-		# 	@@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', 'bookmaker_validator_stg')
-		# else
 		@@logfilename = "#{Doc.basename_normalized}_log.txt"
 		def self.logfilename
 			@@logfilename

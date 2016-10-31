@@ -223,11 +223,14 @@ Public Sub ValidatorExit(Optional RunCleanup As Boolean = True, Optional _
   End If
 
 ' Only save doc if macro completed w/o error AND correctly styled
+' And not if we're debugging
   Dim saveValue As Boolean
-  If blnCompleted = True And blnStyled = True Then
-    saveValue = True
-  Else
-    saveValue = False
+  If Environ("VbaDebug") <> "True" Then
+    If blnCompleted = True And blnStyled = True Then
+      saveValue = True
+    Else
+      saveValue = False
+    End If
   End If
   
 ' Close all open documents
@@ -461,6 +464,9 @@ End Sub
 Private Function IsbnMain(FilePath As String) As String
   On Error GoTo IsbnMainError
   
+' ----- START JSON FILE -------------------------------------------------------
+  Call genUtils.ClassHelpers.AddToJson(strJsonPath, "completed", False)
+  
 ' Make sure relevant file exists, is open
   If genUtils.GeneralHelpers.IsOpen(FilePath) = False Then
     Documents.Open FilePath
@@ -469,27 +475,44 @@ Private Function IsbnMain(FilePath As String) As String
 ' Set reference to correct document
   Set activeDoc = Documents(FilePath)
 
-' Create dictionary object to receive from IsbnCheck function
+' ----- Start checking document -----------------------------------------------
+  Dim strKey As String
+  Dim dictTests As genUtils.Dictionary
+  
+' ----- Various startup checks, including doc password check ------------------
+  strKey = "initialize"
+  Set dictTests = genUtils.Reports.ReportsStartup(DocPath:=FilePath, _
+    AlertPath:=strAlertPath, BookInfoReqd:=False)
+  ' Can't use QuitIfFailed:=False below, IsbnCheck (below) doesn't work
+  ' if a doc is password protected. Could probably fix but might be a
+  ' lot of work.
+  Call ReturnDict(strKey, dictTests)
+
+' ----- Search for ISBNs ------------------------------------------------------
   Dim dictIsbn As genUtils.Dictionary
+  strKey = "isbn"
   Set dictIsbn = IsbnCheck(AddFromJson:=False)
+  Call ReturnDict(strKey, dictIsbn)
 
   If Not dictIsbn Is Nothing Then
-  ' JsonToLog function expects this format
-    Dim dictOutput As genUtils.Dictionary
-    Set dictOutput = genUtils.ClassHelpers.NewDictionary
-    dictOutput.Add "isbn", dictIsbn
-    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictOutput)
+'  ' JsonToLog function expects this format
+'    Dim dictOutput As genUtils.Dictionary
+'    Set dictOutput = genUtils.ClassHelpers.NewDictionary
+'    dictOutput.Add "isbn", dictIsbn
+'    Call genUtils.ClassHelpers.WriteJson(strJsonPath, dictOutput)
+
+  ' If ISBNs were found, they will be in the "list" element
+    If dictIsbn.Exists("list") = True Then
+    ' Reduce array elements to a comma-delimited string
+      IsbnMain = genUtils.Reduce(dictIsbn.Item("list"), ",")
+    Else
+      IsbnMain = vbNullString
+    End If
   Else
     Err.Raise ValidatorError.err_IsbnMainFail
   End If
 
-' If ISBNs were found, they will be in the "list" element
-  If dictIsbn.Exists("list") = True Then
-  ' Reduce array elements to a comma-delimited string
-    IsbnMain = genUtils.Reduce(dictIsbn.Item("list"), ",")
-  Else
-    IsbnMain = vbNullString
-  End If
+
 
   Exit Function
   
@@ -560,9 +583,14 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   Set dictTests = genUtils.Reports.HeadingCheck
   Call ReturnDict(strKey, dictTests)
   
-' ----- ILLUSTRATION VALIDATION -----------------------------------------------
+'' ----- ILLUSTRATION VALIDATION -----------------------------------------------
   strKey = "illustrations"
   Set dictTests = genUtils.Reports.IllustrationCheck
+  Call ReturnDict(strKey, dictTests)
+  
+'' ----- ENDNOTE UNLINKING ----------------------------------------------------
+  strKey = "endnotes"
+  Set dictTests = genUtils.Endnotes.EndnoteCheck
   Call ReturnDict(strKey, dictTests)
 
 ' ----- RUN CLEANUP MACRO -----------------------------------------------------
@@ -570,13 +598,13 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   strKey = "cleanupMacro"
   Set dictTests = genUtils.CleanupMacro.MacmillanManuscriptCleanup
   Call ReturnDict(strKey, dictTests)
-  
+
 ' ----- RUN CHAR STYLES MACRO -------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
   strKey = "characterStyles"
   Set dictTests = genUtils.CharacterStyles.MacmillanCharStyles
   Call ReturnDict(strKey, dictTests)
-  
+''
   Set dictTests = Nothing
   
   ValidatorMain = True
@@ -607,22 +635,33 @@ End Function
 Private Function ValidatorCleanup(CompleteSuccess As Boolean) As Boolean
   On Error GoTo ValidatorCleanupError
 
+' BUG: Can't run zz_clearFind if doc is pw protected
 ' run before set activeDoc = Nothing
-  genUtils.zz_clearFind
+'  genUtils.zz_clearFind
 
 ' just to keep things tidy
   If Not activeDoc Is Nothing Then
     Set activeDoc = Nothing
   End If
   
-  
-' Write our final element to `style_check.json` file
-  Call genUtils.AddToJson(strJsonPath, "completed", CompleteSuccess)
-  
 ' Read style_check.json into dictionary in order to access styled info
   Dim dictJson As genUtils.Dictionary
   Set dictJson = genUtils.ClassHelpers.ReadJson(strJsonPath)
 
+' Check if all subsections passed
+  Dim key1 As Variant
+  For Each key1 In dictJson.Keys
+    If VBA.IsObject(dictJson(key1)) = True Then
+      If dictJson(key1).Item("pass") = False Then
+        CompleteSuccess = False
+        Exit For
+      End If
+    End If
+  Next key1
+
+' Write our final element to JSON file
+  Call genUtils.AddToJson(strJsonPath, "completed", CompleteSuccess)
+  
 ' Determine if doc is styled or not. If errored before checking styles, item
 ' won't exist.
   ValidatorCleanup = False
@@ -789,14 +828,15 @@ End Sub
 '          FOR TESTING
 ' +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Private Sub ValidatorTest()
+Public Sub ValidatorTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
   Dim strFile As String
   Dim strDir As String
   
-  strDir = "C:\Users\erica.warren\Desktop\validator\"
-  strFile = "validator-test"
+  strDir = Environ("USERPROFILE") & "\Desktop\validator\"
+  strFile = "validatortest_orig"
+'  strFile = "CocozzamswithUKeditsfromPEtoDes10182"
 '  strFile = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
 '  strFile = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
 '  strFile = "03Leigh_STYLED_InText_978-0-312-38912-3"
@@ -821,48 +861,22 @@ TestError:
 End Sub
 
 
-Private Sub IsbnTest()
+Public Sub IsbnTest()
 '' to simulate being called by ps1
   On Error GoTo TestError
-  Dim strDir As String: strDir = "C:\Users\erica.warren\Desktop\validator_test\"
+  Dim strDir As String
   Dim strLog As String
   Dim strThisFile As String
   Dim strReturnedIsbn As String
-  Dim A As Long
-  
-'  Dim strFile(1 To 13) As String
-'  strFile(1) = "01Ayres_STYLED_NotInText_978-1-250-08697-6_2016-May-19"
-'  strFile(2) = "02Auster_UNSTYLED_InText_978-1-62779-446-6"
-'  strFile(3) = "03Leigh_STYLED_InText_978-0-312-38912-3"
-'  strFile(4) = "04Brennan_STYLED_InText_2016-May-17"
-'  strFile(5) = "05Jahn_STYLED_NotInText_2016-May-04"
-'  strFile(6) = "06Black_UNSTYLED_InText_5-25-2016"
-'  strFile(7) = "08Newell_UNSTYLED_NotInText_6-29-16"
-'  strFile(8) = "09Chaput_UNSTYLED_inText_styles-added"
-'  strFile(9) = "10Dietrich_STYLED_InText2_match"
-'  strFile(10) = "11Klages_STYLED_InText2_noMatch"
-'  strFile(11) = "12Pomfret_UNSTYLED_InText2_match"
-'  strFile(12) = "13Segre_UNSTYLED_InText2_noMatch"
-'  strFile(13) = "14Meadows_less-than-half"
-'
-'  For A = 1 To UBound(strFile)
-'    DebugPrint A & ": " & strFile(A)
-'    strLog = strDir & strFile(A) & ".txt"
-'    strThisFile = strDir & strFile(A) & ".docx"
-'    strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)
-'    lngCleanupCount = 0
-'    If strReturnedIsbn = vbNullString Then
-'      DebugPrint "No Isbn found"
-'    Else
-'      DebugPrint "Found Isbns: " & strReturnedIsbn
-'    End If
-'    DebugPrint "COMPLETED!" & vbNewLine
-'  Next A
-  
-  
   Dim strFile As String
+  Dim A As Long
+
+  
+  strDir = Environ("USERPROFILE") & "\Desktop\validator\"
+
 '  strFile = "09Chaput_UNSTYLED_inText_styles-added"
-  strFile = "validator-test_orig"
+'  strFile = "9781627790031_The_Book_of_Shadows_FINAL"
+strFile = "validatortest_orig"
   strLog = strDir & strFile & ".txt"
   strThisFile = strDir & strFile & ".docx"
   strReturnedIsbn = Validator.IsbnSearch(strThisFile, strLog)

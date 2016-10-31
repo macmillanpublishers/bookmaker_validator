@@ -70,7 +70,7 @@ if status_hash['pe_lookup'] =~ /not in biblio/
 	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
 	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
 end
-if status_hash['filename_isbn']["checkdigit"] != true
+if !status_hash['filename_isbn']["checkdigit"]
 	fileisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_checkdigit_fail' then fileisbncd_msg = h['message'] end}}
 	warnings = "#{warnings}- #{fileisbncd_msg} #{status_hash['filename_isbn']['isbn']}\n"
 end
@@ -132,17 +132,23 @@ if nogoodisbn
 	errors = "#{errors}- #{nogoodisbn_msg}\n"
 	status_hash['status'] = 'isbn error'
 end
-if !status_hash['validator_macro_complete'] && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
+if (!status_hash['validator_macro_complete'] || Val::Hashes.isbn_hash['completed'] == false) && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
 	validatorerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='validator_error' then validatorerr_msg = h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
 	errors = "#{errors}- #{validatorerr_msg}\n"
 	status_hash['status'] = 'validator error'
 end
-if !status_hash['docfile']
+if !status_hash['docfile'] || status_hash['password_protected'] == true
 	#reset warnings & errors for a simpler message
 	warnings, errors = '',"ERROR(s): #{errheader_msg}\n"
-	docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
-	errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
-	status_hash['status'] = 'not a .doc(x)'
+	if !status_hash['docfile']
+		docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
+		errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
+		status_hash['status'] = 'not a .doc(x)'
+	elsif status_hash['password_protected'] == true
+		protecteddoc_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='protected_doc' then protecteddoc_msg = h['message'] end}}
+		errors = "#{errors}- #{protecteddoc_msg}\n"
+		status_hash['status'] = 'protected .doc(x)'
+	end
 end
 if errors == "ERROR(s): #{errheader_msg}\n"
 	errors = ''
@@ -177,7 +183,7 @@ if !errors.empty? && send_ok
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 				cc_mails_err << pe_mail
 			end
-			logger.info {"sent message to submitter re: fatal isbn/doc errors encountered"}
+			logger.info {"sent message to submitter re: fatal isbn/doctype/password_protected errors encountered"}
 		end
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>

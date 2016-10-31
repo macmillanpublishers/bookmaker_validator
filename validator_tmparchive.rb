@@ -94,11 +94,11 @@ if Val::Doc.extension !~ /.doc($|x$)/
 	nondoc(logger,status_hash)  #this is not renamed, and not moved until validator_cleanup
 else
 	movedoc(logger)
-	#run isbnsearch macro if this is for egalleymaker
-	if Val::Paths.project_name =~ /egalleymaker/
-		logger.info {"we are running egalleymaker, here goes isbnsearch macro"}
-		status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
-	end
+	logger.info {"running isbnsearch/password_check macro"}
+	status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
+	status_hash['password_protected'] = Val::Hashes.isbn_hash['initialize']['password_protected']
+	if Val::Hashes.isbn_hash['completed'] == false then logger.info {"isbnsearch macro error!"} end
+	if status_hash['password_protected'] == true then logger.info {"document is password protected!"} end
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
