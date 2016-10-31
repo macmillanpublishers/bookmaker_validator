@@ -10,7 +10,6 @@ require_relative './val_header.rb'
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
 logger = Val::Logs.logger
-dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split)
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
 
@@ -32,7 +31,7 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 		#check to see if submitter is in ebooks dept.:
 		staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)  		#read in our static pe/pm json
 		for i in 0..staff_hash.length - 1
-				if user_email == "#{staff_hash[i]['email']}"
+				if user_email.downcase == "#{staff_hash[i]['email'].downcase}"
 						if "#{staff_hash[i]['division']}" == 'Ebooks' || "#{staff_hash[i]['division']}" == 'Workflow'
 								contacts_hash['ebooksDept_submitter'] = true
 								logger.info {"#{user_name} is a member of ebooks or Workflow dept, flagging that to edit user comm. addressees"}
@@ -72,9 +71,9 @@ logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Pa
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
 #try to get submitter info (Dropbox document 'modifier' via api)
-user_email, user_name = Vldtr::Tools.dropbox_api_call(dropbox_filepath)
+user_email, user_name = Vldtr::Tools.dropbox_api_call
 
-#set_submitter_info in contacts_hash
+# set_submitter_info in contacts_hash
 set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 
 # ATTN: need to add a generic mailtxt for standalone validator
