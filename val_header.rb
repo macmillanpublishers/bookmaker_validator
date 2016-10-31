@@ -138,7 +138,7 @@ module Val
 	end
 	class Hashes
 		def self.readjson(inputfile)
-			json_hash = {'test'=>'tetet'}
+			json_hash = {}
 			if File.file?(inputfile)
 				file = File.open(inputfile, "r:utf-8")
 				content = file.read
