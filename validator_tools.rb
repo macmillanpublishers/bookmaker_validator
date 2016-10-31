@@ -62,7 +62,7 @@ MESSAGE_END
       #run python api script
       dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
       user_email = dropboxmodifier.split(' ', 2)[0]
-      user_name = dropboxmodifier.split(' ', 2)[1]
+      user_name = dropboxmodifier.split(' ', 2)[1].gsub(/\n/,'')
     	return user_email, user_name
     rescue Exception => e
     	p e   #puts e.inspect
