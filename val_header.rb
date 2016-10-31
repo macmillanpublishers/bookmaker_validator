@@ -202,7 +202,7 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-		@@generated_access_token = File.read(File.join(authkeys_repo,'access_token.txt'))
+		@@generated_access_token = File.read(File.join(Val::Resources.authkeys_repo,'access_token.txt'))
 		def self.generated_access_token
 			@@generated_access_token
 		end
