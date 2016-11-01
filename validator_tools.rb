@@ -5,8 +5,6 @@ require 'open3'
 require 'find'
 
 require_relative './val_header.rb'
-require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
-require_relative '../bookmaker/core/header.rb'
 
 module Vldtr
   class Mailtexts
