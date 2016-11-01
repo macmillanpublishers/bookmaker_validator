@@ -56,14 +56,17 @@ MESSAGE_END
   end
   class Tools
     def self.dropbox_api_call
-    	user_email, user_name = "", ""
       py_script = File.join(Val::Paths.scripts_dir,'dboxapi2.py')
-      dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/([\(\)\$\'`& ])/,'\\\\\1')
+      dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/(&)/,'\\\\\1')
       #run python api script
       dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
-      user_email = dropboxmodifier.split(' ', 2)[0]
-      user_name = dropboxmodifier.split(' ', 2)[1].gsub(/\n/,'')
-    	return user_email, user_name
+      if dropboxmodifier.nil? or dropboxmodifier.empty? or !dropboxmodifier
+      	user_email, user_name = '', ''
+      else
+        user_email = dropboxmodifier.split(' ', 2)[0]
+        user_name = dropboxmodifier.split(' ', 2)[1].gsub(/\n/,'')
+      end
+      return user_email, user_name
     rescue Exception => e
     	p e   #puts e.inspect
     end

@@ -1,6 +1,7 @@
 import sys, dropbox
 token = sys.argv[1]
-inputfile = sys.argv[2]
+infile_args = sys.argv[2:]
+inputfile = ' '.join(infile_args).replace('\\','')
 
 dbx = dropbox.Dropbox(token)
 submitter = (dbx.files_get_metadata(inputfile).sharing_info.modified_by)

@@ -22,7 +22,7 @@ user_email = ''
 
 #---------------------  METHODS
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
-	if user_email.nil? or user_email.empty? or !user_email
+	if user_email == ''
 	    status_hash['api_ok'] = false
 	    contacts_hash.merge!(submitter_name: 'Workflows')
 	    contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
