@@ -5,6 +5,7 @@ require 'open3'
 require 'find'
 
 require_relative './val_header.rb'
+require_relative '../bookmaker/core/header.rb'
 
 module Vldtr
   class Mailtexts
@@ -53,13 +54,18 @@ MESSAGE_END
     end
   end
   class Tools
-    def self.dropbox_api_call(dropbox_filepath)
-    	user_email, user_name = "", ""
-    	client = DropboxClient.new(Val::Resources.generated_access_token)
-    	root_metadata = client.metadata(dropbox_filepath)
-    	user_email = root_metadata["modifier"]["email"]
-    	user_name = root_metadata["modifier"]["display_name"]
-    	return user_email, user_name
+    def self.dropbox_api_call
+      py_script = File.join(Val::Paths.scripts_dir,'dboxapi2.py')
+      dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/(&)/,'\\\\\1')
+      #run python api script
+      dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
+      if dropboxmodifier.nil? or dropboxmodifier.empty? or !dropboxmodifier
+      	user_email, user_name = '', ''
+      else
+        user_email = dropboxmodifier.split(' ', 2)[0]
+        user_name = dropboxmodifier.split(' ', 2)[1].gsub(/\n/,'')
+      end
+      return user_email, user_name
     rescue Exception => e
     	p e   #puts e.inspect
     end
