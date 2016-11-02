@@ -835,8 +835,8 @@ Public Sub ValidatorTest()
   Dim strDir As String
   
   strDir = Environ("USERPROFILE") & "\Desktop\validator\"
-'  strFile = "validatortest_orig"
-  strFile = "Fallout_Mara_FINALCE_9780765337313"
+  strFile = "_validatortest_orig"
+'  strFile = "MindSumo_FreshmanYearOfLife_FinalCE_2016Oct26"
 
 
   Call Validator.Launch(strDir & strFile & ".docx", _
