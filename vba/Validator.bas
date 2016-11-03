@@ -652,7 +652,8 @@ Private Function ValidatorCleanup(CompleteSuccess As Boolean) As Boolean
   Dim key1 As Variant
   For Each key1 In dictJson.Keys
     If VBA.IsObject(dictJson(key1)) = True Then
-      If dictJson(key1).Item("pass") = False Then
+    ' styled pass = False if not styled, which is as designed
+      If key1 <> "styled" And dictJson(key1).Item("pass") = False Then
         CompleteSuccess = False
         Exit For
       End If
@@ -786,8 +787,6 @@ Private Sub ReturnDict(SectionKey As String, TestDict As genUtils.Dictionary, _
       ' write tests to JSON file
       Call genUtils.AddToJson(strJsonPath, SectionKey, TestDict)
       If TestDict("pass") = False Then
-      ' Write our final element to `style_check.json` file
-        Call genUtils.AddToJson(strJsonPath, "completed", False)
         If QuitIfFailed = True Then
           SecondsElapsed = Round(Timer - StartTime, 2)
           DebugPrint SectionKey & " complete: " & SecondsElapsed
@@ -836,7 +835,7 @@ Public Sub ValidatorTest()
   
   strDir = Environ("USERPROFILE") & "\Desktop\validator\"
   strFile = "_validatortest_orig"
-'  strFile = "MindSumo_FreshmanYearOfLife_FinalCE_2016Oct26"
+'  strFile = "EdwardVIIManuscriptReadyforComp"
 
 
   Call Validator.Launch(strDir & strFile & ".docx", _
