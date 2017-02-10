@@ -553,6 +553,10 @@ Private Function ValidatorMain(DocPath As String) As Boolean
 '       ALWAYS CHECK ISBN and STYLES
 ' *****************************************************************************
 
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear
+
 ' ----- OVERALL STYLE CHECKS --------------------------------------------------
   strKey = "styled"
   Set dictTests = genUtils.Reports.StyleCheck()
@@ -573,31 +577,55 @@ Private Function ValidatorMain(DocPath As String) As Boolean
   Set dictTests = genUtils.Reports.TitlepageCheck
   Call ReturnDict(strKey, dictTests)
 
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear
+
 ' ----- SECTION TAGGING -------------------------------------------------------
   strKey = "sections"
   Set dictTests = genUtils.Reports.SectionCheck
   Call ReturnDict(strKey, dictTests)
   
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear  
+
 ' ----- HEADING VALIDATION ----------------------------------------------------
   strKey = "headings"
   Set dictTests = genUtils.Reports.HeadingCheck
   Call ReturnDict(strKey, dictTests)
+
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear
   
 '' ----- ILLUSTRATION VALIDATION -----------------------------------------------
   strKey = "illustrations"
   Set dictTests = genUtils.Reports.IllustrationCheck
   Call ReturnDict(strKey, dictTests)
+
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear
   
 '' ----- ENDNOTE UNLINKING ----------------------------------------------------
   strKey = "endnotes"
   Set dictTests = genUtils.Endnotes.EndnoteCheck
   Call ReturnDict(strKey, dictTests)
 
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear
+
 ' ----- RUN CLEANUP MACRO -----------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
   strKey = "cleanupMacro"
   Set dictTests = genUtils.CleanupMacro.MacmillanManuscriptCleanup
   Call ReturnDict(strKey, dictTests)
+
+' Empty the UnDo buffer & Save to empty scratch files
+  ActiveDocument.Save
+  ActiveDocument.UndoClear
 
 ' ----- RUN CHAR STYLES MACRO -------------------------------------------------
 ' To do: convert to function that returns dictionary of test results
