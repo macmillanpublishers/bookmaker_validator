@@ -122,7 +122,7 @@ def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_h
     				submitter_div = staff_hash[i]['division']
     				if staff_defaults_hash[submitter_div]
       					mail = staff_defaults_hash[submitter_div][pm_or_pe]
-      					name = staff_defaults_hash[submitter_div]["#{pm_or_pe}_name"] #{}"#{mail.split('@')[0].split('.')[0].capitalize} #{mail.split('@')[0].split('.')[1].capitalize}"
+      					name = staff_defaults_hash[submitter_div]["#{pm_or_pe}_name"]
     				else
       					newstatus = "#{newstatus}, and \'#{submitter_div}\' not present in defaults.json"
       			    name, mail = 'Workflows', 'workflows@macmillan.com'
@@ -130,8 +130,25 @@ def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_h
   			end
 		end
 		if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
-  			 newstatus = "#{newstatus}, and submitter email not in staff.json"
-  			 name, mail = 'Workflows', 'workflows@macmillan.com'
+			 newstatus = "#{newstatus}, and submitter email not in staff.json"
+			 name, mail = 'Workflows', 'workflows@macmillan.com'
+       # alert Worfklows that a fallback lookup failed:
+       body = <<MESSAGE_END
+Subject: Alert - egalleymaker staff lookup failed
+
+Please note, egalleymaker may still be successfully running for this title; this error only affects email notifications
+(all notifications should now be being sent to workflows@macmillan.com)
+------
+#{Time.now}
+file: #{Val::Doc.filename_normalized}
+submitter email: #{submitter_mail}
+------
+ERROR:
+#{pm_or_pe} lookup in biblio failed, & fallback lookup of division head based on submitter's email failed as well:
+- submitter email (above) not in staff.json
+MESSAGE_END
+       message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+       Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
 		end
     return mail, name, newstatus
 end
@@ -152,9 +169,26 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
         				status = "#{status}, found email in staff.json"
       			end
     		end
-    		if mail == 'not found'    #this means pm/pe's
-            status = "#{status}, their email is not in staff.json"
-			      newname, mail = 'Workflows', 'workflows@macmillan.com'
+    		if mail == 'not found'    #this means pm/pe's email was not in staff.json
+          status = "#{status}, their email is not in staff.json"
+		      newname, mail = 'Workflows', 'workflows@macmillan.com'
+          # alert Worfklows that a PM/PE email lookup failed:
+          body = <<MESSAGE_END
+Subject: Alert - egalleymaker staff lookup failed
+
+Please note, egalleymaker may still be successfully running for this title; this error only affects email notifications
+(all notifications should now be being sent to workflows@macmillan.com)
+---------
+#{Time.now}
+file: #{Val::Doc.filename_normalized}
+submitter email: #{submitter_mail}
+---------
+ERROR:
+- #{pm_or_pe} Data Warehouse lookup succeeded, but #{pm_or_pe}'s email address is not in staff.json:
+#{pm_or_pe} name: #{name}
+MESSAGE_END
+          message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+          Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
         end
     end
   	return mail, newname, status
@@ -191,7 +225,7 @@ else
 end
 
 #try lookup on filename isbn
-if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'] == false && Val::Hashes.isbn_hash['completed'] == true 
+if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'] == false && Val::Hashes.isbn_hash['completed'] == true
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
     testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
