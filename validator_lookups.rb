@@ -134,18 +134,19 @@ def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_h
 			 name, mail = 'Workflows', 'workflows@macmillan.com'
        # alert Worfklows that a fallback lookup failed:
        body = <<MESSAGE_END
-Subject: Alert - egalleymaker staff lookup failed
+Subject: Alert - egalleymaker staff.json lookup failed
 
 Please note, egalleymaker may still be successfully running for this title; this error only affects email notifications
 (all notifications should now be being sent to workflows@macmillan.com)
 ------
-#{Time.now}
-file: #{Val::Doc.filename_normalized}
-submitter email: #{submitter_mail}
-------
 ERROR:
 #{pm_or_pe} lookup in biblio failed, & fallback lookup of division head based on submitter's email failed as well:
-- submitter email (above) not in staff.json
+- submitter email not in staff.json
+------
+INFO:
+time: #{Time.now}
+file: #{Val::Doc.filename_normalized}
+submitter email: #{submitter_mail}
 MESSAGE_END
        message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
        Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
@@ -174,18 +175,19 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
 		      newname, mail = 'Workflows', 'workflows@macmillan.com'
           # alert Worfklows that a PM/PE email lookup failed:
           body = <<MESSAGE_END
-Subject: Alert - egalleymaker staff lookup failed
+Subject: Alert - egalleymaker staff.json lookup failed
 
 Please note, egalleymaker may still be successfully running for this title; this error only affects email notifications
 (all notifications should now be being sent to workflows@macmillan.com)
 ---------
-#{Time.now}
-file: #{Val::Doc.filename_normalized}
-submitter email: #{submitter_mail}
----------
 ERROR:
-- #{pm_or_pe} Data Warehouse lookup succeeded, but #{pm_or_pe}'s email address is not in staff.json:
+- #{pm_or_pe} Data Warehouse lookup succeeded, but #{pm_or_pe}'s email address is not in staff.json
+---------
+INFO:
+time: #{Time.now}
+file: #{Val::Doc.filename_normalized}
 #{pm_or_pe} name: #{name}
+submitter email: #{submitter_mail}
 MESSAGE_END
           message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
           Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
