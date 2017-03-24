@@ -129,9 +129,9 @@ def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_h
     				end
   			end
 		end
-		if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
-			 newstatus = "#{newstatus}, and submitter email not in staff.json"
-			 name, mail = 'Workflows', 'workflows@macmillan.com'
+    if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
+       newstatus = "#{newstatus}, and submitter email not in staff.json"
+       name, mail = 'Workflows', 'workflows@macmillan.com'
        # alert Worfklows that a fallback lookup failed:
        body = <<MESSAGE_END
 Subject: Alert - egalleymaker staff.json lookup failed
@@ -148,9 +148,11 @@ time: #{Time.now}
 file: #{Val::Doc.filename_normalized}
 submitter email: #{submitter_mail}
 MESSAGE_END
-       message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
-       Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
-		end
+      message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+      unless File.file?(Val::Paths.testing_value_file)
+        Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
+      end  
+    end
     return mail, name, newstatus
 end
 
