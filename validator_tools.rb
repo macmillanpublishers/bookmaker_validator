@@ -202,5 +202,20 @@ MESSAGE_END
         FileUtils.mkdir_p outfolder
       end
     end
+    def self.runnode(js, args)  #copied directly from bookmaker's header.rb
+      if os == "mac" or os == "unix"
+        `node #{js} #{args}`
+      elsif os == "windows"
+        nodepath = File.join(Paths.resource_dir, "nodejs", "node.exe")
+        `#{nodepath} #{js} #{args}`
+      else
+        File.open(Bkmkr::Paths.log_file, 'a+') do |f|
+          f.puts "----- NODE ERROR"
+          f.puts "ERROR: I can't seem to run node. Is it installed and part of your system PATH?"
+          f.puts "ABORTING. All following processes will fail."
+        end
+        File.delete(Project.alert)
+      end
+    end
   end
 end
