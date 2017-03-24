@@ -7,7 +7,7 @@ require_relative './val_header.rb'
 
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
-logger = Val::Logs.logger
+@logger = Val::Logs.logger
 
 htmlmakerjs_path = File.join(Val::Paths.scripts_dir, 'htmlmaker_js')
 
@@ -34,20 +34,20 @@ def convertToHTML(htmlmaker, docpath, outputdir, styles_json, stylefunctions_js,
 rescue => e
   status_hash['html_conversions'] = false
   p e
-  logger.info {"error occurred while converting .docx to html (#{__method__.to_s}): #{e}"}
+  @logger.info {"error occurred while converting .docx to html (#{__method__.to_s}): #{e}"}
 end
 
-## wrapping Vldtr::Tools.runnode in a new method for this script; for easy logger and verifying infile exists
+## wrapping Vldtr::Tools.runnode in a new method for this script; for easy @logger and verifying infile exists
 def localRunNode(jsfile, html, status_hash)
   if File.exist?(html)
   	Vldtr::Tools.runnode(jsfile, args)
   else
-    logger.info {"file: \"#{Val::Doc.basename_normalized}.html\" is not present; skipping #{__method__.to_s}"}
+    @logger.info {"file: \"#{Val::Doc.basename_normalized}.html\" is not present; skipping #{__method__.to_s}"}
   end
 rescue => e
   status_hash['html_conversions'] = false
   p e
-  logger.info {"error occurred while running #{__method__.to_s}: #{e}"}
+  @logger.info {"error occurred while running #{__method__.to_s}: #{e}"}
 end
 
 
@@ -80,7 +80,7 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
   end
 
 else
-  logger.info {"Skipping html conversions: according to output from \"validator_checker.rb\", this .docx is not bookmaker ready."}
+  @logger.info {"Skipping html conversions: according to output from \"validator_checker.rb\", this .docx is not bookmaker ready."}
 end
 
 
