@@ -15,7 +15,7 @@ htmlmaker = File.join(htmlmakerjs_path, 'bin', 'htmlmaker')
 
 styles_json = File.join(htmlmakerjs_path, 'styles.json')
 
-style-functions_js = File.join(htmlmakerjs_path, 'style-functions.js')
+stylefunctions_js = File.join(htmlmakerjs_path, 'style-functions.js')
 
 htmltohtmlbook_js = File.join(htmlmakerjs_path, 'lib', 'htmltohtmlbook.js')
 
@@ -28,8 +28,8 @@ status_hash = Val::Hashes.status_hash
 status_hash['html_conversions'] = ''
 
 # ---------------------- METHOD
-def convertToHTML(htmlmaker, docpath, outputdir, styles_json, style-functions_js, status_hash)
-  `"#{htmlmaker} #{docpath} #{outputdir} #{styles_json} #{style-functions_js}"`
+def convertToHTML(htmlmaker, docpath, outputdir, styles_json, stylefunctions_js, status_hash)
+  `"#{htmlmaker} #{docpath} #{outputdir} #{styles_json} #{stylefunctions_js}"`
   status_hash['html_conversions'] = true
 rescue => e
   status_hash['html_conversions'] = false
@@ -56,7 +56,7 @@ end
 if Val::Hashes.status_hash['bookmaker_ready'] == true
 
   # convert .docx to html
-  convertToHTML(htmlmaker, Val::Files.working_file, Val::Paths.tmp_dir, styles_json, style-functions_js, status_hash)
+  convertToHTML(htmlmaker, Val::Files.working_file, Val::Paths.tmp_dir, styles_json, stylefunctions_js, status_hash)
 
   # make a copy of converted html prior to next transformation (for troubleshooting)
   Mcmlln::Tools.copyFile(html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
