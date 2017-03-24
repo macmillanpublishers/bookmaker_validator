@@ -118,7 +118,7 @@ end
 def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)   #no name associated in biblio, lookup backup PM/PE via submitter division
     mail, newstatus = 'not found', status
 		for i in 0..staff_hash.length - 1
-  			if submitter_mail == staff_hash[i]['email']
+  			if submitter_mail.downcase == staff_hash[i]['email'].downcase
     				submitter_div = staff_hash[i]['division']
     				if staff_defaults_hash[submitter_div]
       					mail = staff_defaults_hash[submitter_div][pm_or_pe]
@@ -165,7 +165,7 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
     else
         status = "#{pm_or_pe} name in biblio"
     		for i in 0..staff_hash.length - 1
-      			if newname == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
+      			if newname.downcase == "#{staff_hash[i]['firstName'].downcase} #{staff_hash[i]['lastName'].downcase}"
         				mail = staff_hash[i]['email']
         				status = "#{status}, found email in staff.json"
       			end
