@@ -17,27 +17,18 @@ styles_json = File.join(htmlmakerjs_path, 'styles.json')
 
 stylefunctions_js = File.join(htmlmakerjs_path, 'style-functions.js')
 
-htmltohtmlbook_js = File.join(htmlmakerjs_path, 'lib', 'htmltohtmlbook.js')
-
-generateTOC_js = File.join(htmlmakerjs_path, 'lib', 'generateTOC.js')
-
 html_output = File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}.html")
 
 status_hash = Val::Hashes.status_hash
 
-status_hash['html_conversions'] = ''
+status_hash['html_conversion'] = false
 
 
 # ---------------------- METHOD
 ## wrapping Vldtr::Tools.runnode in a new method for this script
 def localRunNode(jsfile, args, status_hash)
-  unless status_hash['html_conversions'] == false
   	Vldtr::Tools.runnode(jsfile, args)
-  else
-    @logger.info {"an error has occurred in an earlier step; skipping #{jsfile} run"}
-  end
 rescue => e
-  status_hash['html_conversions'] = false
   p e
   @logger.info {"error occurred while running #{__method__.to_s}/#{jsfile}: #{e}"}
 end
@@ -49,25 +40,14 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
 
   # convert .docx to html
   localRunNode(htmlmaker, "#{Val::Files.working_file Val::Paths.tmp_dir styles_json stylefunctions_js}", status_hash)
-  # convertToHTML(htmlmaker, Val::Files.working_file, Val::Paths.tmp_dir, styles_json, stylefunctions_js, status_hash)
 
-  # make a copy of converted html prior to next transformation (for troubleshooting)
-  Mcmlln::Tools.copyFile(html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
-
+  # test if file was created, updated lofs and status hash
   if File.exist?(html_output)
-    # run html to htmlboook js conversion
-    localRunNode(htmltohtmlbook_js, html_output, status_hash)
-    # make a copy of htmlbook html prior to next conversion (for troubleshooting)
-    Mcmlln::Tools.copyFile(html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_htmlbookjs_backup.html"))
-    # generate a toc for the htmlbook html via js
-    localRunNode(generateTOC_js, html_output, status_hash)
-    # make sure html file is present and no errors occurred, update our status_hash value for scripts later in the toolchain
-    if status_hash['html_conversions'] != false
-      status_hash['html_conversions'] = true
-    end
+    status_hash['html_conversion'] = true
+    @logger.info {"successfully created #{Val::Doc.basename_normalized}.html from our .docx"}
 
-  else
-    @logger.info {"file: \"#{Val::Doc.basename_normalized}.html\" is not present; skipping html js conversions"}
+    # make a copy of converted html prior to next transformation (for troubleshooting)
+    Mcmlln::Tools.copyFile(html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
   end
 
 else
