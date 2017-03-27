@@ -39,7 +39,7 @@ end
 if Val::Hashes.status_hash['bookmaker_ready'] == true
 
   # convert .docx to html
-  localRunNode(htmlmaker, "#{Val::Files.working_file Val::Paths.tmp_dir styles_json stylefunctions_js}", status_hash)
+  localRunNode(htmlmaker, "#{Val::Files.working_file} #{Val::Paths.tmp_dir} #{styles_json} #{stylefunctions_js}", status_hash)
 
   # test if file was created, updated lofs and status hash
   if File.exist?(html_output)
