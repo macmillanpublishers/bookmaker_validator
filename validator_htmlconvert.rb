@@ -9,15 +9,13 @@ require_relative './val_header.rb'
 Val::Logs.log_setup()
 @logger = Val::Logs.logger
 
-htmlmakerjs_path = File.join(Val::Paths.scripts_dir, 'htmlmaker_js')
+htmlmakerjs_path = File.join(Val::Paths.scripts_dir, '..', 'htmlmaker_js')
 
 htmlmaker = File.join(htmlmakerjs_path, 'bin', 'htmlmaker')
 
 styles_json = File.join(htmlmakerjs_path, 'styles.json')
 
 stylefunctions_js = File.join(htmlmakerjs_path, 'style-functions.js')
-
-html_output = File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}.html")
 
 status_hash = Val::Hashes.status_hash
 
@@ -42,12 +40,12 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
   localRunNode(htmlmaker, "#{Val::Files.working_file} #{Val::Paths.tmp_dir} #{styles_json} #{stylefunctions_js}", status_hash)
 
   # test if file was created, updated lofs and status hash
-  if File.exist?(html_output)
+  if File.exist?(Val::Files.html_output)
     status_hash['html_conversion'] = true
     @logger.info {"successfully created #{Val::Doc.basename_normalized}.html from our .docx"}
 
     # make a copy of converted html prior to next transformation (for troubleshooting)
-    Mcmlln::Tools.copyFile(html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
+    Mcmlln::Tools.copyFile(Val::Files.html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
   end
 
 else
