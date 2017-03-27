@@ -25,9 +25,9 @@ status_hash['html_conversion'] = false
 
 
 # ---------------------- METHOD
-## wrapping Vldtr::Tools.runnode in a new method for this script
+## wrapping Bkmkr::Tools.runnode in a new method for this script
 def localRunNode(jsfile, args, status_hash)
-  	Vldtr::Tools.runnode(jsfile, args)
+  	Bkmkr::Tools.runnode(jsfile, args)
 rescue => e
   p e
   @logger.info {"error occurred while running #{__method__.to_s}/#{jsfile}: #{e}"}
