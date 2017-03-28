@@ -21,6 +21,8 @@ status_hash = Val::Hashes.status_hash
 
 status_hash['html_conversion'] = false
 
+# write this value to file early.
+Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
 
 # ---------------------- METHOD
 ## wrapping Bkmkr::Tools.runnode in a new method for this script
@@ -44,6 +46,9 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
     status_hash['html_conversion'] = true
     @logger.info {"successfully created #{Val::Doc.basename_normalized}.html from our .docx"}
 
+    #update status file with new news!
+    Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
+
     # make a copy of converted html prior to next transformation (for troubleshooting)
     Mcmlln::Tools.copyFile(Val::Files.html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
   end
@@ -51,7 +56,3 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
 else
   @logger.info {"Skipping html conversions: according to output from \"validator_checker.rb\", this .docx is not bookmaker ready."}
 end
-
-
-#update status file with new news!
-Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
