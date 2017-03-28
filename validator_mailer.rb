@@ -132,7 +132,7 @@ if nogoodisbn
 	errors = "#{errors}- #{nogoodisbn_msg}\n"
 	status_hash['status'] = 'isbn error'
 end
-if (!status_hash['validator_macro_complete'] || Val::Hashes.isbn_hash['completed'] == false || status_hash['html_conversions'] == false) && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
+if (!status_hash['validator_macro_complete'] || Val::Hashes.isbn_hash['completed'] == false || status_hash['html_conversion'] != true) && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
 	validatorerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='validator_error' then validatorerr_msg = h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
 	errors = "#{errors}- #{validatorerr_msg}\n"
 	status_hash['status'] = 'validator error'
