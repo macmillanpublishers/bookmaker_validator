@@ -202,15 +202,5 @@ MESSAGE_END
         FileUtils.mkdir_p outfolder
       end
     end
-    def self.runnode(js, args)  #copied directly from bookmaker's header.rb
-      if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
-        `node #{js} #{args}`
-      elsif os == "windows"
-        nodepath = File.join(Bkmkr::Paths.resource_dir, "nodejs", "node.exe")
-        `#{nodepath} #{js} #{args}`
-      end
-    rescue => e
-      p e
-    end
   end
 end
