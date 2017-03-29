@@ -116,24 +116,24 @@ def typeset_from_check(typesetfrom_file, isbn_array)
 end
 
 def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)   #no name associated in biblio, lookup backup PM/PE via submitter division
-    mail, newstatus = 'not found', status
-		for i in 0..staff_hash.length - 1
-  			if submitter_mail == staff_hash[i]['email']
-    				submitter_div = staff_hash[i]['division']
-    				if staff_defaults_hash[submitter_div]
-      					mail = staff_defaults_hash[submitter_div][pm_or_pe]
-      					name = staff_defaults_hash[submitter_div]["#{pm_or_pe}_name"]
-    				else
-      					newstatus = "#{newstatus}, and \'#{submitter_div}\' not present in defaults.json"
-      			    name, mail = 'Workflows', 'workflows@macmillan.com'
-    				end
-  			end
-		end
-		if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
-			 newstatus = "#{newstatus}, and submitter email not in staff.json"
-			 name, mail = 'Workflows', 'workflows@macmillan.com'
-       # alert Worfklows that a fallback lookup failed:
-       body = <<MESSAGE_END
+  mail, newstatus = 'not found', status
+  for i in 0..staff_hash.length - 1
+    if submitter_mail.downcase == staff_hash[i]['email'].downcase
+      submitter_div = staff_hash[i]['division']
+      if staff_defaults_hash[submitter_div]
+    		mail = staff_defaults_hash[submitter_div][pm_or_pe]
+    		name = staff_defaults_hash[submitter_div]["#{pm_or_pe}_name"]
+      else
+    		newstatus = "#{newstatus}, and \'#{submitter_div}\' not present in defaults.json"
+        name, mail = 'Workflows', 'workflows@macmillan.com'
+      end
+    end
+  end
+  if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
+    newstatus = "#{newstatus}, and submitter email not in staff.json"
+    name, mail = 'Workflows', 'workflows@macmillan.com'
+    # alert Worfklows that a fallback lookup failed:
+     body = <<MESSAGE_END
 Subject: Alert - egalleymaker staff.json lookup failed
 
 Please note, egalleymaker may still be successfully running for this title; this error only affects email notifications
@@ -148,33 +148,35 @@ time: #{Time.now}
 file: #{Val::Doc.filename_normalized}
 submitter email: #{submitter_mail}
 MESSAGE_END
-       message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
-       Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
-		end
-    return mail, name, newstatus
+    message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+    unless File.file?(Val::Paths.testing_value_file)
+      Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
+    end
+  end
+  return mail, name, newstatus
 end
 
 def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash)
-  	status, newname, mail = '', name, 'not found'
-    if newname == 'not found'
-        status = 'not in biblio'
-        mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
-    elsif newname.empty?
-        status = 'no bookinfo file?'
-        mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
-    else
-        status = "#{pm_or_pe} name in biblio"
-    		for i in 0..staff_hash.length - 1
-      			if newname == "#{staff_hash[i]['firstName']} #{staff_hash[i]['lastName']}"
-        				mail = staff_hash[i]['email']
-        				status = "#{status}, found email in staff.json"
-      			end
-    		end
-    		if mail == 'not found'    #this means pm/pe's email was not in staff.json
-          status = "#{status}, their email is not in staff.json"
-		      newname, mail = 'Workflows', 'workflows@macmillan.com'
-          # alert Worfklows that a PM/PE email lookup failed:
-          body = <<MESSAGE_END
+  status, newname, mail = '', name, 'not found'
+  if newname == 'not found'
+    status = 'not in biblio'
+    mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
+  elsif newname.empty?
+    status = 'no bookinfo file?'
+    mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
+  else
+    status = "#{pm_or_pe} name in biblio"
+    for i in 0..staff_hash.length - 1
+      if newname.downcase == "#{staff_hash[i]['firstName'].downcase} #{staff_hash[i]['lastName'].downcase}"
+        mail = staff_hash[i]['email']
+        status = "#{status}, found email in staff.json"
+      end
+    end
+    if mail == 'not found'    #this means pm/pe's email was not in staff.json
+      status = "#{status}, their email is not in staff.json"
+      newname, mail = 'Workflows', 'workflows@macmillan.com'
+      # alert Worfklows that a PM/PE email lookup failed:
+      body = <<MESSAGE_END
 Subject: Alert - egalleymaker staff.json lookup failed
 
 Please note, egalleymaker may still be successfully running for this title; this error only affects email notifications
@@ -189,11 +191,13 @@ file: #{Val::Doc.filename_normalized}
 #{pm_or_pe} name: #{name}
 submitter email: #{submitter_mail}
 MESSAGE_END
-          message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
-          Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
-        end
+      message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+      unless File.file?(Val::Paths.testing_value_file)
+        Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
+      end
     end
-  	return mail, newname, status
+  end
+  return mail, newname, status
 end
 
 #--------------------- RUN
