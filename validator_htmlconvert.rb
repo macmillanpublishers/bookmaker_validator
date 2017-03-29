@@ -48,7 +48,7 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
     # make a copy of converted html prior to next transformation (for troubleshooting)
     Mcmlln::Tools.copyFile(Val::Files.html_output, File.join(Val::Paths.tmp_dir, "#{Val::Doc.basename_normalized}_converted_backup.html"))
   else
-    status_hash['html_conversion'] = 'false'
+    status_hash['html_conversion'] = false
     @logger.info {"htmlmaker failed, no html file was produced"}
   end
 
