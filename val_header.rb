@@ -95,6 +95,10 @@ module Val
 		def self.working_file
 			@@working_file
 		end
+    @@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
+    def self.html_output
+			@@html_output
+		end
 		@@bookinfo_file = File.join(Paths.tmp_dir,'book_info.json')
 		def self.bookinfo_file
 			@@bookinfo_file
