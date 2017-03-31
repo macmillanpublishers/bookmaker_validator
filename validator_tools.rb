@@ -202,19 +202,19 @@ MESSAGE_END
       else
         FileUtils.mkdir_p outfolder
       end
-      def self.runnode(js, args)
-        if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
-          node_output = `node #{js} #{args}`
-        elsif Bkmkr::Tools.os == "windows"
-          nodepath = File.join(Bkmkr::Paths.resource_dir, "nodejs", "node.exe")
-          node_output = `#{nodepath} #{js} #{args}`
-        else
-          node_output = "ERROR: I can't seem to run node. Is it installed and part of your system PATH?"
-        end
-        return node_output
-      rescue => e
-        p e
+    end
+    def self.runnode(js, args)
+      if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
+        node_output = `node #{js} #{args}`
+      elsif Bkmkr::Tools.os == "windows"
+        nodepath = File.join(Bkmkr::Paths.resource_dir, "nodejs", "node.exe")
+        node_output = `#{nodepath} #{js} #{args}`
+      else
+        node_output = "ERROR: I can't seem to run node. Is it installed and part of your system PATH?"
       end
+      return node_output
+    rescue => e
+      p e
     end
   end
 end
