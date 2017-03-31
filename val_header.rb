@@ -139,6 +139,10 @@ module Val
 		def self.errFile
 			@@errFile
 		end
+    @@ss_rules_json = File.join(Paths.scripts_dir, "ss_rules.json")
+    def self.ss_rules_json
+      @@ss_rules_json
+    end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -206,9 +210,9 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-		@@generated_access_token = File.read(File.join(authkeys_repo,'access_token.txt'))
-		def self.generated_access_token
-			@@generated_access_token
+		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
+		def self.generated_access_token_file
+			@@generated_access_token_file
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
    			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)

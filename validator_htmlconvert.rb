@@ -21,11 +21,16 @@ status_hash = Val::Hashes.status_hash
 
 status_hash['html_conversion'] = ''
 
+status_hash['section_starts_applied'] = ''
+
+section_start_rules_js = File.join(Val::Paths.scripts_dir, "section_start_rules.js")
+# section_start_rules_js = File.join(File.dirname(__FILE__), "section_start_rules.js")
 
 # ---------------------- METHOD
 ## wrapping Bkmkr::Tools.runnode in a new method for this script
 def localRunNode(jsfile, args, status_hash)
-  	Bkmkr::Tools.runnode(jsfile, args)
+  	node_output = Vldtr::Tools.runnode(jsfile, args)
+    return node_output
 rescue => e
   p e
   @logger.info {"error occurred while running #{__method__.to_s}/#{jsfile}: #{e}"}
@@ -54,6 +59,16 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
 
 else
   @logger.info {"Skipping html conversions: according to output from \"validator_checker.rb\", this .docx is not bookmaker ready."}
+end
+
+if status_hash['html_conversion'] == true
+  node_output = localRunNode(section_start_rules_js, "#{Val::Files.html_output} #{Val::Files.ss_rules_json}", status_hash)
+  puts node_output
+  if node_output == "Content has been updated!"
+    status_hash['section_starts_applied'] = true
+  else
+    status_hash['section_starts_applied'] = false
+  end
 end
 
 #update status file with new news!
