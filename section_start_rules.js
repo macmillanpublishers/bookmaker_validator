@@ -110,9 +110,9 @@ for(ss in rulesjson) {
   if (rulesjson[ss]['section_type'] == 'frontmatter') {
     section_types['frontmatter_sections'].push(ss);
   } else if (rulesjson[ss]['section_type'] == 'main') {
-    main_sections.push(ss);
+    section_types['main_sections'].push(ss);
   } else if (rulesjson[ss]['section_type'] == 'backmatter') {
-    backmatter_sections.push(ss);
+    section_types['backmatter_sections'].push(ss);
   }
 }
 
