@@ -42,7 +42,7 @@ end
 if Val::Hashes.status_hash['bookmaker_ready'] == true
 
   # convert .docx to html
-  @logger.info {"this file is bookmaker_ready, running htmlmaker"}
+  @logger.info {"this file is ready for HTML conversion, running htmlmaker"}
   localRunNode(htmlmaker, "#{Val::Files.working_file} #{Val::Paths.tmp_dir} #{styles_json} #{stylefunctions_js}", status_hash)
 
   # test if file was created, updated lofs and status hash
@@ -58,7 +58,7 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
   end
 
 else
-  @logger.info {"Skipping html conversions: according to output from \"validator_checker.rb\", this .docx is not bookmaker ready."}
+  @logger.info {"this .docx is not ready for HTML conversion"}
 end
 
 if status_hash['html_conversion'] == true
