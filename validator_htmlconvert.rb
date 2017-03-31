@@ -24,7 +24,7 @@ status_hash['html_conversion'] = ''
 status_hash['section_starts_applied'] = ''
 
 section_start_rules_js = File.join(Val::Paths.scripts_dir, "section_start_rules.js")
-# section_start_rules_js = File.join(File.dirname(__FILE__), "section_start_rules.js")
+
 
 # ---------------------- METHOD
 ## wrapping Bkmkr::Tools.runnode in a new method for this script
@@ -62,8 +62,10 @@ else
 end
 
 if status_hash['html_conversion'] == true
+  # Run our section start rules js on the html
   node_output = localRunNode(section_start_rules_js, "#{Val::Files.html_output} #{Val::Files.ss_rules_json}", status_hash)
   puts node_output
+  # mark this as a success (true) or failure (false) in the status_hash
   if node_output == "Content has been updated!"
     status_hash['section_starts_applied'] = true
   else

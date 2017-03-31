@@ -54,6 +54,7 @@ module Val
 			@@working_dir
 		end
 		@@scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts', 'bookmaker_validator')
+    # @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
 		def self.scripts_dir
 			@@scripts_dir
 		end
