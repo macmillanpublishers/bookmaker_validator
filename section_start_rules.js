@@ -17,7 +17,8 @@ fs.readFile(file, function editContent (err, contents) {
 // -------------------------------------------- FUNCTIONS
 function processRule(rule, section_types) {
   // Are our values getting here?
-  // console.log("name : " + rule['name']);
+  // console.log("rule_name : " + rule['rule_name']);
+  // console.log("ss_name : " + rule['ss_name']);
   // console.log("section_required : " + rule['section_required']);
   // console.log("insert_before : " + rule['insert_before']);
   // console.log("multiple : " + rule['multiple']);
@@ -47,7 +48,8 @@ function Rule(key, values_hash, rule_number, section_types) {
     criteria_count = rule_number;
   }
 
-  this.name = key + "_" + criteria_count;
+  this.rule_name = key + "_" + criteria_count;
+  this.ss_name = key;
   if (values_hash.hasOwnProperty('section_required')) {
     this.section_required = 'True';
     this.insert_before = values_hash['section_required']['insert_before'];
