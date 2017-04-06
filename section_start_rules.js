@@ -118,10 +118,20 @@ for(ss in rulesjson) {
   }
 }
 
-// Run through our Section Starts, apply rules
+// Run through Section Starts with section_required, apply rules
 for(ss in rulesjson) {
-  // The '1' is to start with 1st contiguous block criteria
-  var obj = new Rule(ss, rulesjson[ss], 1, section_types);
+  if (rulesjson[ss].hasOwnProperty('section_required')) {
+    // The '1' is to start with 1st contiguous block criteria
+    var obj = new Rule(ss, rulesjson[ss], 1, section_types);
+  }
+}
+
+// Run through Section Starts WITHOUT section_required, apply rules
+for(ss in rulesjson) {
+  if (!rulesjson[ss].hasOwnProperty('section_required')) {
+    // The '1' is to start with 1st contiguous block criteria
+    var obj = new Rule(ss, rulesjson[ss], 1, section_types);
+  }
 }
 
 
