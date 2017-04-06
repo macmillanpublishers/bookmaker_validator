@@ -7,6 +7,9 @@ var file = process.argv[2];
 // read in json
 var rulesjson = require(process.argv[3]);
 
+// set idCounter for id gneration function
+var idCounter = 0;
+
 // Read in file contents
 fs.readFile(file, function editContent (err, contents) {
   $ = cheerio.load(contents, {
@@ -15,6 +18,46 @@ fs.readFile(file, function editContent (err, contents) {
 
 
 // -------------------------------------------- FUNCTIONS
+// convert array of stylenames to array of bookmaker classes
+function stylesToClasses(myArray) {
+  myArray.forEach(function(part, index, myArray) {
+  myArray[index] = "." + myArray[index].replace(/[ ()]/g,'');
+})};
+
+function makeNot(list) {
+  return "body:not(" + list + "), section:not(" + list + "), div:not(" + list + "), blockquote:not(" + list + "), h1:not(" + list + "), pre:not(" + list + "), aside:not(" + list + "), p:not(" + list + "), li:not(" + list + "), figure:not(" + list + ")";
+}
+
+function makeID() {
+  idCounter++
+  return "ssid" + Math.random().toString(36).substr(2, 4) + idCounter
+}
+
+function evalFirstChild(rule, matchingPara) {
+  if (rule['first_child_match'] == 'True' && matchingPara.text() == rule['first_child_text']) {
+    console.log("found 1st child positive match: " + matchingPara.text())
+    return true
+  } else if (rule['first_child_match'] == 'False' && matchingPara.text() != rule['first_child_text']) {
+    console.log("found 1st child negative match: " + matchingPara.text())
+    return true
+  } else {
+    console.log("1st child match criteria not met: " + matchingPara.text())
+    return false
+  }
+}
+
+function evalPosition(rule, match, section_types) {
+  if rule['position'] == 'frontmatter' {
+    if 
+  } else if rule['position'] == 'main' {
+
+  } else if rule['position'] == 'backmatter' {
+
+  } else {
+    return false
+  }
+}
+
 function processRule(rule, section_types) {
   // Are our values getting here?
   // console.log("rule_name : " + rule['rule_name']);
@@ -36,7 +79,106 @@ function processRule(rule, section_types) {
   // console.log(section_types['frontmatter_sections']);
   // console.log(file);
 
-  // Get to work!:
+//   // Get to work!:
+
+// convert array of stylenames to array of classes
+var ssName = rule['ss_name'].replace(/[ ()]/g,'');
+
+stylesToClasses(rule['styles'])
+stylesToClasses(rule['required_styles'])
+stylesToClasses(rule['optional_heading_styles'])
+stylesToClasses(rule['previous_until_stop'])
+
+var styleList = rule['styles'].join(", ");
+// var notStyleList = makeNot(styleList);
+var requiredStyleList = rule['required_styles'].join(", ");
+var optionalHeadingStyleList = rule['optional_heading_styles'].join(", ");
+var previousUntilStopList = rule['previous_until_stop'].join(", ");
+  
+var position = false  // default value for position check
+var required_style_present = false  // default value for previous_until check
+var firstChildFound = false // default value for first child check
+
+var match = $(styleList)
+// if we are not matching multiples, select first only
+if (rule['multiple'] == 'False') {
+  var match = $(styleList).first()
+}
+if (optionalHeadingStyleList) {
+  console.log("optionals detected: ")
+}
+
+// new work with first children
+match.each(function() {
+  var matchingPara = $(this)
+  var leadingPara = $(this).prev()
+
+  if (rule['position']) {
+    console.log("position is indicated!")
+    position = evalPosition(rule['position'], $(this), section_types)
+  }
+
+  // account for optional headers
+  while (leadingPara.is(optionalHeadingStyleList)) {
+    console.log("optional header encountered: " + leadingPara.attr('class'))
+    var matchingPara = leadingPara
+    var leadingPara = leadingPara.prev()
+  }
+  // go check first child criteria in evalFirstChild function
+  if (rule['first_child'] == 'True') {
+    firstChildFound = evalFirstChild(rule, matchingPara)
+    console.log("fcf is " + firstChildFound)
+  }
+  // define our para for insertion
+  var ssPara = $("<p/>").addClass(ssName).attr('id',makeID());
+
+  if (rule['previous_sibling'] == 'True') {
+    // check criteria for previous_sibling
+    if (!leadingPara.is(requiredStyleList+", "+styleList)) {
+      // check criteria for first child
+      if (rule['first_child'] == 'True' && firstChildFound == true) {
+        // check criteria for position
+        if (rule['position'] && position == true)
+          // Insert section style
+          console.log("adding SS - leading para class was: " + leadingPara.attr('class'))
+          matchingPara.before(ssPara)
+        }  
+      } 
+    }
+  } else if (rule['previous_until'] == 'True') {
+
+    // get all matches to prevUntilStop or requiredStyles
+    var prevAllMatches = matchingPara.prevAll(requiredStyleList + ", " +previousUntilStopList)
+    // get an array of classes present on FIRST prev match
+    prevMatchedClass = prevAllMatches.attr('class').split(" ")
+    // see if 1st matched previous element had a required style
+    prevMatchedClass.forEach(function (matchedClass) {
+      if (requiredStyleList.includes("." + matchedClass)) {
+        console.log(matchedClass)
+        required_style_present = true
+      }
+    })
+    // check criteria for previous until:
+    if (required_style_present == false) {
+      // check criteria for first child
+      if (rule['first_child'] == 'True' && firstChildFound == true) {
+        //check criteria for position
+        if (rule['position'] && position == true)
+          // Insert section style
+          console.log("adding SS - prevUntil para class was: " + prevMatchedClass)
+          matchingPara.before(ssPara)
+        }  
+      } 
+    }
+}});
+
+
+
+
+
+
+
+// }
 
 }
 
