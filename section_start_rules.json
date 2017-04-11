@@ -333,9 +333,9 @@
 				"Chap Title Nonprinting (ctnp)"
 			],
       "previous_sibling": {
-        "required_styles": [
-          "Section-Chapter (scp)"
-        ]
+				"required_styles": [
+					"Section-Chapter (scp)"
+				]
       },
 			"previous_until": [
 				"Chap Number (cn)",
