@@ -127,6 +127,7 @@
     },
     "Section-Epigraph (sep)": {
         "section_type": "frontmatter",
+        "position": "frontmatter",
         "contiguous_block_criteria_01": {
             "multiple": false,
             "styles": [
@@ -137,7 +138,6 @@
                 "Epigraph in Text - verse (tepiv)",
                 "Epigraph Source (eps)"
             ],
-            "position": "frontmatter",
             "previous_sibling": {
                 "required_styles": [
                     "Section-Epigraph (sep)"
