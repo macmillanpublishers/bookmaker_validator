@@ -66,7 +66,7 @@ if status_hash['html_conversion'] == true
   node_output = localRunNode(section_start_rules_js, "#{Val::Files.html_output} #{Val::Files.ss_rules_json}", status_hash)
   @logger.info {"output from running section_start_rules_js: \"#{node_output.strip}\""}
   # mark this as a success (true) or failure (false) in the status_hash
-  if node_output.strip == "Content has been updated!"
+  if node_output.split("\n").last == "Content has been updated!"
     status_hash['section_starts_applied'] = true
   else
     status_hash['section_starts_applied'] = false

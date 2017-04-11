@@ -140,9 +140,9 @@ module Val
 		def self.errFile
 			@@errFile
 		end
-    @@ss_rules_json = File.join(Paths.scripts_dir, "ss_rules.json")
-    def self.ss_rules_json
-      @@ss_rules_json
+    @@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
+    def self.section_start_rules_json
+      @@section_start_rules_json
     end
 	end
 	class Hashes
