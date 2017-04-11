@@ -2,7 +2,7 @@
 	"Section-Ad-Card (sac)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Ad Card List of Titles (acl)",
 				"Ad Card Main Head (acmh)",
@@ -18,7 +18,7 @@
 	"Section-Front-Sales (sfs)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Front Sales Quote (fsq)",
 				"Front Sales Quote Head (fsqh)",
@@ -39,7 +39,7 @@
 	"Section-Series-Page (ssp)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Series Page Author (sau)",
 				"Series Page Heading (sh)",
@@ -60,7 +60,7 @@
 	"Section-Halftitle (sht)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"Halftitle Book Title (htit)"
 			],
@@ -74,7 +74,7 @@
 	"Section-Titlepage (sti)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Titlepage Author Name (au)",
 				"Titlepage Book Subtitle (stit)",
@@ -98,7 +98,7 @@
 	"Section-Copyright-Page (scr)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Copyright Text double space (crtxd)",
 				"Copyright Text single space (crtx)"
@@ -113,7 +113,7 @@
 	"Section-Dedication (sde)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Dedication (ded)",
 				"Dedication Author (dedau)"
@@ -128,7 +128,7 @@
 	"Section-Epigraph (sep)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Epigraph - non-verse (epi)",
 				"Epigraph - verse (epiv)",
@@ -148,7 +148,7 @@
 	"Section-Contents (stc)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"TOC Author (cau)",
 				"TOC Backmatter Head (cbmh)",
@@ -171,7 +171,7 @@
 	"Section-Introduction-Frontmatter (sif)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"FM Head (fmh)",
 				"FM Head ALT (afmh)",
@@ -182,37 +182,11 @@
 				"text": [
 					"Introduction"
 				],
-				"match":	"True"
+				"match":	true
 			},
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
-					"Section-Contents (stc)",
-					"Section-Introduction-Frontmatter (sif)",
-					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)"
+					"Section-Introduction-Frontmatter (sif)"
 				]
 			}
 		}
@@ -220,7 +194,7 @@
 	"Section-Preface (spf)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"FM Head (fmh)",
 				"FM Head ALT (afmh)",
@@ -232,42 +206,19 @@
 					"Introduction",
 					"Foreword"
 				],
-				"match":	"False"
+				"match":	false
 			},
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
 					"Section-Contents (stc)",
 					"Section-Introduction-Frontmatter (sif)",
 					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)"
+					"Section-Foreword (sfw)"
 				]
 			}
 		},
 		"contiguous_block_criteria_02": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"FM Author Name (fmau)",
 				"FM Author Signature (ausig)",
@@ -294,37 +245,10 @@
 			],
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
 					"Section-Contents (stc)",
 					"Section-Introduction-Frontmatter (sif)",
 					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)",
-					"FM Head (fmh)",
-					"FM Head ALT (afmh)",
-					"FM Head Nonprinting (fmhnp)",
-					"FM Title (fmt)"
+					"Section-Foreword (sfw)"
 				]
 			}
 		}
@@ -332,7 +256,7 @@
 	"Section-Foreword (sfw)": {
 		"section_type":	"frontmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	true,
 			"styles": [
 				"FM Head (fmh)",
 				"FM Head ALT (afmh)",
@@ -343,37 +267,11 @@
 				"text": [
 					"Foreword"
 				],
-				"match":	"True"
+				"match":	true
 			},
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
-					"Section-Contents (stc)",
-					"Section-Introduction-Frontmatter (sif)",
-					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)"
+					"Section-Foreword (sfw)"
 				]
 			}
 		}
@@ -381,7 +279,7 @@
 	"Section-Introduction-Chapter (sic)": {
 		"section_type":	"main",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"Chap Title (ct)",
 				"Chap Title ALT (act)",
@@ -391,7 +289,7 @@
 				"text": [
 					"Introduction"
 				],
-				"match":	"True"
+				"match":	true
 			},
 			"previous_sibling": {
 				"required_styles": [
@@ -403,7 +301,7 @@
 	"Section-Part (spt)": {
 		"section_type":	"main",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"Part Contents Head (pch)",
 				"Part Contents Main Head (pcmh)",
@@ -428,25 +326,26 @@
 	"Section-Chapter (scp)": {
 		"section_type":	"main",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"Chap Number (cn)",
 				"Chap Title (ct)",
 				"Chap Title Nonprinting (ctnp)"
 			],
-			"previous_until": {
-				"required_styles": [
-					"Section-Chapter (scp)"
-				],
-				"previous_until_stop": [
-					"Chap Number (cn)",
-					"Chap Title (ct)",
-					"Chap Title Nonprinting (ctnp)",
-					"Titlepage Book Title (tit)"
-				]
-			}
+      "previous_sibling": {
+        "required_styles": [
+          "Section-Chapter (scp)"
+        ]
+      },
+			"previous_until": [
+				"Chap Number (cn)",
+				"Chap Title (ct)",
+				"Chap Title Nonprinting (ctnp)",
+				"Titlepage Book Title (tit)"
+			]
 		},
 		"section_required": {
+      "value": true,
 			"insert_before": [
 				"Chap Title (ct)",
 				"Chap Number (cn)",
@@ -466,7 +365,7 @@
 	"Section-Appendix (sap)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"Appendix Footnote (apfn)",
 				"Appendix Head (aph)",
@@ -493,7 +392,7 @@
 	"Section-Acknowledgments (sak)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"BM Head (bmh)",
 				"BM Head ALT (abmh)",
@@ -504,37 +403,11 @@
 				"text": [
 					"Acknowledgements"
 				],
-				"match":	"True"
+				"match":	true
 			},
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
-					"Section-Contents (stc)",
-					"Section-Introduction-Frontmatter (sif)",
-					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)"
+					"Section-Acknowledgments (sak)"
 				]
 			}
 		}
@@ -542,7 +415,7 @@
 	"Section-Afterword (saw)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"BM Head (bmh)",
 				"BM Head ALT (abmh)",
@@ -553,37 +426,11 @@
 				"text": [
 					"Afterword"
 				],
-				"match":	"True"
+				"match":	true
 			},
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
-					"Section-Contents (stc)",
-					"Section-Introduction-Frontmatter (sif)",
-					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)"
+					"Section-Afterword (saw)"
 				]
 			}
 		}
@@ -591,7 +438,7 @@
 	"Section-Conclusion (scl)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"BM Head (bmh)",
 				"BM Head ALT (abmh)",
@@ -602,37 +449,11 @@
 				"text": [
 					"Conclusion"
 				],
-				"match":	"True"
+				"match":	true
 			},
 			"previous_sibling": {
 				"required_styles": [
-					"Section-Ad-Card (sac)",
-					"Section-Front-Sales (sfs)",
-					"Section-Series-Page (ssp)",
-					"Section-Halftitle (sht)",
-					"Section-Titlepage (sti)",
-					"Section-Copyright-Page (scr)",
-					"Section-Dedication (sde)",
-					"Section-Contents (stc)",
-					"Section-Introduction-Frontmatter (sif)",
-					"Section-Preface (spf)",
-					"Section-Foreword (sfw)",
-					"Section-Introduction-Chapter (sic)",
-					"Section-Part (spt)",
-					"Section-Chapter (scp)",
-					"Section-Appendix (sap)",
-					"Section-Acknowledgments (sak)",
-					"Section-Afterword (saw)",
-					"Section-Conclusion (scl)",
-					"Section-About-Author (saa)",
-					"Section-Back-Ad (sba)",
-					"Section-Epigraph (sep)",
-					"Section-Excerpt-Opener (seo)",
-					"Section-Excerpt-Chapter (sec)",
-					"Section-Notes (snt)",
-					"Section-Bibliography (sbi)",
-					"Section-Glossary (sgl)",
-					"Section-Index (sin)"
+					"Section-Conclusion (scl)"
 				]
 			}
 		}
@@ -640,7 +461,7 @@
 	"Section-About-Author (saa)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"About Author Text (atatx)",
 				"About Author Text Head (atah)",
@@ -656,7 +477,7 @@
 	"Section-Back-Ad (sba)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"BOB Ad Imprint (bobimp)",
 				"BOB Ad Level-1 Subhead (bobh1)",
@@ -683,7 +504,7 @@
 	"Section-Excerpt-Opener (seo)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"True",
+			"multiple":	true,
 			"styles": [
 				"Teaser Opening Text (totx)",
 				"Teaser Opening Text No-Indent (totx1)"
@@ -698,7 +519,7 @@
 	"Section-Notes (snt)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Note Level-1 Subhead (n1)",
 				"Note Level-2 Subhead (n2)",
@@ -722,7 +543,7 @@
 	"Section-Bibliography (sbi)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Biblio Level-1 Subhead (b1)",
 				"Biblio Level-2 Subhead (b2)",
@@ -747,7 +568,7 @@
 	"Section-Glossary (sgl)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Glossary Term (glt)",
 				"Glossary Text (gltx)"
@@ -768,7 +589,7 @@
 	"Section-Index (sin)": {
 		"section_type":	"backmatter",
 		"contiguous_block_criteria_01": {
-			"multiple":	"False",
+			"multiple":	false,
 			"styles": [
 				"Index Entry (ine)",
 				"Index Internal Subhead (ih1)",
@@ -789,4 +610,4 @@
 			}
 		}
 	}
-}								
+}
