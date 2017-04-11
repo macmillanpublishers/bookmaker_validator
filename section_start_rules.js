@@ -20,7 +20,8 @@ fs.readFile(file, function editContent (err, contents) {
 
 // -------------------------------------------------------   FUNCTIONS
 function styleCharCleanup(style) {
-  converted = style.replace(/[ ()]/g,'');
+  // remove spaces and paren characters, escape pound signs
+  converted = style.replace(/[ ()]/g,'').replace(/#/g,'\\#');
   return converted;
 }
 
@@ -41,7 +42,7 @@ function makeID() {
 }
 
 function evalMultiple(rule) {
-  // get styles converted to classes and flattened  
+  // get styles converted to classes and flattened
   var styleList = toClassesAndFlatten(rule['styles']);
   if (rule['multiple'] == 'True') {
     var match = $(styleList).first();
@@ -81,7 +82,7 @@ function evalFirstChild(rule, matchingPara) {
    } else {
     console.log("no 1st child criteria for " + rule['rule_name']);
     return true;
-   } 
+   }
 }
 
 function evalPosition(rule, match, section_types) {
@@ -103,15 +104,15 @@ function evalPosition(rule, match, section_types) {
     } else if (rule['position'] == 'backmatter') {
       if (match.nextAll(mainStyleList).length == 0) {
         position = true;
-      } 
-    } 
+      }
+    }
     // prepare our return value
     if (position == true) {
       console.log("'position' criteria " + rule['position'] + " matched!");
       return true;
     } else {
       console.log("'position' criteria " + rule['position'] + " NOT matched.");
-      return false;    
+      return false;
     }
   } else {
     console.log("no 'position' criteria for " + rule['rule_name']);
@@ -121,7 +122,7 @@ function evalPosition(rule, match, section_types) {
 
 function evalPreviousSibling(rule, leadingPara) {
   if (rule['previous_sibling'] == 'True') {
-    // get our style arrays converted to classes and flattened  
+    // get our style arrays converted to classes and flattened
     var styleList = toClassesAndFlatten(rule['styles']);
     var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
 
@@ -140,7 +141,7 @@ function evalPreviousSibling(rule, leadingPara) {
 
 function evalPreviousUntil(rule, matchingPara) {
   if (rule['previous_until'] == 'True') {
-    // get our style items converted to classes and flatten array  
+    // get our style items converted to classes and flatten array
     var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
     var previousUntilStopList = toClassesAndFlatten(rule['previous_until_stop']);
 
@@ -219,8 +220,8 @@ function processRule(rule, section_types) {
             // All criteria for this rule has been met; insert section style
             matchingPara.before(ssPara);
             console.log("adding SS – leading para class: '" + leadingPara.attr('class') + "' matching para class: '" + matchingPara.attr('class') + "'");
-          }  
-        } 
+          }
+        }
       }
     }
 
