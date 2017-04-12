@@ -131,8 +131,6 @@ function evalPosition(rule, match, section_types) {
 }
 
 function evalPreviousSibling(rule, leadingPara) {
-  if (rule['previous_until'].length == 0) {
-    // get our style arrays converted to classes and flattened
     var styleList = toClassesAndFlatten(rule['styles']);
     var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
 
@@ -143,10 +141,6 @@ function evalPreviousSibling(rule, leadingPara) {
       console.log("Previous sibling is not a required style!");
       return true;
     }
-  } else {
-    console.log("previous_until criteria present; this overrides prev_sibling for " + rule['rule_name']);
-    return true;
-  }
 }
 
 function evalPreviousUntil(rule, matchingPara) {

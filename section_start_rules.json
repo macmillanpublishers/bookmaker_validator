@@ -161,6 +161,12 @@
                 "TOC Part Number (cpn)",
                 "TOC Part Title (cpt)"
             ],
+            "optional_heading_styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)"
+            ],
             "previous_sibling": {
                 "required_styles": [
                     "Section-Contents (stc)"
@@ -194,7 +200,7 @@
     "Section-Preface (spf)": {
         "section_type": "frontmatter",
         "contiguous_block_criteria_01": {
-            "multiple": false,
+            "multiple": true,
             "styles": [
                 "FM Head (fmh)",
                 "FM Head ALT (afmh)",
@@ -204,7 +210,8 @@
             "first_child": {
                 "text": [
                     "Introduction",
-                    "Foreword"
+                    "Foreword",
+                    "Acknowledgements"
                 ],
                 "match": false
             },
@@ -213,12 +220,13 @@
                     "Section-Contents (stc)",
                     "Section-Intro-Frontmatter (sif)",
                     "Section-Preface (spf)",
-                    "Section-Foreword (sfw)"
+                    "Section-Foreword (sfw)",
+                    "Section-Acknowledgments (sak)"
                 ]
             }
         },
         "contiguous_block_criteria_02": {
-            "multiple": false,
+            "multiple": true,
             "styles": [
                 "FM Author Name (fmau)",
                 "FM Author Signature (ausig)",
@@ -248,7 +256,12 @@
                     "Section-Contents (stc)",
                     "Section-Intro-Frontmatter (sif)",
                     "Section-Preface (spf)",
-                    "Section-Foreword (sfw)"
+                    "Section-Foreword (sfw)",
+                    "FM Head (fmh)",
+                    "FM Head ALT (afmh)",
+                    "FM Head Nonprinting (fmhnp)",
+                    "FM Title (fmt)",
+                    "Section-Acknowledgments (sak)"
                 ]
             }
         }
@@ -272,28 +285,6 @@
             "previous_sibling": {
                 "required_styles": [
                     "Section-Foreword (sfw)"
-                ]
-            }
-        }
-    },
-    "Section-Intro-Chapter (sic)": {
-        "section_type": "main",
-        "contiguous_block_criteria_01": {
-            "multiple": true,
-            "styles": [
-                "Chap Title (ct)",
-                "Chap Title ALT (act)",
-                "Chap Title Nonprinting (ctnp)"
-            ],
-            "first_child": {
-                "text": [
-                    "Introduction"
-                ],
-                "match": true
-            },
-            "previous_sibling": {
-                "required_styles": [
-                    "Section-Introduction-Chapter (sic)"
                 ]
             }
         }
@@ -334,7 +325,8 @@
             ],
             "previous_sibling": {
                 "required_styles": [
-                    "Section-Chapter (scp)"
+                    "Section-Chapter (scp)",
+                    "Section-Intro-Chapter (sic)"
                 ]
             },
             "previous_until": [
@@ -394,6 +386,10 @@
         "contiguous_block_criteria_01": {
             "multiple": false,
             "styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)",
                 "BM Head (bmh)",
                 "BM Head ALT (abmh)",
                 "BM Head Nonprinting (bmhnp)",
