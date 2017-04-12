@@ -1,11 +1,15 @@
 var fs = require('fs');
 var cheerio = require('cheerio');
 
+
 // -------------------------------------------------------    LOCAL DECLARATIONS
 var file = process.argv[2];
 
 // read in json
 var rulesjson = require(process.argv[3]);
+
+// set idCounter for id gneration function
+var idCounter = 0;
 
 // Read in file contents
 fs.readFile(file, function editContent (err, contents) {
@@ -15,29 +19,242 @@ fs.readFile(file, function editContent (err, contents) {
 
 
 // -------------------------------------------------------   FUNCTIONS
-function processRule(rule, section_types) {
-  // Are our values getting here?
-  // console.log("\n\nrule_name : " + rule['rule_name']);
-  // console.log("ss_name : " + rule['ss_name']);
-  // console.log("section_required : " + rule['section_required']);
-  // console.log("insert_before : " + rule['insert_before']);
-  // console.log("multiple : " + rule['multiple']);
-  // console.log("styles : " + rule['styles']);
-  // console.log("position : " + rule['position']);
-  // console.log("optional_heading_styles : " + rule['optional_heading_styles']);
-  // console.log("first_child : " + rule['first_child']);
-  // console.log("first_child_text : " + rule['first_child_text']);
-  // console.log("first_child_match : " + rule['first_child_match']);
-  // console.log("previous_until : " + rule['previous_until']);
-  // console.log("required_styles : " + rule['required_styles']);
-  // console.log("last : " + rule['last']);
-  // console.log(section_types['frontmatter_sections']);
-  // console.log(file);
-
-
+function styleCharCleanup(style) {
+  // remove spaces and paren characters, escape pound signs
+  converted = style.replace(/[ ()]/g,'').replace(/#/g,'\\#');
+  return converted;
 }
 
-// Constructor for section start rules
+// convert array of stylenames bookmaker classes
+function toClasses(myArray) {
+  var newArray = [];
+  myArray.forEach(function(part, index, myArray) {
+    converted = "." + styleCharCleanup(myArray[index]);
+    newArray.push(converted);
+  });
+  return newArray;
+}
+
+// convert array of stylenames to string of bookmaker classes
+function toClassesAndFlatten(myArray) {
+  newArray = toClasses(myArray);
+  flatArray = newArray.join(", ");
+  return flatArray;
+}
+
+function makeID() {
+  idCounter++;
+  return "ssid" + Math.random().toString(36).substr(2, 4) + idCounter;
+}
+
+function evalMultiple(rule) {
+  // get styles converted to classes and flattened
+  var styleList = toClassesAndFlatten(rule['styles']);
+
+  if (rule['multiple'] == false) {
+    var match = $(styleList).first();
+  } else if (rule['multiple'] == true) {
+    var match = $(styleList);
+  }
+  return match;
+}
+
+function evalOptionalHeaders(rule, match) {
+  // get our optional_headings class list ready
+  var optionalHeadingStyleList = toClassesAndFlatten(rule['optional_heading_styles']);
+  // set matching para and leading para vars
+  var matchingPara = match;
+  var leadingPara = match.prev();
+  // adjust for optional headers
+  while (leadingPara.is(optionalHeadingStyleList)) {
+    console.log("optional header encountered: " + leadingPara.attr('class'));
+    var matchingPara = leadingPara;
+    var leadingPara = leadingPara.prev();
+  }
+  return [matchingPara, leadingPara];
+}
+
+function evalFirstChild(rule, matchingPara) {
+  if (rule['first_child'] == true) {
+    if (rule['first_child_match'] == true && matchingPara.text().includes(rule['first_child_text'])) {
+      console.log("found 1st child positive match: " + matchingPara.text());
+      return true;
+    } else if (rule['first_child_match'] == false && !matchingPara.text().includes(rule['first_child_text'])) {
+      console.log("found 1st child negative match: " + matchingPara.text());
+      return true;
+    } else {
+      console.log("1st child match criteria not met: " + matchingPara.text());
+      return false;
+    }
+   } else {
+    console.log("no 1st child criteria for " + rule['rule_name']);
+    return true;
+   }
+}
+
+function evalPosition(rule, match, section_types) {
+  if (rule['position']) {
+    // setting a default val for conditionals below
+    var position = false;
+
+    // get our Class lists by section ready
+    var fmStyleList = toClassesAndFlatten(rule['required_styles']);
+    var mainStyleList = toClassesAndFlatten(rule['required_styles']);
+    var bmStyleList = toClassesAndFlatten(rule['required_styles']);
+
+    // see if our matched para is in the desired section
+    if (rule['position'] == 'frontmatter') {
+      if (match.prevAll(mainStyleList).length == 0) {
+        var position = true;
+      }
+    } else if (rule['position'] == 'main') {
+      if (match.nextAll(fmStyleList).length == 0 && match.nextAll(bmStyleList).length == 0) {
+        var position = true;
+      }
+    } else if (rule['position'] == 'backmatter') {
+      if (match.nextAll(mainStyleList).length == 0) {
+        var position = true;
+      }
+    }
+    // prepare our return value
+    if (position == true) {
+      console.log("'position' criteria " + rule['position'] + " matched!");
+      return true;
+    } else {
+      console.log("'position' criteria " + rule['position'] + " NOT matched.");
+      return false;
+    }
+  } else {
+    console.log("no 'position' criteria for " + rule['rule_name']);
+    return true;
+  }
+}
+
+function evalPreviousSibling(rule, leadingPara) {
+  if (rule['previous_until'].length == 0) {
+    // get our style arrays converted to classes and flattened
+    var styleList = toClassesAndFlatten(rule['styles']);
+    var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
+
+    if (leadingPara.is(requiredStyleList+", "+styleList)) {
+      console.log("Previous sibling is already a required style");
+      return false;
+    } else {
+      console.log("Previous sibling is not a required style!");
+      return true;
+    }
+  } else {
+    console.log("previous_until criteria present; this overrides prev_sibling for " + rule['rule_name']);
+    return true;
+  }
+}
+
+function evalPreviousUntil(rule, matchingPara) {
+  if (rule['previous_until'].length > 0) {
+    // get our style items converted to classes and flatten array
+    var requiredStyleClasses = toClasses(rule['required_styles']);
+    var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
+    var previousUntilList = toClassesAndFlatten(rule['previous_until']);
+
+    // get all matches to prevUntilStop or requiredStyles
+    var prevAllMatches = matchingPara.prevAll(requiredStyleList + ", " + previousUntilList);
+    // make sure we matched something..
+    if (prevAllMatches.length > 0) {
+      // get an array of classes present on FIRST prev match
+      prevMatchedClass = prevAllMatches.attr('class').split(" ");
+      // see if 1st matched previous element had a required style (have to check each class of element)
+      var prevUntilMatch = true;
+      prevMatchedClass.forEach(function (matchedClass) {
+        if (requiredStyleClasses.includes("." + matchedClass)) {
+          prevUntilMatch = false;
+        }
+      })
+      if (prevUntilMatch == true) {
+        console.log("A prevUntil class was found before a required one: " + prevMatchedClass);
+        return true;
+      } else if (prevUntilMatch == false) {
+        console.log("A required Class was found before a prevUntil one, we will not insert an SS : " + prevMatchedClass);
+        return false;
+      }
+    } else {
+      console.log("Neither prevUntil nor required Style found, ready to insert SectionStart");
+      return true;
+    }
+  } else {
+    console.log("previous_until is not a criteria for " + rule['rule_name']);
+    return true;
+  }
+}
+
+function evalSectionRequired(rule, ssClassName) {
+  // we only wnat to run this on the last rule for a given section-start style
+  if (rule['section_required'] == true && rule['last'] == true) {
+    // get our insertBefore styles converted to classes, flattened
+    var insertBeforeStyleList = toClassesAndFlatten(rule['insert_before']);
+    // check to see if required ss present
+    if($("." + ssClassName).length == 0) {
+      if ($(insertBeforeStyleList).length > 0) {
+        var insertionPoint = $(insertBeforeStyleList).first();
+        // define our para to be inserted
+        var ssPara = $("<p/>").addClass(ssClassName).attr('id',makeID());
+        // insert ss para
+        insertionPoint.before(ssPara);
+        console.log("required ss not found, so inserted '" + ssClassName + "' before element with class: " + insertionPoint.attr('class'));
+      } else {
+        console.log("required ss not found, but neither were any insertBefore classes, so I could not insert ss");
+      }
+    } else {
+      console.log("section_required: required ss already exists somewhere in the MS, yay!");
+    }
+  } else {
+    console.log("section_required is n/a");
+  }
+}
+
+function processRule(rule, section_types) {
+  // make ssName style a classname:
+  var ssClassName = styleCharCleanup(rule['ss_name']);
+
+  // select paras matching 'styles'; first-only for 'multiple' = true
+  var match = evalMultiple(rule);
+
+  // cycle through each match
+  match.each(function() {
+    // account for optional headers
+    var keyParas = evalOptionalHeaders(rule, $(this));
+    var matchingPara = keyParas[0];
+    var leadingPara = keyParas[1];
+
+    // check criteria for position
+    var positionResults = evalPosition(rule, matchingPara, section_types);
+    // check criteria for first child
+    var firstChildResults = evalFirstChild(rule, matchingPara);
+    // check criteria for previous sibling
+    var previousSiblingResults = evalPreviousSibling(rule, leadingPara);
+    // check criteria for previous until
+    var previousUntilResults = evalPreviousUntil(rule, matchingPara);
+
+    if (previousSiblingResults == true) {
+      if (firstChildResults == true) {
+        if (positionResults == true) {
+          if (previousUntilResults == true) {
+            // All criteria for this rule has been met!
+            // define our para to be inserted
+            var ssPara = $("<p/>").addClass(ssClassName).attr('id',makeID());
+            // insert section style
+            matchingPara.before(ssPara);
+            console.log("adding SS – leading para class: '" + leadingPara.attr('class') + "' matching para class: '" + matchingPara.attr('class') + "'");
+          }
+        }
+      }
+    }
+  });
+
+  // apply section required rule if applicable
+  evalSectionRequired(rule, ssClassName);
+}
+
+
 // Constructor for section start rules
 function Rule(key, values_hash, rule_number, section_types) {
   // get a rule count as string
@@ -100,6 +317,7 @@ function Rule(key, values_hash, rule_number, section_types) {
     var obj = new Rule(key, values_hash, next_rule, section_types);
   }
 }
+
 
 // -------------------------------------------------------  RUN
 // Sort sections into type-labels
