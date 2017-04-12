@@ -95,7 +95,7 @@
             }
         }
     },
-    "Section-Copyright-Page (scr)": {
+    "Section-Copyright (scr)": {
         "section_type": "frontmatter",
         "contiguous_block_criteria_01": {
             "multiple": false,
@@ -105,7 +105,7 @@
             ],
             "previous_sibling": {
                 "required_styles": [
-                    "Section-Copyright-Page (scr)"
+                    "Section-Copyright (scr)"
                 ]
             }
         }
@@ -125,7 +125,7 @@
             }
         }
     },
-    "Section-Epigraph (sep)": {
+    "Section-Epigraph (sepi)": {
         "section_type": "frontmatter",
         "position": "frontmatter",
         "contiguous_block_criteria_01": {
@@ -140,7 +140,7 @@
             ],
             "previous_sibling": {
                 "required_styles": [
-                    "Section-Epigraph (sep)"
+                    "Section-Epigraph (sepi)"
                 ]
             }
         }
@@ -168,7 +168,7 @@
             }
         }
     },
-    "Section-Introduction-Frontmatter (sif)": {
+    "Section-Intro-Frontmatter (sif)": {
         "section_type": "frontmatter",
         "contiguous_block_criteria_01": {
             "multiple": false,
@@ -186,7 +186,7 @@
             },
             "previous_sibling": {
                 "required_styles": [
-                    "Section-Introduction-Frontmatter (sif)"
+                    "Section-Intro-Frontmatter (sif)"
                 ]
             }
         }
@@ -211,7 +211,7 @@
             "previous_sibling": {
                 "required_styles": [
                     "Section-Contents (stc)",
-                    "Section-Introduction-Frontmatter (sif)",
+                    "Section-Intro-Frontmatter (sif)",
                     "Section-Preface (spf)",
                     "Section-Foreword (sfw)"
                 ]
@@ -246,7 +246,7 @@
             "previous_sibling": {
                 "required_styles": [
                     "Section-Contents (stc)",
-                    "Section-Introduction-Frontmatter (sif)",
+                    "Section-Intro-Frontmatter (sif)",
                     "Section-Preface (spf)",
                     "Section-Foreword (sfw)"
                 ]
@@ -276,7 +276,7 @@
             }
         }
     },
-    "Section-Introduction-Chapter (sic)": {
+    "Section-Intro-Chapter (sic)": {
         "section_type": "main",
         "contiguous_block_criteria_01": {
             "multiple": true,
