@@ -197,8 +197,12 @@
             }
         }
     },
+    "Section-Intro-Chapter (sic)": {
+        "section_type": "frontmatter"
+    },
     "Section-Preface (spf)": {
         "section_type": "frontmatter",
+        "order": "last",
         "contiguous_block_criteria_01": {
             "multiple": true,
             "styles": [
@@ -356,6 +360,7 @@
     },
     "Section-Appendix (sap)": {
         "section_type": "backmatter",
+        "order": "last",
         "contiguous_block_criteria_01": {
             "multiple": true,
             "styles": [
@@ -520,6 +525,9 @@
         }
     },
     "Section-Excerpt-Opener (seo)": {
+        "section_type": "backmatter"
+    },
+    "Section-Excerpt-Chapter (sec)": {
         "section_type": "backmatter",
         "contiguous_block_criteria_01": {
             "multiple": true,
