@@ -47,16 +47,19 @@ function makeID() {
   return "ssid" + Math.random().toString(36).substr(2, 4) + idCounter;
 }
 
-function evalMultiple(rule) {
-  // get styles converted to classes and flattened
-  var styleList = toClassesAndFlatten(rule['styles']);
-
+function evalMultiple(rule, ssClassName) {
   if (rule['multiple'] == false) {
-    var match = $(styleList).first();
-  } else if (rule['multiple'] == true) {
-    var match = $(styleList);
+    if($("." + ssClassName).length > 0) {
+      console.log(ssClassName + " already exists in the html, we will not insert again")
+      return false
+    } else {
+      // this ss is not already present in the html
+      return true
+    }
+  } else {
+    // multiples are allowed
+    return true
   }
-  return match;
 }
 
 function evalOptionalHeaders(rule, match) {
@@ -76,10 +79,18 @@ function evalOptionalHeaders(rule, match) {
 
 function evalFirstChild(rule, matchingPara) {
   if (rule['first_child'] == true) {
-    if (rule['first_child_match'] == true && matchingPara.text().includes(rule['first_child_text'])) {
+    // check if we have a positive match
+    var matchFound = false;
+    rule['first_child_text'].forEach(function (firstChildString) {
+      if (matchingPara.text().toLowerCase().includes(firstChildString.toLowerCase())) {
+        matchFound = true;
+      }
+    })
+    // return values based on matchFound & desired match (positive or negative)
+    if (rule['first_child_match'] == true && matchFound == true) {
       console.log("found 1st child positive match: " + matchingPara.text());
       return true;
-    } else if (rule['first_child_match'] == false && !matchingPara.text().includes(rule['first_child_text'])) {
+    } else if (rule['first_child_match'] == false && matchFound == false) {
       console.log("found 1st child negative match: " + matchingPara.text());
       return true;
     } else {
@@ -98,9 +109,9 @@ function evalPosition(rule, match, section_types) {
     var position = false;
 
     // get our Class lists by section ready
-    var fmStyleList = toClassesAndFlatten(rule['required_styles']);
-    var mainStyleList = toClassesAndFlatten(rule['required_styles']);
-    var bmStyleList = toClassesAndFlatten(rule['required_styles']);
+    var fmStyleList = toClassesAndFlatten(section_types['frontmatter_sections']);
+    var mainStyleList = toClassesAndFlatten(section_types['main_sections']);
+    var bmStyleList = toClassesAndFlatten(section_types['backmatter_sections']);
 
     // see if our matched para is in the desired section
     if (rule['position'] == 'frontmatter') {
@@ -209,8 +220,11 @@ function processRule(rule, section_types) {
   // make ssName style a classname:
   var ssClassName = styleCharCleanup(rule['ss_name']);
 
-  // select paras matching 'styles'; first-only for 'multiple' = true
-  var match = evalMultiple(rule);
+  // get styles converted to classes and flattened
+  var styleList = toClassesAndFlatten(rule['styles']);
+
+  // select paras matching 'styles'
+  var match = $(styleList);
 
   // cycle through each match
   match.each(function() {
@@ -219,6 +233,8 @@ function processRule(rule, section_types) {
     var matchingPara = keyParas[0];
     var leadingPara = keyParas[1];
 
+    // check criteria for multiple
+    var multipleResults = evalMultiple(rule, ssClassName)
     // check criteria for position
     var positionResults = evalPosition(rule, matchingPara, section_types);
     // check criteria for first child
@@ -228,16 +244,23 @@ function processRule(rule, section_types) {
     // check criteria for previous until
     var previousUntilResults = evalPreviousUntil(rule, matchingPara);
 
-    if (previousSiblingResults == true) {
-      if (firstChildResults == true) {
-        if (positionResults == true) {
-          if (previousUntilResults == true) {
-            // All criteria for this rule has been met!
-            // define our para to be inserted
-            var ssPara = $("<p/>").addClass(ssClassName).attr('id',makeID());
-            // insert section style
-            matchingPara.before(ssPara);
-            console.log("adding SS – leading para class: '" + leadingPara.attr('class') + "' matching para class: '" + matchingPara.attr('class') + "'");
+    if (multipleResults == true) {
+      if (previousSiblingResults == true) {
+        if (firstChildResults == true) {
+          if (positionResults == true) {
+            if (previousUntilResults == true) {
+              // define our para to be inserted
+              var ssPara = $("<p/>").addClass(ssClassName).attr('id',makeID());
+              // insert section style
+              matchingPara.before(ssPara);
+              console.log("adding SS – leading para class: '" + leadingPara.attr('class') + "' matching para class: '" + matchingPara.attr('class') + "'");
+
+              // 'return false' breaks the 'each' loop for when we only want the first possible match:
+              if (rule['multiple'] == false) {
+                console.log("not checking any more matches, 'multiple' is set to false")
+                return false;
+              }
+            }
           }
         }
       }

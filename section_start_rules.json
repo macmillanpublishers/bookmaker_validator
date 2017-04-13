@@ -211,7 +211,7 @@
                 "text": [
                     "Introduction",
                     "Foreword",
-                    "Acknowledgements"
+                    "Acknowledgments"
                 ],
                 "match": false
             },
@@ -397,7 +397,7 @@
             ],
             "first_child": {
                 "text": [
-                    "Acknowledgements"
+                    "Acknowledgments"
                 ],
                 "match": true
             },
