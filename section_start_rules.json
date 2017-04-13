@@ -372,11 +372,33 @@
                 "Appendix Source Note (apsn)",
                 "Appendix Subhead (apsh)",
                 "Appendix Text (aptx)",
-                "Appendix Text No-Indent (aptx1)"
+                "Appendix Text No-Indent (aptx1)",
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
             ],
+            "first_child": {
+                "text": [
+                    "Acknowledgments",
+                    "Conclusion",
+                    "Afterword"
+                ],
+                "match": false
+            },
             "previous_sibling": {
                 "required_styles": [
-                    "Section-Appendix (sap)"
+                    "Section-Appendix (sap)",
+                    "Section-Acknowledgments (sak)",
+                    "Section-Afterword (saw)",
+                    "Section-Conclusion (scl)",
+                    "Section-About-Author (saa)",
+                    "Section-Back-Ad (sba)",
+                    "Section-Excerpt-Opener (seo)",
+                    "Section-Notes (snt)",
+                    "Section-Bibliography (sbi)",
+                    "Section-Glossary (sgl)",
+                    "Section-Index (sin)"
                 ]
             }
         }
