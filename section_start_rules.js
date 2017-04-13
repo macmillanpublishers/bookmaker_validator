@@ -82,7 +82,7 @@ function evalFirstChild(rule, matchingPara) {
     // check if we have a positive match
     var matchFound = false;
     rule['first_child_text'].forEach(function (firstChildString) {
-      if (matchingPara.text().toLowerCase().includes(firstChildString.toLowerCase())) {
+      if (matchingPara.text().toLowerCase().indexOf(firstChildString.toLowerCase()) > -1) {
         matchFound = true;
       }
     })
@@ -170,7 +170,7 @@ function evalPreviousUntil(rule, matchingPara) {
       // see if 1st matched previous element had a required style (have to check each class of element)
       var prevUntilMatch = true;
       prevMatchedClass.forEach(function (matchedClass) {
-        if (requiredStyleClasses.includes("." + matchedClass)) {
+        if (requiredStyleClasses.indexOf("." + matchedClass) > -1) {
           prevUntilMatch = false;
         }
       })
