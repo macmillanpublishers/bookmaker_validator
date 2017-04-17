@@ -141,12 +141,13 @@ function evalPosition(rule, match, section_types) {
   }
 }
 
-function evalPreviousSibling(rule, leadingPara) {
+function evalPreviousSibling(rule, leadingPara, section_types) {
     var styleList = toClassesAndFlatten(rule['styles']);
     var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
+    var fullSectionStartList = toClassesAndFlatten(section_types['all_sections']);
 
-    if (leadingPara.is(requiredStyleList+", "+styleList)) {
-      console.log("Previous sibling is already a required style");
+    if (leadingPara.is(requiredStyleList + ", " + styleList + ", " + fullSectionStartList)) {
+      console.log("Previous sibling is already a required style (or Section Start style)");
       return false;
     } else {
       console.log("Previous sibling is not a required style!");
@@ -240,7 +241,7 @@ function processRule(rule, section_types) {
     // check criteria for first child
     var firstChildResults = evalFirstChild(rule, matchingPara);
     // check criteria for previous sibling
-    var previousSiblingResults = evalPreviousSibling(rule, leadingPara);
+    var previousSiblingResults = evalPreviousSibling(rule, leadingPara, section_types);
     // check criteria for previous until
     var previousUntilResults = evalPreviousUntil(rule, matchingPara);
 
@@ -274,72 +275,76 @@ function processRule(rule, section_types) {
 
 // Constructor for section start rules
 function Rule(key, values_hash, rule_number, section_types) {
-  // get a rule count as string
-  if (rule_number < 9) {
-    criteria_count = '0' + rule_number;
-  } else {
-    criteria_count = rule_number;
-  }
+  // skip any Section Start entries without criteria
+  if (values_hash.hasOwnProperty('contiguous_block_criteria_01') || rule_number > 1) {
+    // get a rule count as string
+    if (rule_number < 9) {
+      criteria_count = '0' + rule_number;
+    } else {
+      criteria_count = rule_number;
+    }
 
-  // set values for 'rule'
-  this.rule_name = key + "_" + criteria_count;
-  this.ss_name = key;
-  if (values_hash.hasOwnProperty('section_required')) {
-    this.section_required = values_hash['section_required']['value']
-    this.insert_before = values_hash['section_required']['insert_before'];
-  } else {
-    this.section_required = false;
-    this.insert_before = [];
-  }
-  if (values_hash.hasOwnProperty('position')) {
-    this.position = values_hash['position'];
-  } else {
-    this.position = '';
-  }
-  this.multiple = values_hash["contiguous_block_criteria_" + criteria_count]['multiple'];
-  this.styles = values_hash["contiguous_block_criteria_" + criteria_count]['styles'];
-  if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('optional_heading_styles')) {
-    this.optional_heading_styles = values_hash["contiguous_block_criteria_" + criteria_count]['optional_heading_styles'];
-  } else {
-    this.optional_heading_styles = [];
-  }
-  if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('first_child')) {
-    this.first_child = true;
-    this.first_child_text = values_hash["contiguous_block_criteria_" + criteria_count]['first_child']['text'];
-    this.first_child_match = values_hash["contiguous_block_criteria_" + criteria_count]['first_child']['match'];
-  } else {
-    this.first_child = false;
-    this.first_child_text = [];
-    this.first_child_match = '';
-  }
-  this.required_styles = values_hash["contiguous_block_criteria_" + criteria_count]['previous_sibling']['required_styles'];
-  if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('previous_until')) {
-    this.previous_until = values_hash["contiguous_block_criteria_" + criteria_count]['previous_until']
-  } else {
-    this.previous_until = [];
-  }
+    // set values for 'rule'
+    this.rule_name = key + "_" + criteria_count;
+    this.ss_name = key;
+    if (values_hash.hasOwnProperty('section_required')) {
+      this.section_required = values_hash['section_required']['value']
+      this.insert_before = values_hash['section_required']['insert_before'];
+    } else {
+      this.section_required = false;
+      this.insert_before = [];
+    }
+    if (values_hash.hasOwnProperty('position')) {
+      this.position = values_hash['position'];
+    } else {
+      this.position = '';
+    }
+    this.multiple = values_hash["contiguous_block_criteria_" + criteria_count]['multiple'];
+    this.styles = values_hash["contiguous_block_criteria_" + criteria_count]['styles'];
+    if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('optional_heading_styles')) {
+      this.optional_heading_styles = values_hash["contiguous_block_criteria_" + criteria_count]['optional_heading_styles'];
+    } else {
+      this.optional_heading_styles = [];
+    }
+    if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('first_child')) {
+      this.first_child = true;
+      this.first_child_text = values_hash["contiguous_block_criteria_" + criteria_count]['first_child']['text'];
+      this.first_child_match = values_hash["contiguous_block_criteria_" + criteria_count]['first_child']['match'];
+    } else {
+      this.first_child = false;
+      this.first_child_text = [];
+      this.first_child_match = '';
+    }
+    this.required_styles = values_hash["contiguous_block_criteria_" + criteria_count]['previous_sibling']['required_styles'];
+    if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('previous_until')) {
+      this.previous_until = values_hash["contiguous_block_criteria_" + criteria_count]['previous_until']
+    } else {
+      this.previous_until = [];
+    }
 
-  // 'last' is to let processRule know if there are more rules coming for this SS; important when 'section_required' = true
-  var next_rule = rule_number + 1;
-  if (values_hash.hasOwnProperty("contiguous_block_criteria_" + next_rule) || values_hash.hasOwnProperty("contiguous_block_criteria_0" + next_rule)) {
-    this.last = false;
-  } else {
-    this.last = true;
-  }
+    // 'last' is to let processRule know if there are more rules coming for this SS; important when 'section_required' = true
+    var next_rule = rule_number + 1;
+    if (values_hash.hasOwnProperty("contiguous_block_criteria_" + next_rule) || values_hash.hasOwnProperty("contiguous_block_criteria_0" + next_rule)) {
+      this.last = false;
+    } else {
+      this.last = true;
+    }
 
-  processRule(this, section_types);
+    processRule(this, section_types);
 
-  // if there is a successive contiguous_block_criteria, make a new rule and process it!
-  if (this.last == false) {
-    var obj = new Rule(key, values_hash, next_rule, section_types);
+    // if there is a successive contiguous_block_criteria, make a new rule and process it!
+    if (this.last == false) {
+      var obj = new Rule(key, values_hash, next_rule, section_types);
+    }
   }
 }
 
 
 // -------------------------------------------------------  RUN
 // Sort sections into type-labels
-var section_types = {frontmatter_sections:[], main_sections:[], backmatter_sections:[]};
+var section_types = {all_sections:[], frontmatter_sections:[], main_sections:[], backmatter_sections:[]};
 for(ss in rulesjson) {
+  section_types['all_sections'].push(ss);
   if (rulesjson[ss]['section_type'] == 'frontmatter') {
     section_types['frontmatter_sections'].push(ss);
   } else if (rulesjson[ss]['section_type'] == 'main') {
@@ -349,27 +354,39 @@ for(ss in rulesjson) {
   }
 }
 
-// Run through Section Starts with section_required, apply rules
+var sectionStartObject = {};
+// Run through Section Starts with section_required, create & apply rules
 for(ss in rulesjson) {
   if (rulesjson[ss].hasOwnProperty('section_required')) {
     // The '1' is to start with 1st contiguous block criteria
-    var obj = new Rule(ss, rulesjson[ss], 1, section_types);
+    sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
   }
 }
-
-// Apply rules for Section Starts WITHOUT section_required or position_requirement
+// Apply rules for Section Starts WITHOUT order:last or position_requirement
 for(ss in rulesjson) {
-  if (!rulesjson[ss].hasOwnProperty('section_required') && !rulesjson[ss].hasOwnProperty('position')) {
-    // The '1' is to start with 1st contiguous block criteria
-    var obj = new Rule(ss, rulesjson[ss], 1, section_types);
+  if (!rulesjson[ss].hasOwnProperty('order') && !rulesjson[ss].hasOwnProperty('position')) {
+    // exclude Section Starts we've already processed
+    if (!sectionStartObject.hasOwnProperty(ss)) {
+      sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
+    }
   }
 }
-
-// Apply rules for Section Starts with position requirement (without section_required)
+// Apply rules for Section Starts with position requirement
 for(ss in rulesjson) {
-  if (rulesjson[ss].hasOwnProperty('position') && !rulesjson[ss].hasOwnProperty('section_required')) {
-    // The '1' is to start with 1st contiguous block criteria
-    var obj = new Rule(ss, rulesjson[ss], 1, section_types);
+  if (rulesjson[ss].hasOwnProperty('position')) {
+    // exclude Section Starts we've already processed
+    if (!sectionStartObject.hasOwnProperty(ss)) {
+      sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
+    }
+  }
+}
+// // Apply rules for Section Starts with order:last
+for(ss in rulesjson) {
+  if (rulesjson[ss]['order'] == 'last') {
+    // exclude Section Starts we've already processed
+    if (!sectionStartObject.hasOwnProperty(ss)) {
+      sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
+    }
   }
 }
 
