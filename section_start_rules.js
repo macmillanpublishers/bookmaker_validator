@@ -19,13 +19,13 @@ fs.readFile(file, function editContent (err, contents) {
 
 
 // -------------------------------------------------------   FUNCTIONS
+  // remove spaces and paren characters, escape pound signs from stylenames
 function styleCharCleanup(style) {
-  // remove spaces and paren characters, escape pound signs
   converted = style.replace(/[ ()]/g,'').replace(/#/g,'\\#');
   return converted;
 }
 
-// convert array of stylenames bookmaker classes
+// convert array of stylenames to an array of bookmaker classes
 function toClasses(myArray) {
   var newArray = [];
   myArray.forEach(function(part, index, myArray) {
@@ -35,18 +35,22 @@ function toClasses(myArray) {
   return newArray;
 }
 
-// convert array of stylenames to string of bookmaker classes
+// convert array of stylenames to a string of bookmaker classes
 function toClassesAndFlatten(myArray) {
   newArray = toClasses(myArray);
   flatArray = newArray.join(", ");
   return flatArray;
 }
 
+// make a randomm id for section starts;
+// the idCounter is to make absolutely sure they're unique
 function makeID() {
   idCounter++;
   return "ssid" + Math.random().toString(36).substr(2, 4) + idCounter;
 }
 
+// returns value 'false' if item with ssClass already exists & if the multiple is set to 'false'
+//  else returns true
 function evalMultiple(rule, ssClassName) {
   if (rule['multiple'] == false) {
     if($("." + ssClassName).length > 0) {
@@ -62,6 +66,7 @@ function evalMultiple(rule, ssClassName) {
   }
 }
 
+// changes the value of 'leading' and 'matchingPara' to include optional headers if they are present
 function evalOptionalHeaders(rule, match) {
   // get our optional_headings class list ready
   var optionalHeadingStyleList = toClassesAndFlatten(rule['optional_heading_styles']);
@@ -77,6 +82,8 @@ function evalOptionalHeaders(rule, match) {
   return [matchingPara, leadingPara];
 }
 
+// if firstchild criteria is present and met, or there is no firstchild criteria, returns true
+//  else returns false
 function evalFirstChild(rule, matchingPara) {
   if (rule['first_child'] == true) {
     // check if we have a positive match
@@ -103,6 +110,8 @@ function evalFirstChild(rule, matchingPara) {
    }
 }
 
+// if position criteria is present and met, or there is no position criteria, returns true;
+//  else returns false
 function evalPosition(rule, match, section_types) {
   if (rule['position']) {
     // setting a default val for conditionals below
@@ -141,6 +150,10 @@ function evalPosition(rule, match, section_types) {
   }
 }
 
+// returns false if the previous sibling is any section-start style, anything from 'required-style' list,
+//  or anything from the contiguous block 'style' list (this last item could occur in case of an optional header
+//  in the middle of a contiguous block).
+// Else returns true
 function evalPreviousSibling(rule, leadingPara, section_types) {
     var styleList = toClassesAndFlatten(rule['styles']);
     var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
@@ -155,6 +168,7 @@ function evalPreviousSibling(rule, leadingPara, section_types) {
     }
 }
 
+// returns true previous_until criteria is present and met, otherwise returns false
 function evalPreviousUntil(rule, matchingPara) {
   if (rule['previous_until'].length > 0) {
     // get our style items converted to classes and flatten array
@@ -192,6 +206,8 @@ function evalPreviousUntil(rule, matchingPara) {
   }
 }
 
+// if a rule has seciton required criteria and the section-start is not present,
+//  it is inserted before the first item on the 'insert_before' list that is found in the MS
 function evalSectionRequired(rule, ssClassName) {
   // we only wnat to run this on the last rule for a given section-start style
   if (rule['section_required'] == true && rule['last'] == true) {
@@ -217,6 +233,9 @@ function evalSectionRequired(rule, ssClassName) {
   }
 }
 
+// ----------------------- Process Section Start rules
+// Here's where we walk through and apply criteria of each rule to see if we're inserting
+//  a para with a Section-Start style
 function processRule(rule, section_types) {
   // make ssName style a classname:
   var ssClassName = styleCharCleanup(rule['ss_name']);
@@ -227,12 +246,17 @@ function processRule(rule, section_types) {
   // select paras matching 'styles'
   var match = $(styleList);
 
-  // cycle through each match
+  // cycle through each matching para to test against rule criteria
   match.each(function() {
     // account for optional headers
     var keyParas = evalOptionalHeaders(rule, $(this));
     var matchingPara = keyParas[0];
     var leadingPara = keyParas[1];
+
+    // Each of the following function calls will evaluate the matchingPara against this ssRule
+    // For any of these tests: if no value for that function is present for this rule,
+    //  &/or criteria IS present for this rule and is met, it will return a value of true
+    //  If criteria is specified for this rule and is NOT met, we will get a value of false:
 
     // check criteria for multiple
     var multipleResults = evalMultiple(rule, ssClassName)
@@ -245,14 +269,17 @@ function processRule(rule, section_types) {
     // check criteria for previous until
     var previousUntilResults = evalPreviousUntil(rule, matchingPara);
 
+    // Now any values of false from above functions will cause us to exit our nested ifs and
+    //  skip ahead to check the next matched Para
     if (multipleResults == true) {
       if (previousSiblingResults == true) {
         if (firstChildResults == true) {
           if (positionResults == true) {
             if (previousUntilResults == true) {
+              // All criteria were met for this rule, we need to insert a Section Start paragraph!
               // define our para to be inserted
               var ssPara = $("<p/>").addClass(ssClassName).attr('id',makeID());
-              // insert section style
+              // insert section style para:
               matchingPara.before(ssPara);
               console.log("adding SS – leading para class: '" + leadingPara.attr('class') + "' matching para class: '" + matchingPara.attr('class') + "'");
 
@@ -268,12 +295,15 @@ function processRule(rule, section_types) {
     }
   });
 
-  // apply section required rule if applicable
+  // apply section_required rule if applicable
   evalSectionRequired(rule, ssClassName);
 }
 
 
-// Constructor for section start rules
+// ----------------------- Constructor for section start rules
+// Here's where we create a Rule object for each Section-Start criteria
+// Basically flattening key:values from the JSON
+//  and creating empty values for the Rule object where keys are not present in the JSON
 function Rule(key, values_hash, rule_number, section_types) {
   // skip any Section Start entries without criteria
   if (values_hash.hasOwnProperty('contiguous_block_criteria_01') || rule_number > 1) {
@@ -284,9 +314,12 @@ function Rule(key, values_hash, rule_number, section_types) {
       criteria_count = rule_number;
     }
 
-    // set values for 'rule'
+    ////// Set values for Rule object
+    // rule_name is the SectionStart Name with a 01 appended (or 02, 03 etc) based on criteria_count
     this.rule_name = key + "_" + criteria_count;
+    // ss_name is the SectionStart Name
     this.ss_name = key;
+    // section_required & insert_before values from the JSON, or 'false' & empty array if they're not present
     if (values_hash.hasOwnProperty('section_required')) {
       this.section_required = values_hash['section_required']['value']
       this.insert_before = values_hash['section_required']['insert_before'];
@@ -294,18 +327,30 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.section_required = false;
       this.insert_before = [];
     }
+    // position value is the position string from the JSON, or empty string if it wasn't present in JSON
     if (values_hash.hasOwnProperty('position')) {
       this.position = values_hash['position'];
     } else {
       this.position = '';
     }
+    // 'multiple' value, always present in JSON, t/f
     this.multiple = values_hash["contiguous_block_criteria_" + criteria_count]['multiple'];
+    // 'styles' value, always present in JSON, array of stylenames
     this.styles = values_hash["contiguous_block_criteria_" + criteria_count]['styles'];
+
+    ////// The rest of the values below require delving into the nested "contiguous_block_criteria_xx" JSON hash.
+    //////  Because each criteria is a separate rule, we use the rulenum/criteria_count to make sure we are
+    //////  accessing values form the right criteria
+    // optional_heading_styles value is an array of styles where present, set to an empty array otherwise
     if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('optional_heading_styles')) {
       this.optional_heading_styles = values_hash["contiguous_block_criteria_" + criteria_count]['optional_heading_styles'];
     } else {
       this.optional_heading_styles = [];
     }
+    // first_child is a boolean, true if present, false if not
+    // first_child_text is an array of text values (nested under first_child), or
+    //  an empty array if not present in the JSON
+    // first_child_match is a boolean nested under first_child, indicating whether the desired match is positive or negative
     if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('first_child')) {
       this.first_child = true;
       this.first_child_text = values_hash["contiguous_block_criteria_" + criteria_count]['first_child']['text'];
@@ -315,14 +360,18 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.first_child_text = [];
       this.first_child_match = '';
     }
+    // 'required_styles' value, nested under 'previous_sibling', is present in JSON for each criteria, as an array of stylenames
     this.required_styles = values_hash["contiguous_block_criteria_" + criteria_count]['previous_sibling']['required_styles'];
+    // 'previous_until' value, where present, is an array of stylenames, otherwise set to empty array
     if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('previous_until')) {
       this.previous_until = values_hash["contiguous_block_criteria_" + criteria_count]['previous_until']
     } else {
       this.previous_until = [];
     }
 
-    // 'last' is to let processRule know if there are more rules coming for this SS; important when 'section_required' = true
+    // calculated value 'last' is to let processRule know if there are more criteria/Rules coming
+    //  for this SectionStart; this is important to know when 'section_required' = true,
+    //  because we want to run section_required criteria after all other criteria for a given Section Start has run
     var next_rule = rule_number + 1;
     if (values_hash.hasOwnProperty("contiguous_block_criteria_" + next_rule) || values_hash.hasOwnProperty("contiguous_block_criteria_0" + next_rule)) {
       this.last = false;
@@ -330,9 +379,11 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.last = true;
     }
 
+    // We have out Rule object! Now we send this Rule to the processRule function to be evaluated!
     processRule(this, section_types);
 
-    // if there is a successive contiguous_block_criteria, make a new rule and process it!
+    // if there is a successive contiguous_block_criteria for this Section Start in the JSON,
+    //  construct a new Rule on the fly right here from this call.
     if (this.last == false) {
       var obj = new Rule(key, values_hash, next_rule, section_types);
     }
@@ -342,6 +393,8 @@ function Rule(key, values_hash, rule_number, section_types) {
 
 // -------------------------------------------------------  RUN
 // Sort sections into type-labels
+// We'll need to access values by type for Rules with 'position' requirements
+// And we'll need to access the list of 'all' section starts when testing 'previous_sibling'
 var section_types = {all_sections:[], frontmatter_sections:[], main_sections:[], backmatter_sections:[]};
 for(ss in rulesjson) {
   section_types['all_sections'].push(ss);
@@ -354,6 +407,13 @@ for(ss in rulesjson) {
   }
 }
 
+// Note for future dev:  in our VBA version of this script, the sequential loops through rules by Priority were
+//  abstracted/encapsulated as follows:
+// As each Rule object is created, a 'priority' value (integer) was calculated in a function and added as a property of the Rule.
+// Then the loops below were replaced by a single 'while' loop incrementing through priority values
+// This could be done here if we get more complicated priorities requirements
+
+// Priority 1: rules with section_required criteria need to run before all others
 var sectionStartObject = {};
 // Run through Section Starts with section_required, create & apply rules
 for(ss in rulesjson) {
@@ -362,7 +422,7 @@ for(ss in rulesjson) {
     sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
   }
 }
-// Apply rules for Section Starts WITHOUT order:last or position_requirement
+// Priority 2: Apply rules for Section Starts WITHOUT order:last or position_requirement
 for(ss in rulesjson) {
   if (!rulesjson[ss].hasOwnProperty('order') && !rulesjson[ss].hasOwnProperty('position')) {
     // exclude Section Starts we've already processed
@@ -371,7 +431,7 @@ for(ss in rulesjson) {
     }
   }
 }
-// Apply rules for Section Starts with position requirement
+// Priority 3: Apply rules for Section Starts with position requirement
 for(ss in rulesjson) {
   if (rulesjson[ss].hasOwnProperty('position')) {
     // exclude Section Starts we've already processed
@@ -380,7 +440,7 @@ for(ss in rulesjson) {
     }
   }
 }
-// // Apply rules for Section Starts with order:last
+// Priority 4: Apply rules for Section Starts with order:last
 for(ss in rulesjson) {
   if (rulesjson[ss]['order'] == 'last') {
     // exclude Section Starts we've already processed
