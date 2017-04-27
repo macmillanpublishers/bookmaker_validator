@@ -49,7 +49,7 @@ function makeID() {
   return "ssid" + Math.random().toString(36).substr(2, 4) + idCounter;
 }
 
-// returns value 'false' if item with ssClass already exists & if the multiple is set to 'false'
+// returns value 'false' if item with ssClass already exists & if 'multiple' is set to 'false'
 //  else returns true
 function evalMultiple(rule, ssClassName) {
   if (rule['multiple'] == false) {
@@ -66,7 +66,7 @@ function evalMultiple(rule, ssClassName) {
   }
 }
 
-// changes the value of 'leading' and 'matchingPara' to include optional headers if they are present
+// changes the value of 'leadingPara' and 'matchingPara' to include optional headers if they are present
 function evalOptionalHeaders(rule, match) {
   // get our optional_headings class list ready
   var optionalHeadingStyleList = toClassesAndFlatten(rule['optional_heading_styles']);
@@ -82,7 +82,7 @@ function evalOptionalHeaders(rule, match) {
   return [matchingPara, leadingPara];
 }
 
-// if firstchild criteria is present and met, or there is no firstchild criteria, returns true
+// if first-child criteria is present and met, or there is no first-child criteria, returns true
 //  else returns false
 function evalFirstChild(rule, matchingPara) {
   if (rule['first_child'] == true) {
@@ -168,7 +168,7 @@ function evalPreviousSibling(rule, leadingPara, section_types) {
     }
 }
 
-// returns true previous_until criteria is present and met, otherwise returns false
+// returns true if previous_until criteria is present and met, otherwise returns false
 function evalPreviousUntil(rule, matchingPara) {
   if (rule['previous_until'].length > 0) {
     // get our style items converted to classes and flatten array
@@ -206,7 +206,7 @@ function evalPreviousUntil(rule, matchingPara) {
   }
 }
 
-// if a rule has seciton required criteria and the section-start is not present,
+// if a rule has section_required criteria and the section-start is not present,
 //  it is inserted before the first item on the 'insert_before' list that is found in the MS
 function evalSectionRequired(rule, ssClassName) {
   // we only wnat to run this on the last rule for a given section-start style
@@ -235,12 +235,12 @@ function evalSectionRequired(rule, ssClassName) {
 
 // ----------------------- Process Section Start rules
 // Here's where we walk through and apply criteria of each rule to see if we're inserting
-//  a para with a Section-Start style
+//  a new para with Section-Start style
 function processRule(rule, section_types) {
-  // make ssName style a classname:
+  // make section-start stylename a classname:
   var ssClassName = styleCharCleanup(rule['ss_name']);
 
-  // get styles converted to classes and flattened
+  // get stylelist array converted to classes and flattened to string
   var styleList = toClassesAndFlatten(rule['styles']);
 
   // select paras matching 'styles'
@@ -253,9 +253,9 @@ function processRule(rule, section_types) {
     var matchingPara = keyParas[0];
     var leadingPara = keyParas[1];
 
-    // Each of the following function calls will evaluate the matchingPara against this ssRule
-    // For any of these tests: if no value for that function is present for this rule,
-    //  &/or criteria IS present for this rule and is met, it will return a value of true
+    // Each of the following function calls evaluates matchingPara for this sectionstart-Rule
+    // For all of these tests: if no value for that function is present for this rule,
+    //  &/or criteria IS present for this rule AND criteria is met, it will return a value of true
     //  If criteria is specified for this rule and is NOT met, we will get a value of false:
 
     // check criteria for multiple
@@ -315,11 +315,12 @@ function Rule(key, values_hash, rule_number, section_types) {
     }
 
     ////// Set values for Rule object
-    // rule_name is the SectionStart Name with a 01 appended (or 02, 03 etc) based on criteria_count
-    this.rule_name = key + "_" + criteria_count;
-    // ss_name is the SectionStart Name
+    // 'ss_name' is the SectionStart Name
     this.ss_name = key;
-    // section_required & insert_before values from the JSON, or 'false' & empty array if they're not present
+    // 'rule_name' is the SectionStart Name with a 2 digit criteria_count appended (e.g. 01, 02, etc)
+    this.rule_name = key + "_" + criteria_count;
+    // 'section_required' & 'insert_before' values are straight from the JSON – a boolean, and an array of styles, respectively:
+    //  or 'false', & empty array if they're not present
     if (values_hash.hasOwnProperty('section_required')) {
       this.section_required = values_hash['section_required']['value']
       this.insert_before = values_hash['section_required']['insert_before'];
@@ -327,7 +328,7 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.section_required = false;
       this.insert_before = [];
     }
-    // position value is the position string from the JSON, or empty string if it wasn't present in JSON
+    // 'position' value is the position string from the JSON, or empty string if not present in JSON
     if (values_hash.hasOwnProperty('position')) {
       this.position = values_hash['position'];
     } else {
@@ -335,13 +336,14 @@ function Rule(key, values_hash, rule_number, section_types) {
     }
     // 'multiple' value, always present in JSON, t/f
     this.multiple = values_hash["contiguous_block_criteria_" + criteria_count]['multiple'];
-    // 'styles' value, always present in JSON, array of stylenames
+    // 'styles' value, always present in JSON, an array of stylenames
     this.styles = values_hash["contiguous_block_criteria_" + criteria_count]['styles'];
 
-    ////// The rest of the values below require delving into the nested "contiguous_block_criteria_xx" JSON hash.
+    ////// The rest of the values below are nested in the "contiguous_block_criteria_xx" hash in the JSON.
     //////  Because each criteria is a separate rule, we use the rulenum/criteria_count to make sure we are
-    //////  accessing values form the right criteria
-    // optional_heading_styles value is an array of styles where present, set to an empty array otherwise
+    //////  accessing values form the right 'contiguous_block_criteria'
+
+    // 'optional_heading_styles', where present, is an array of stylenames; set to an empty array otherwise
     if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('optional_heading_styles')) {
       this.optional_heading_styles = values_hash["contiguous_block_criteria_" + criteria_count]['optional_heading_styles'];
     } else {
@@ -360,7 +362,7 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.first_child_text = [];
       this.first_child_match = '';
     }
-    // 'required_styles' value, nested under 'previous_sibling', is present in JSON for each criteria, as an array of stylenames
+    // 'required_styles' value, nested under 'previous_sibling', is present in JSON for every criteria, as an array of stylenames
     this.required_styles = values_hash["contiguous_block_criteria_" + criteria_count]['previous_sibling']['required_styles'];
     // 'previous_until' value, where present, is an array of stylenames, otherwise set to empty array
     if (values_hash["contiguous_block_criteria_" + criteria_count].hasOwnProperty('previous_until')) {
@@ -369,9 +371,9 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.previous_until = [];
     }
 
-    // calculated value 'last' is to let processRule know if there are more criteria/Rules coming
+    // calculated value 'last' is to let processRule function know if there are more criteria/Rules coming
     //  for this SectionStart; this is important to know when 'section_required' = true,
-    //  because we want to run section_required criteria after all other criteria for a given Section Start has run
+    //  because we want to run section_required function AFTER all other Rules for this Section Start have been evaluated.
     var next_rule = rule_number + 1;
     if (values_hash.hasOwnProperty("contiguous_block_criteria_" + next_rule) || values_hash.hasOwnProperty("contiguous_block_criteria_0" + next_rule)) {
       this.last = false;
@@ -379,11 +381,11 @@ function Rule(key, values_hash, rule_number, section_types) {
       this.last = true;
     }
 
-    // We have out Rule object! Now we send this Rule to the processRule function to be evaluated!
+    // We have our Rule object! Now we send this Rule to the processRule function to be evaluated!
     processRule(this, section_types);
 
     // if there is a successive contiguous_block_criteria for this Section Start in the JSON,
-    //  construct a new Rule on the fly right here from this call.
+    //  construct a new Rule for it here by calling the constructor again (with incremented rule_number)
     if (this.last == false) {
       var obj = new Rule(key, values_hash, next_rule, section_types);
     }
@@ -392,9 +394,9 @@ function Rule(key, values_hash, rule_number, section_types) {
 
 
 // -------------------------------------------------------  RUN
-// Sort sections into type-labels
-// We'll need to access values by type for Rules with 'position' requirements
-// And we'll need to access the list of 'all' section starts when testing 'previous_sibling'
+// Push SectionStart names into arrays by section-type, + one array with 'all' names
+// We'll need the lists of sections-by-type to evaluate Rules with 'position' requirements
+// And we'll need the list of 'all' section start names when testing 'previous_sibling'
 var section_types = {all_sections:[], frontmatter_sections:[], main_sections:[], backmatter_sections:[]};
 for(ss in rulesjson) {
   section_types['all_sections'].push(ss);
@@ -407,15 +409,17 @@ for(ss in rulesjson) {
   }
 }
 
-// Note for future dev:  in our VBA version of this script, the sequential loops through rules by Priority were
-//  abstracted/encapsulated as follows:
-// As each Rule object is created, a 'priority' value (integer) was calculated in a function and added as a property of the Rule.
-// Then the loops below were replaced by a single 'while' loop incrementing through priority values
-// This could be done here if we get more complicated priorities requirements
+// Note for future dev:  in our VBA version of this script, the below loops through rules by sequential 'Priority'
+//  were abstracted/encapsulated as follows:
+// - As each Rule object is created in the Constructor class, a 'priority' value (integer) is
+//  calculated in a function and added as a property of the Rule.
+// - Then a single loop constructs Rule objects, and a subsequent While loop processes Rules in increasing 'priority'
+// Something like this could be done here if we get more complicated priority requirements
+
+// Create a hash to contain created Rule objects
+var sectionStartObject = {};
 
 // Priority 1: rules with section_required criteria need to run before all others
-var sectionStartObject = {};
-// Run through Section Starts with section_required, create & apply rules
 for(ss in rulesjson) {
   if (rulesjson[ss].hasOwnProperty('section_required')) {
     // The '1' is to start with 1st contiguous block criteria
