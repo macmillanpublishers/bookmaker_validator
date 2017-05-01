@@ -52,13 +52,11 @@ def nondoc(logger,status_hash)
     f.puts "Unable to process \"#{Val::Doc.filename_normalized}\". Your document is not a .doc or .docx file."
   }
 end
-def convertDocToDocxPSscript(doc_or_docx_workingfile)
-  # doctodocx = "S:\\resources\\bookmaker_scripts\\bookmaker_addons\\htmlmaker_preprocessing.ps1"
-  # doctodocx = "#{Val::Paths.bookmaker_scripts_dir}\\bookmaker_addons\\htmlmaker_preprocessing.ps1"
-  # `PowerShell -NoProfile -ExecutionPolicy Bypass -Command "#{doctodocx} '#{doc_or_docx_workingfile}'"`
-  `#{Val::Resources.powershell_exe} "#{File.join(Val::Paths.scripts_dir, 'save_doc_as_docx.ps1')} '#{doc_or_docx_workingfile}'"`
+def convertDocToDocxPSscript(logger, doc_or_docx_workingfile)
+  saveas_output = ''
+  saveas_output = `#{Val::Resources.powershell_exe} "#{File.join(Val::Paths.scripts_dir, 'save_doc_as_docx.ps1')} '#{doc_or_docx_workingfile}'"`
 rescue => e
-  puts e
+  logger.info {"Error converting to .docx: #{e}\nOutput from .ps1: #{saveas_output}"}
 end
 def movedoc(logger)
   # setting a var for the workingfile before its converted to .docx
@@ -74,7 +72,7 @@ def movedoc(logger)
     logger.info {"renamed \"#{Val::Doc.filename_split}\" to \"#{Val::Doc.filename_normalized}\" and moved to tmpdir "}
   end
   # if .doc, save up to .docx
-  if Val::Doc.extension == /.doc$/
+  if Val::Doc.extension.match(/.doc$/)
     logger.info {"working file is a .doc (#{Val::Doc.filename_normalized}), attempting to save as a .docx"}
     convertDocToDocxPSscript(logger, doc_or_docx_workingfile)
     if File.file?(Val::Files.working_file)
