@@ -325,7 +325,8 @@
             "styles": [
                 "Chap Number (cn)",
                 "Chap Title (ct)",
-                "Chap Title Nonprinting (ctnp)"
+                "Chap Title Nonprinting (ctnp)",
+                "Chap Title ALT (act)"
             ],
             "previous_sibling": {
                 "required_styles": [
@@ -337,6 +338,7 @@
                 "Chap Number (cn)",
                 "Chap Title (ct)",
                 "Chap Title Nonprinting (ctnp)",
+                "Chap Title ALT (act)",
                 "Titlepage Book Title (tit)"
             ]
         },
@@ -345,6 +347,7 @@
             "insert_before": [
                 "Chap Title (ct)",
                 "Chap Number (cn)",
+                "Chap Title ALT (act)",
                 "Chap Opening Text (cotx)",
                 "Chap Opening Text No-Indent (cotx1)",
                 "Chap Opening Text No-Indent Space After (cotx1#)",
@@ -551,7 +554,9 @@
                 "Note Level-2 Subhead (n2)",
                 "Note Level-3 Subhead (n3)",
                 "Note Level-4 Subhead (n4)",
-                "Note Level-5 Subhead (n5)"
+                "Note Level-5 Subhead (n5)",
+                "Endnote Text (ntx)",
+                "Endnote Text"
             ],
             "optional_heading_styles": [
                 "BM Head (bmh)",
