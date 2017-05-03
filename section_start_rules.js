@@ -5,8 +5,14 @@ var cheerio = require('cheerio');
 // -------------------------------------------------------    LOCAL DECLARATIONS
 var file = process.argv[2];
 
-// read in json
+// read in section-start_rules.json
 var rulesjson = require(process.argv[3]);
+
+// read in style_config.json
+var styleconfig = require(process.argv[4]);
+
+// set versatileBlockParas var
+var versatileBlockParas = styleconfig['versatileblockparas'].join(", ")
 
 // set idCounter for id gneration function
 var idCounter = 0;
@@ -66,20 +72,48 @@ function evalMultiple(rule, ssClassName) {
   }
 }
 
-// changes the value of 'leadingPara' and 'matchingPara' to include optional headers if they are present
-function evalOptionalHeaders(rule, match) {
-  // get our optional_headings class list ready
+// scan upwards to reset the value of 'matchingPara' and its 'leadingPara':
+//  a style from contiguous block Style list or optional header list
+//  not preceded by optional headers, versatile block paras or style from Style list
+// Also return whether the matching para was preceded by another mathicn style in the same block
+function checkFirstStyleofBlock(rule, match) {
+  // get our optional_headings and style class lists ready
+  var styleList = toClassesAndFlatten(rule['styles']);
   var optionalHeadingStyleList = toClassesAndFlatten(rule['optional_heading_styles']);
+
+  // setting selector contents for below loop(s), depending on presence of optional headers
+  if (optionalHeadingStyleList) {
+    var optHeadingsVersatileBlocksAndStyles = optionalHeadingStyleList + ", " + versatileBlockParas + ", " + styleList;
+    var optHeadingsAndStyles = optionalHeadingStyleList + ", " + styleList;
+  } else {
+    var optHeadingsVersatileBlocksAndStyles = versatileBlockParas + ", " + styleList;
+    var optHeadingsAndStyles = styleList;
+  }
+
   // set matching para and leading para vars
   var matchingPara = match;
   var leadingPara = match.prev();
-  // adjust for optional headers
-  while (leadingPara.is(optionalHeadingStyleList)) {
-    console.log("optional header encountered: " + leadingPara.attr('class'));
-    var matchingPara = leadingPara;
-    var leadingPara = leadingPara.prev();
+  var matchParaTmp = match;
+  var leadParaTmp = leadingPara;
+  var firstStyleOfBlock = true;
+
+  // scan upwards through any optional headers, versatile block paras, or styles in Style list (for contiguous block criteria)
+  while (leadParaTmp.is(optHeadingsVersatileBlocksAndStyles)) {
+    console.log("leading optional header or versatile block para: " + leadParaTmp.attr('class'));
+    // increment the loop upwards
+    var matchParaTmp = leadParaTmp;
+    var leadParaTmp = leadParaTmp.prev();
+    // adjust matching & leadingParas if we found optional header or para with style from
+    //  Style list directly preceding a versatile block para
+    if (matchParaTmp.is(optHeadingsAndStyles)) {
+      var matchingPara = matchParaTmp;
+      var leadingPara = leadParaTmp;
+      if (matchParaTmp.is(styleList)) {
+        firstStyleOfBlock = false;
+      }
+    }
   }
-  return [matchingPara, leadingPara];
+  return [matchingPara, leadingPara, firstStyleOfBlock];
 }
 
 // if first-child criteria is present and met, or there is no first-child criteria, returns true
@@ -150,16 +184,13 @@ function evalPosition(rule, match, section_types) {
   }
 }
 
-// returns false if the previous sibling is any section-start style, anything from 'required-style' list,
-//  or anything from the contiguous block 'style' list (this last item could occur in case of an optional header
-//  in the middle of a contiguous block).
+// returns false if the previous sibling is any section-start style or anything from 'required-style' list,
 // Else returns true
 function evalPreviousSibling(rule, leadingPara, section_types) {
-    var styleList = toClassesAndFlatten(rule['styles']);
     var requiredStyleList = toClassesAndFlatten(rule['required_styles']);
     var fullSectionStartList = toClassesAndFlatten(section_types['all_sections']);
 
-    if (leadingPara.is(requiredStyleList + ", " + styleList + ", " + fullSectionStartList)) {
+    if (leadingPara.is(requiredStyleList + ", " + fullSectionStartList)) {
       console.log("Previous sibling is already a required style (or Section Start style)");
       return false;
     } else {
@@ -248,10 +279,19 @@ function processRule(rule, section_types) {
 
   // cycle through each matching para to test against rule criteria
   match.each(function() {
-    // account for optional headers
-    var keyParas = evalOptionalHeaders(rule, $(this));
+    // account for optional headers and versatile block paras: find the beginning of the Style block
+    var keyParas = checkFirstStyleofBlock(rule, $(this));
     var matchingPara = keyParas[0];
     var leadingPara = keyParas[1];
+    // boolean for whether this match was found to be the first matching style in its block
+    var firstStyleOfBlock = keyParas[2];
+
+    // if this match was preceded by other contiguous block styles within the block,
+    //  move to the next match:
+    if (firstStyleOfBlock == false) {
+      console.log("this match is not the beginning of the contiguous block, skipping");
+      return;
+    }
 
     // Each of the following function calls evaluates matchingPara for this sectionstart-Rule
     // For all of these tests: if no value for that function is present for this rule,
