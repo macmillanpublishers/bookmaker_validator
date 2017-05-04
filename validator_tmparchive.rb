@@ -53,10 +53,9 @@ def nondoc(logger,status_hash)
   }
 end
 def convertDocToDocxPSscript(logger, doc_or_docx_workingfile)
-  saveas_output = ''
-  saveas_output = `#{Val::Resources.powershell_exe} "#{File.join(Val::Paths.scripts_dir, 'save_doc_as_docx.ps1')} '#{doc_or_docx_workingfile}'"`
+  `#{Val::Resources.powershell_exe} "#{File.join(Val::Paths.scripts_dir, 'save_doc_as_docx.ps1')} '#{doc_or_docx_workingfile}'"`
 rescue => e
-  logger.info {"Error converting to .docx: #{e}\nOutput from .ps1: #{saveas_output}"}
+  logger.info {"Error converting to .docx: #{e}"}
 end
 def movedoc(logger)
   # setting a var for the workingfile before its converted to .docx
