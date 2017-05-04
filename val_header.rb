@@ -43,6 +43,10 @@ module Val
 		def self.filename_normalized
 			@@filename_normalized
 		end
+    @@filename_docx = "#{@@basename_normalized}.docx"
+		def self.filename_docx
+			@@filename_docx
+		end
 	end
 	class Paths
 		@@testing_value_file = File.join("C:", "staging.txt")
@@ -92,7 +96,7 @@ module Val
 		def self.original_file
 			@@original_file
 		end
-		@@working_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
+		@@working_file = File.join(Paths.tmp_dir, Doc.filename_docx)
 		def self.working_file
 			@@working_file
 		end

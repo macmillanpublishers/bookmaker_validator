@@ -100,7 +100,7 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		tmp_dir_new = File.join(Val::Paths.working_dir,"#{isbn}_to_bookmaker_#{index}")
 		Mcmlln::Tools.moveFile(Val::Paths.tmp_dir, tmp_dir_new)
 		#update path for working_file
-		working_file_updated = File.join(tmp_dir_new, Val::Doc.filename_normalized)
+		working_file_updated = File.join(tmp_dir_new, Val::Doc.filename_docx)
 		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
 		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
@@ -113,13 +113,13 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
     		end
   	else
     		logger.info {"adding isbn to done_filename because it was missing"}
-			  done_file = working_file_updated.gsub(/#{Val::Doc.extension}$/,"_#{isbn}#{Val::Doc.extension}")
+			  done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
   	end
-  	done_file = done_file.gsub(/#{Val::Doc.extension}$/,"_DONE_#{index}#{Val::Doc.extension}")
+  	done_file = done_file.gsub(/.docx$/,"_DONE_#{index}.docx")
 		Mcmlln::Tools.copyFile(working_file_updated, done_file)
     Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
 		#rename working file to keep it distinct from infile
-		new_workingfile = working_file_updated.gsub(/#{Val::Doc.extension}$/,"_workingfile#{Val::Doc.extension}")
+		new_workingfile = working_file_updated.gsub(/.docx$/,"_workingfile.docx")
 		File.rename(working_file_updated, new_workingfile)
 		#make a copy of infile so we have a reference to it for posts
 	  Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
