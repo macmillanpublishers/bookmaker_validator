@@ -57,9 +57,8 @@ MESSAGE_END
     def self.dropbox_api_call
       py_script = File.join(Val::Paths.scripts_dir,'dboxapi2.py')
       dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/(&)/,'\\\\\1')
-      generated_access_token = File.read(Val::Resources.generated_access_token_file)
       #run python api script
-      dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{generated_access_token} #{dropbox_filepath}")
+      dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
       if dropboxmodifier.nil? or dropboxmodifier.empty? or !dropboxmodifier
       	user_email, user_name = '', ''
       else
@@ -202,19 +201,6 @@ MESSAGE_END
       else
         FileUtils.mkdir_p outfolder
       end
-    end
-    def self.runnode(js, args)
-      if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
-        node_output = `node #{js} #{args}`
-      elsif Bkmkr::Tools.os == "windows"
-        nodepath = File.join(Bkmkr::Paths.resource_dir, "nodejs", "node.exe")
-        node_output = `#{nodepath} #{js} #{args}`
-      else
-        node_output = "ERROR: I can't seem to run node. Is it installed and part of your system PATH?"
-      end
-      return node_output
-    rescue => e
-      p e
     end
   end
 end

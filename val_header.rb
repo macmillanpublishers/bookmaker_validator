@@ -58,7 +58,6 @@ module Val
 			@@working_dir
 		end
 		@@scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts', 'bookmaker_validator')
-    # @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
 		def self.scripts_dir
 			@@scripts_dir
 		end
@@ -144,10 +143,6 @@ module Val
 		def self.errFile
 			@@errFile
 		end
-    @@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
-    def self.section_start_rules_json
-      @@section_start_rules_json
-    end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -215,9 +210,9 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
-		def self.generated_access_token_file
-			@@generated_access_token_file
+		@@generated_access_token = File.read(File.join(authkeys_repo,'access_token.txt'))
+		def self.generated_access_token
+			@@generated_access_token
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
    			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
