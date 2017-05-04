@@ -1,0 +1,644 @@
+{
+    "Section-Ad-Card (sac)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Ad Card List of Titles (acl)",
+                "Ad Card Main Head (acmh)",
+                "Ad Card Subhead (acsh)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Ad-Card (sac)"
+                ]
+            }
+        }
+    },
+    "Section-Front-Sales (sfs)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Front Sales Quote (fsq)",
+                "Front Sales Quote Head (fsqh)",
+                "Front Sales Quote NoIndent (fsq1)",
+                "Front Sales Quote Source (fsqs)",
+                "Front Sales Subtitle (fsst)",
+                "Front Sales Text (fstx)",
+                "Front Sales Text NoIndent (fstx1)",
+                "Front Sales Title (fst)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Front-Sales (sfs)"
+                ]
+            }
+        }
+    },
+    "Section-Series-Page (ssp)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Series Page Author (sau)",
+                "Series Page Heading (sh)",
+                "Series Page List of Titles (slt)",
+                "Series Page Subhead 1 (sh1)",
+                "Series Page Subhead 2 (sh2)",
+                "Series Page Subhead 3 (sh3)",
+                "Series Page Text (stx)",
+                "Series Page Text No-Indent (stx1)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Series-Page (ssp)"
+                ]
+            }
+        }
+    },
+    "Section-Halftitle (sht)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "Halftitle Book Title (htit)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Halftitle (sht)"
+                ]
+            }
+        }
+    },
+    "Section-Titlepage (sti)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Titlepage Author Name (au)",
+                "Titlepage Book Subtitle (stit)",
+                "Titlepage Book Title (tit)",
+                "Titlepage Cities (cit)",
+                "Titlepage Contributor Name (con)",
+                "Titlepage Imprint Line (imp)",
+                "Titlepage Logo (logo)",
+                "Titlepage Publisher Name (pub)",
+                "Titlepage Reading Line (rl)",
+                "Titlepage Series Title (ser)",
+                "Titlepage Translator Name (tran)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Titlepage (sti)"
+                ]
+            }
+        }
+    },
+    "Section-Copyright (scr)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Copyright Text double space (crtxd)",
+                "Copyright Text single space (crtx)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Copyright (scr)"
+                ]
+            }
+        }
+    },
+    "Section-Dedication (sde)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Dedication (ded)",
+                "Dedication Author (dedau)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Dedication (sde)"
+                ]
+            }
+        }
+    },
+    "Section-Epigraph (sepi)": {
+        "section_type": "frontmatter",
+        "position": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Epigraph - non-verse (epi)",
+                "Epigraph - verse (epiv)",
+                "Epigraph in Text - non-verse (tepi)",
+                "Epigraph in Text - Source (teps)",
+                "Epigraph in Text - verse (tepiv)",
+                "Epigraph Source (eps)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Epigraph (sepi)"
+                ]
+            }
+        }
+    },
+    "Section-Contents (stc)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "TOC Author (cau)",
+                "TOC Backmatter Head (cbmh)",
+                "TOC Chapter Number (ccn)",
+                "TOC Chapter Subtitle (ccst)",
+                "TOC Chapter Title (cct)",
+                "TOC Frontmatter Head (cfmh)",
+                "TOC Level-1 Chapter Head (ch1)",
+                "TOC Page Number (cnum)",
+                "TOC Part Number (cpn)",
+                "TOC Part Title (cpt)"
+            ],
+            "optional_heading_styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Contents (stc)"
+                ]
+            }
+        }
+    },
+    "Section-Intro-Frontmatter (sif)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Introduction"
+                ],
+                "match": true
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Intro-Frontmatter (sif)"
+                ]
+            }
+        }
+    },
+    "Section-Intro-Chapter (sic)": {
+        "section_type": "frontmatter"
+    },
+    "Section-Preface (spf)": {
+        "section_type": "frontmatter",
+        "order": "last",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Introduction",
+                    "Foreword",
+                    "Acknowledgments"
+                ],
+                "match": false
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Contents (stc)",
+                    "Section-Intro-Frontmatter (sif)",
+                    "Section-Preface (spf)",
+                    "Section-Foreword (sfw)",
+                    "Section-Acknowledgments (sak)"
+                ]
+            }
+        },
+        "contiguous_block_criteria_02": {
+            "multiple": true,
+            "styles": [
+                "FM Author Name (fmau)",
+                "FM Author Signature (ausig)",
+                "FM Dramatis Personae (fmdp)",
+                "FM Epigraph - non-verse (fmepi)",
+                "FM Epigraph - verse (fmepiv)",
+                "FM Epigraph Source (fmeps)",
+                "FM Level-1 Subhead (fmh1)",
+                "FM Level-2 Subhead (fmh2)",
+                "FM Level-3 Subhead (fmh3)",
+                "FM Level-4 Subhead (fmh4)",
+                "FM Level-5 Subhead (fmh5)",
+                "FM Subhead (fmsh)",
+                "FM Text (fmtx)",
+                "FM Text ALT (afmtx)",
+                "FM Text No-Indent (fmtx1)",
+                "FM Text No-Indent ALT (afmtx1)",
+                "FM Text No-Indent Space After (fmtx1#)",
+                "FM Text No-Indent Space Around (#fmtx1#)",
+                "FM Text No-Indent Space Before (#fmtx1)",
+                "FM Text Space After (fmtx#)",
+                "FM Text Space Around (#fmtx#)",
+                "FM Text Space Before (#fmtx)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Contents (stc)",
+                    "Section-Intro-Frontmatter (sif)",
+                    "Section-Preface (spf)",
+                    "Section-Foreword (sfw)",
+                    "FM Head (fmh)",
+                    "FM Head ALT (afmh)",
+                    "FM Head Nonprinting (fmhnp)",
+                    "FM Title (fmt)",
+                    "Section-Acknowledgments (sak)"
+                ]
+            }
+        }
+    },
+    "Section-Foreword (sfw)": {
+        "section_type": "frontmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Foreword"
+                ],
+                "match": true
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Foreword (sfw)"
+                ]
+            }
+        }
+    },
+    "Section-Part (spt)": {
+        "section_type": "main",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "Part Contents Head (pch)",
+                "Part Contents Main Head (pcmh)",
+                "Part Epigraph - non-verse (pepi)",
+                "Part Epigraph - verse (pepiv)",
+                "Part Epigraph Source (peps)",
+                "Part Number (pn)",
+                "Part Opening Text (potx)",
+                "Part Opening Text No-Indent (potx1)",
+                "Part Ornament (porn)",
+                "Part Ornament ALT (porn2)",
+                "Part Subtitle (pst)",
+                "Part Title (pt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Part (spt)"
+                ]
+            }
+        }
+    },
+    "Section-Chapter (scp)": {
+        "section_type": "main",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "Chap Number (cn)",
+                "Chap Title (ct)",
+                "Chap Title Nonprinting (ctnp)",
+                "Chap Title ALT (act)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Chapter (scp)",
+                    "Section-Intro-Chapter (sic)"
+                ]
+            },
+            "previous_until": [
+                "Chap Number (cn)",
+                "Chap Title (ct)",
+                "Chap Title Nonprinting (ctnp)",
+                "Chap Title ALT (act)",
+                "Titlepage Book Title (tit)"
+            ]
+        },
+        "section_required": {
+            "value": true,
+            "insert_before": [
+                "Chap Title (ct)",
+                "Chap Number (cn)",
+                "Chap Title ALT (act)",
+                "Chap Opening Text (cotx)",
+                "Chap Opening Text No-Indent (cotx1)",
+                "Chap Opening Text No-Indent Space After (cotx1#)",
+                "Chap Opening Text Space After (cotx#)",
+                "Text - Std No-Indent (tx1)",
+                "Text - Std No-Indent ALT (atx1)",
+                "Text - Std No-Indent Space After (tx1#)",
+                "Text - Std No-Indent Space Around (#tx1#)",
+                "Text - Std No-Indent Space Before (#tx1)",
+                "Text - Standard (tx)"
+            ]
+        }
+    },
+    "Section-Appendix (sap)": {
+        "section_type": "backmatter",
+        "order": "last",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "Appendix Footnote (apfn)",
+                "Appendix Head (aph)",
+                "Appendix Level-1 Subhead (aph1)",
+                "Appendix Level-2 Subhead (aph2)",
+                "Appendix Level-3 Subhead (aph3)",
+                "Appendix Level-4 Subhead (aph4)",
+                "Appendix Level-5 Subhead (aph5)",
+                "Appendix List Bullet (apbl)",
+                "Appendix List Num (apnl)",
+                "Appendix List Unnum (apul)",
+                "Appendix Source Note (apsn)",
+                "Appendix Subhead (apsh)",
+                "Appendix Text (aptx)",
+                "Appendix Text No-Indent (aptx1)",
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Acknowledgments",
+                    "Conclusion",
+                    "Afterword"
+                ],
+                "match": false
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Appendix (sap)",
+                    "Section-Acknowledgments (sak)",
+                    "Section-Afterword (saw)",
+                    "Section-Conclusion (scl)",
+                    "Section-About-Author (saa)",
+                    "Section-Back-Ad (sba)",
+                    "Section-Excerpt-Opener (seo)",
+                    "Section-Notes (snt)",
+                    "Section-Bibliography (sbi)",
+                    "Section-Glossary (sgl)",
+                    "Section-Index (sin)"
+                ]
+            }
+        }
+    },
+    "Section-Acknowledgments (sak)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "FM Head (fmh)",
+                "FM Head ALT (afmh)",
+                "FM Head Nonprinting (fmhnp)",
+                "FM Title (fmt)",
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Acknowledgments"
+                ],
+                "match": true
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Acknowledgments (sak)"
+                ]
+            }
+        }
+    },
+    "Section-Afterword (saw)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Afterword"
+                ],
+                "match": true
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Afterword (saw)"
+                ]
+            }
+        }
+    },
+    "Section-Conclusion (scl)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "first_child": {
+                "text": [
+                    "Conclusion"
+                ],
+                "match": true
+            },
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Conclusion (scl)"
+                ]
+            }
+        }
+    },
+    "Section-About-Author (saa)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "About Author Text (atatx)",
+                "About Author Text Head (atah)",
+                "About Author Text No-Indent (atatx1)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-About-Author (saa)"
+                ]
+            }
+        }
+    },
+    "Section-Back-Ad (sba)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "BOB Ad Imprint (bobimp)",
+                "BOB Ad Level-1 Subhead (bobh1)",
+                "BOB Ad Level-2 Subhead (bobh2)",
+                "BOB Ad Level-3 Subhead (bobh3)",
+                "BOB Ad Level-4 Subhead (bobh4)",
+                "BOB Ad Level-5 Subhead (bobh5)",
+                "BOB Ad Quote (bobq)",
+                "BOB Ad Quote Head (bobqh)",
+                "BOB Ad Quote No-Indent (bobq1)",
+                "BOB Ad Quote Source (bobqs)",
+                "BOB Ad Subtitle (bobst)",
+                "BOB Ad Text (bobtx)",
+                "BOB Ad Text No-Indent (bobtx1)",
+                "BOB Ad Title (bobt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Back-Ad (sba)"
+                ]
+            }
+        }
+    },
+    "Section-Excerpt-Opener (seo)": {
+        "section_type": "backmatter"
+    },
+    "Section-Excerpt-Chapter (sec)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+                "Teaser Opening Text (totx)",
+                "Teaser Opening Text No-Indent (totx1)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Excerpt-Opener (seo)"
+                ]
+            }
+        }
+    },
+    "Section-Notes (snt)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Note Level-1 Subhead (n1)",
+                "Note Level-2 Subhead (n2)",
+                "Note Level-3 Subhead (n3)",
+                "Note Level-4 Subhead (n4)",
+                "Note Level-5 Subhead (n5)",
+                "Endnote Text (ntx)",
+                "Endnote Text"
+            ],
+            "optional_heading_styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Notes (snt)"
+                ]
+            }
+        }
+    },
+    "Section-Bibliography (sbi)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Biblio Level-1 Subhead (b1)",
+                "Biblio Level-2 Subhead (b2)",
+                "Biblio Level-3 Subhead (b3)",
+                "Biblio Level-4 Subhead (b4)",
+                "Biblio Level-5 Subhead (b5)",
+                "Bibliography Text (bibtx)"
+            ],
+            "optional_heading_styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Bibliography (sbi)"
+                ]
+            }
+        }
+    },
+    "Section-Glossary (sgl)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Glossary Term (glt)",
+                "Glossary Text (gltx)"
+            ],
+            "optional_heading_styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Glossary (sgl)"
+                ]
+            }
+        }
+    },
+    "Section-Index (sin)": {
+        "section_type": "backmatter",
+        "contiguous_block_criteria_01": {
+            "multiple": false,
+            "styles": [
+                "Index Entry (ine)",
+                "Index Internal Subhead (ih1)",
+                "Index Sub-subentry (insse)",
+                "Index Subentry (inse)",
+                "Index Text (intx)"
+            ],
+            "optional_heading_styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Section-Index (sin)"
+                ]
+            }
+        }
+    }
+}
