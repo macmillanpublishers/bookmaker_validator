@@ -43,6 +43,10 @@ module Val
 		def self.filename_normalized
 			@@filename_normalized
 		end
+    @@filename_docx = "#{@@basename_normalized}.docx"
+		def self.filename_docx
+			@@filename_docx
+		end
 	end
 	class Paths
 		@@testing_value_file = File.join("C:", "staging.txt")
@@ -92,7 +96,7 @@ module Val
 		def self.original_file
 			@@original_file
 		end
-		@@working_file = File.join(Paths.tmp_dir, Doc.filename_normalized)
+		@@working_file = File.join(Paths.tmp_dir, Doc.filename_docx)
 		def self.working_file
 			@@working_file
 		end
@@ -211,7 +215,7 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
+    @@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
 		def self.generated_access_token_file
 			@@generated_access_token_file
 		end
