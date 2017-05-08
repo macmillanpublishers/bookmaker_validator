@@ -9,10 +9,10 @@ var file = process.argv[2];
 var rulesjson = require(process.argv[3]);
 
 // read in style_config.json
-var styleconfig = require(process.argv[4]);
+var vbastyleconfig = require(process.argv[4]);
 
-// set versatileBlockParas var
-var versatileBlockParas = styleconfig['versatileblockparas'].join(", ")
+// set versatileParas var
+var versatileParas = vbastyleconfig['versatileparas']
 
 // set idCounter for id gneration function
 var idCounter = 0;
@@ -77,16 +77,16 @@ function evalMultiple(rule, ssClassName) {
 //  not preceded by optional headers, versatile block paras or style from Style list
 // Also return whether the matching para was preceded by another mathicn style in the same block
 function checkFirstStyleofBlock(rule, match) {
-  // get our optional_headings and style class lists ready
+  // get our optional_headings, versatileParas, and style class lists ready
   var styleList = toClassesAndFlatten(rule['styles']);
   var optionalHeadingStyleList = toClassesAndFlatten(rule['optional_heading_styles']);
-
+  var versatileParasList = toClassesAndFlatten(versatileParas);
   // setting selector contents for below loop(s), depending on presence of optional headers
   if (optionalHeadingStyleList) {
-    var optHeadingsVersatileBlocksAndStyles = optionalHeadingStyleList + ", " + versatileBlockParas + ", " + styleList;
+    var optHeadingsVersatileBlocksAndStyles = optionalHeadingStyleList + ", " + versatileParasList + ", " + styleList;
     var optHeadingsAndStyles = optionalHeadingStyleList + ", " + styleList;
   } else {
-    var optHeadingsVersatileBlocksAndStyles = versatileBlockParas + ", " + styleList;
+    var optHeadingsVersatileBlocksAndStyles = versatileParasList + ", " + styleList;
     var optHeadingsAndStyles = styleList;
   }
 
@@ -99,7 +99,7 @@ function checkFirstStyleofBlock(rule, match) {
 
   // scan upwards through any optional headers, versatile block paras, or styles in Style list (for contiguous block criteria)
   while (leadParaTmp.is(optHeadingsVersatileBlocksAndStyles)) {
-    console.log("leading optional header or versatile block para: " + leadParaTmp.attr('class'));
+    console.log("leading optional header, contiguous block style, or versatile para: " + leadParaTmp.attr('class'));
     // increment the loop upwards
     var matchParaTmp = leadParaTmp;
     var leadParaTmp = leadParaTmp.prev();
