@@ -114,8 +114,10 @@ else
   logger.info {"running isbnsearch/password_check macro"}
   status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
   status_hash['password_protected'] = Val::Hashes.isbn_hash['initialize']['password_protected']
+  status_hash['template_version'] = Val::Hashes.isbn_hash['template_version']
   if Val::Hashes.isbn_hash['completed'] == false then logger.info {"isbnsearch macro error!"} end
   if status_hash['password_protected'] == true then logger.info {"document is password protected!"} end
+  unless status_hash['template_version'].nil? then logger.info {"template_version is -#{status_hash['template_version']}-"}
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
