@@ -13,7 +13,6 @@ logger = Val::Logs.logger
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
-epubQA_request_txt = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
 alert_hash = Mcmlln::Tools.readjson(alerts_file)
@@ -111,19 +110,6 @@ Cc: Workflows <workflows@macmillan.com>
 MESSAGE_END
 		Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
 		logger.info {"Sending epub success message to PM"}
-
-		#sending another email, for Patrick to QA epubs
-		body_b = Val::Resources.mailtext_gsubs(epubQA_request_txt, warnings, errors, Val::Posts.bookinfo)
-		body_b = body_b.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
-message_epubQA = <<MESSAGE_END_C
-From: Workflows <workflows@macmillan.com>
-#{body_b}
-MESSAGE_END_C
-		unless Val::Resources.testing == true || Val::Resources.testing_Prod == true
-			Vldtr::Tools.sendmail(message_epubQA, 'Patrick.Woodruff@macmillan.com', 'workflows@macmillan.com')
-			logger.info {"Sending success message to Patrick in ebooksfor QA"}
-		end
-
 	end
 else
 
