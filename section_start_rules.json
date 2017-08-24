@@ -528,21 +528,51 @@
         }
     },
     "Section-Excerpt-Opener (seo)": {
-        "section_type": "backmatter"
-    },
-    "Section-Excerpt-Chapter (sec)": {
         "section_type": "backmatter",
+        "order": "first",        
         "contiguous_block_criteria_01": {
-            "multiple": true,
+            "multiple": false,
             "styles": [
                 "Teaser Opening Text (totx)",
                 "Teaser Opening Text No-Indent (totx1)"
+            ],
+            "optional_heading_styles": [
+                "BM Head (bmh)",
+                "BM Head ALT (abmh)",
+                "BM Head Nonprinting (bmhnp)",
+                "BM Title (bmt)",
+                "Chap Title Nonprinting (ctnp)"
             ],
             "previous_sibling": {
                 "required_styles": [
                     "Section-Excerpt-Opener (seo)"
                 ]
             }
+        }
+    },
+    "Section-Excerpt-Chapter (sec)": {
+        "section_type": "backmatter",
+        "order": "first",
+        "contiguous_block_criteria_01": {
+            "multiple": true,
+            "styles": [
+              "Chap Number (cn)",
+              "Chap Title (ct)",
+              "Chap Title Nonprinting (ctnp)",
+              "Chap Title ALT (act)"
+            ],
+            "previous_sibling": {
+                "required_styles": [
+                    "Titlepage Book Title (tit)",
+                    "Titlepage Author Name (au)",
+                    "Copyright Text double space (crtxd)",
+                    "Copyright Text single space (crtx)"
+                ]
+            },
+            "previous_until": [
+              "Teaser Opening Text (totx)",
+              "Teaser Opening Text No-Indent (totx1)"
+            ]
         }
     },
     "Section-Notes (snt)": {
