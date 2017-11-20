@@ -78,6 +78,54 @@ MESSAGE_END
     	currenthash.merge!(newhash)
     	Vldtr::Tools.write_json(currenthash,json)
     end
+    # expecting alert_type of "error", "warning", or "notice", but will accept anything.
+    def self.log_alert_to_json(alerts_json, alert_category, new_errtext)
+        alerts_hash = Mcmlln::Tools.readjson(alerts_json)
+        if alerts_hash.has_key? alert_category
+            alerts_hash[alert_category].push(new_errtext)
+        else
+            alerts_hash[alert_category]=[]
+            alerts_hash[alert_category].push(new_errtext)
+        end
+        Vldtr::Tools.write_json(alerts_hash, alerts_json)
+    end
+    def self.get_alert_string(alerts_json)
+        alerts_hash = Mcmlln::Tools.readjson(alerts_json)
+        alerttxt_string = ""
+        alerttxt_list = []
+        unless alerts_hash.empty?
+            # make sure errors come first
+            alerts_hash = alerts_hash.sort
+            # cycle through the hash and write the formatted key (category) folloed by values
+            alerts_hash.each { |category, errtext|
+                if category == 'error'
+                  cat_string = "#{category.upcase}(s): #{Val::Hashes.alertmessages_hash["errors"]["error_header"]}"
+                else
+                  cat_string = "#{category.upcase}(s):"
+                end
+                alerttxt_list.push(cat_string)
+                alerttxt_list.push("- #{errtext}")
+                alerttxt_list.push("")
+            }
+            alerttxt_string = alerttxt_list.join("\n")
+        return alerttxt_string, alerts_hash
+    end
+    def self.write_alerts_to_txtfile(alerts_json, outfolder)
+        alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(alerts_json)
+            # now we figure outwhat to call the file, based on highest level of alert
+            if alerts_hash.has_key? "error"
+                alertfile = File.join(outfolder, "ERROR.txt")
+            elsif alerts_hash.has_key? "warning"
+                alertfile = File.join(outfolder, "WARNING.txt")
+            else
+                alertfile = File.join(outfolder, "NOTCE.txt")
+            end
+            # write our file
+            File.open(alertfile, "w") do |f|
+                f.puts(alerttxt_string)
+            end
+        return alerttxt_string, alerts_hash
+    end
     def self.sendrescue_mail(orig_to,orig_ccs,orig_header)
     message = Mailtexts.rescuemail(orig_to,orig_ccs,orig_header)
     Net::SMTP.start('10.249.0.12') do |smtp|

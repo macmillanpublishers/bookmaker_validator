@@ -128,6 +128,14 @@ module Val
 		def self.isbn_file
 			@@isbn_file
 		end
+    @@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
+		end
+    @@alertmessages_file = File.join(Paths.mailer_dir,'warning-error_text.json')
+		def self.alertmessages_file
+			@@alertmessages_file
+		end
 		@@typesetfrom_file = File.join(Paths.static_data_files,'typeset_from_report','typeset_from.xml')
 		def self.typesetfrom_file
 			@@typesetfrom_file
@@ -184,6 +192,12 @@ module Val
 		end
 		def self.staff_defaults_hash
 			readjson(Files.imprint_defaultPMs)
+		end
+    def self.alerts_hash
+			readjson(Files.alerts_json)
+		end
+    def self.alertmessages_hash
+			readjson(Files.alertmessages_file)
 		end
 	end
 	class Resources
@@ -321,6 +335,10 @@ module Val
 		@@status_file = File.join(tmp_dir,'status_info.json')
 		def self.status_file
 			@@status_file
+		end
+    @@alerts_json = File.join(tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
 		end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
 				if Resources.thisscript =~ /post_/
