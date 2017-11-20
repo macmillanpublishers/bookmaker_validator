@@ -57,7 +57,12 @@ module Val
 		def self.working_dir
 			@@working_dir
 		end
-		@@scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts', 'bookmaker_validator')
+    @@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
+		def self.bookmaker_scripts_dir
+			@@bookmaker_scripts_dir
+		end
+		@@scripts_dir = File.join(bookmaker_scripts_dir, 'bookmaker_validator')
+    # @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
 		def self.scripts_dir
 			@@scripts_dir
 		end
@@ -123,6 +128,14 @@ module Val
 		def self.isbn_file
 			@@isbn_file
 		end
+    @@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
+		end
+    @@alertmessages_file = File.join(Paths.mailer_dir,'warning-error_text.json')
+		def self.alertmessages_file
+			@@alertmessages_file
+		end
 		@@typesetfrom_file = File.join(Paths.static_data_files,'typeset_from_report','typeset_from.xml')
 		def self.typesetfrom_file
 			@@typesetfrom_file
@@ -143,6 +156,10 @@ module Val
 		def self.errFile
 			@@errFile
 		end
+    @@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
+    def self.section_start_rules_json
+      @@section_start_rules_json
+    end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -176,6 +193,12 @@ module Val
 		def self.staff_defaults_hash
 			readjson(Files.imprint_defaultPMs)
 		end
+    def self.alerts_hash
+			readjson(Files.alerts_json)
+		end
+    def self.alertmessages_hash
+			readjson(Files.alertmessages_file)
+		end
 	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
@@ -206,9 +229,9 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-		@@generated_access_token = File.read(File.join(authkeys_repo,'access_token.txt'))
-		def self.generated_access_token
-			@@generated_access_token
+    @@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
+		def self.generated_access_token_file
+			@@generated_access_token_file
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
    			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
@@ -308,6 +331,10 @@ module Val
 		@@status_file = File.join(tmp_dir,'status_info.json')
 		def self.status_file
 			@@status_file
+		end
+    @@alerts_json = File.join(tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
 		end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
 				if Resources.thisscript =~ /post_/

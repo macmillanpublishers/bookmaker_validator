@@ -14,8 +14,8 @@ logger = Val::Logs.logger
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
-alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
-alert_hash = Mcmlln::Tools.readjson(alerts_file)
+# alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
+# alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
 epub, epub_firstpass = '', ''
 send_ok = true
@@ -58,7 +58,7 @@ logger.info {"Reading in jsons from validator run"}
 if File.file?(Val::Posts.contacts_file)
 	contacts_hash = Mcmlln::Tools.readjson(Val::Posts.contacts_file)
 	submitter_name = contacts_hash['submitter_name']
-    submitter_mail = contacts_hash['submitter_email']
+  submitter_mail = contacts_hash['submitter_email']
 	pm_name = contacts_hash['production_manager_name']
 	pm_mail = contacts_hash['production_manager_email']
 	pe_name = contacts_hash['production_editor_name']
@@ -74,8 +74,10 @@ if File.file?(Val::Posts.status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
 	if !errtxt_files.empty?
-		bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
-		errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
+    # log to alerts.json as error
+    Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["bookmaker_error"].gsub(/PROJECT/,Val::Paths.project_name)
+		# bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
+		# errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
 		status_hash['errors'] = errors
 		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
 		send_ok = false

@@ -57,8 +57,9 @@ MESSAGE_END
     def self.dropbox_api_call
       py_script = File.join(Val::Paths.scripts_dir,'dboxapi2.py')
       dropbox_filepath = File.join('/', Val::Paths.project_name, 'IN', Val::Doc.filename_split).gsub(/(&)/,'\\\\\1')
+      generated_access_token = File.read(Val::Resources.generated_access_token_file)
       #run python api script
-      dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{Val::Resources.generated_access_token} #{dropbox_filepath}")
+      dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{generated_access_token} #{dropbox_filepath}")
       if dropboxmodifier.nil? or dropboxmodifier.empty? or !dropboxmodifier
       	user_email, user_name = '', ''
       else
@@ -76,6 +77,54 @@ MESSAGE_END
     def self.update_json(newhash, currenthash, json)
     	currenthash.merge!(newhash)
     	Vldtr::Tools.write_json(currenthash,json)
+    end
+    # expecting alert_type of "error", "warning", or "notice", but will accept anything.
+    def self.log_alert_to_json(alerts_json, alert_category, new_errtext)
+        alerts_hash = Mcmlln::Tools.readjson(alerts_json)
+        if alerts_hash.has_key? alert_category
+            alerts_hash[alert_category].push(new_errtext)
+        else
+            alerts_hash[alert_category]=[]
+            alerts_hash[alert_category].push(new_errtext)
+        end
+        Vldtr::Tools.write_json(alerts_hash, alerts_json)
+    end
+    def self.get_alert_string(alerts_json)
+        alerts_hash = Mcmlln::Tools.readjson(alerts_json)
+        alerttxt_string = ""
+        alerttxt_list = []
+        unless alerts_hash.empty?
+            # make sure errors come first
+            alerts_hash = alerts_hash.sort
+            # cycle through the hash and write the formatted key (category) folloed by values
+            alerts_hash.each { |category, errtext|
+                if category == 'error'
+                  cat_string = "#{category.upcase}(s): #{Val::Hashes.alertmessages_hash["errors"]["error_header"]}"
+                else
+                  cat_string = "#{category.upcase}(s):"
+                end
+                alerttxt_list.push(cat_string)
+                alerttxt_list.push("- #{errtext}")
+                alerttxt_list.push("")
+            }
+            alerttxt_string = alerttxt_list.join("\n")
+        return alerttxt_string, alerts_hash
+    end
+    def self.write_alerts_to_txtfile(alerts_json, outfolder)
+        alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(alerts_json)
+            # now we figure outwhat to call the file, based on highest level of alert
+            if alerts_hash.has_key? "error"
+                alertfile = File.join(outfolder, "ERROR.txt")
+            elsif alerts_hash.has_key? "warning"
+                alertfile = File.join(outfolder, "WARNING.txt")
+            else
+                alertfile = File.join(outfolder, "NOTCE.txt")
+            end
+            # write our file
+            File.open(alertfile, "w") do |f|
+                f.puts(alerttxt_string)
+            end
+        return alerttxt_string, alerts_hash
     end
     def self.sendrescue_mail(orig_to,orig_ccs,orig_header)
     message = Mailtexts.rescuemail(orig_to,orig_ccs,orig_header)
@@ -201,6 +250,19 @@ MESSAGE_END
       else
         FileUtils.mkdir_p outfolder
       end
+    end
+    def self.runnode(js, args)
+      if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
+        node_output = `node #{js} #{args}`
+      elsif Bkmkr::Tools.os == "windows"
+        nodepath = File.join(Bkmkr::Paths.resource_dir, "nodejs", "node.exe")
+        node_output = `#{nodepath} #{js} #{args}`
+      else
+        node_output = "ERROR: I can't seem to run node. Is it installed and part of your system PATH?"
+      end
+      return node_output
+    rescue => e
+      p e
     end
   end
 end

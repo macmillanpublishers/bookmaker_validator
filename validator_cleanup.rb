@@ -12,10 +12,11 @@ logger = Val::Logs.logger
 logfile = "#{Val::Logs.logfolder}/#{Val::Logs.logfilename}"
 
 outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalized)
-err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}.txt")
-warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}.txt")
-alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
-alert_hash = Mcmlln::Tools.readjson(alerts_file)
+# err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}.txt")
+# warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}.txt")
+# alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
+# alert_hash = Mcmlln::Tools.readjson(alerts_file)
+# alert_hash = Mcmlln::Tools.readjson(Val::Files.alertmessages_file)
 
 bookmaker_bot_IN = ''
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
@@ -134,8 +135,9 @@ else	#if not bookmaker_ready, clean up
 	#deal with errors & warnings!
 	if !status_hash['errors'].empty?
 		#errors found!  use the text from mailer to write file:
-		text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
-		Mcmlln::Tools.overwriteFile(err_notice, text)
+		# text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
+		# Mcmlln::Tools.overwriteFile(err_notice, text)
+    Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		#save the Val::Paths.tmp_dir for review
 		if Dir.exists?(Val::Paths.tmp_dir) && status_hash['docfile'] == true
 			FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
@@ -145,8 +147,9 @@ else	#if not bookmaker_ready, clean up
 	end
 	if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
 		#warnings found!  use the text from mailer to write file:
-		text = status_hash['warnings']
-		Mcmlln::Tools.overwriteFile(warn_notice, text)
+		# text = status_hash['warnings']
+		# Mcmlln::Tools.overwriteFile(warn_notice, text)
+    Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		logger.info {"warnings found, writing warn_notice"}
 	end
 
