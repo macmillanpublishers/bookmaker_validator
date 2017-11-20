@@ -8,8 +8,8 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-  		@input_file = File.expand_path(@unescapeargv)
-  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
+			@input_file = File.expand_path(@unescapeargv)
+			@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 		def self.input_file
 			@@input_file
 		end
@@ -43,7 +43,7 @@ module Val
 		def self.filename_normalized
 			@@filename_normalized
 		end
-    @@filename_docx = "#{@@basename_normalized}.docx"
+		@@filename_docx = "#{@@basename_normalized}.docx"
 		def self.filename_docx
 			@@filename_docx
 		end
@@ -57,12 +57,12 @@ module Val
 		def self.working_dir
 			@@working_dir
 		end
-    @@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
+		@@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
 		def self.bookmaker_scripts_dir
 			@@bookmaker_scripts_dir
 		end
 		@@scripts_dir = File.join(bookmaker_scripts_dir, 'bookmaker_validator')
-    # @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
+		# @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
 		def self.scripts_dir
 			@@scripts_dir
 		end
@@ -104,8 +104,8 @@ module Val
 		def self.working_file
 			@@working_file
 		end
-    @@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
-    def self.html_output
+		@@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
+		def self.html_output
 			@@html_output
 		end
 		@@bookinfo_file = File.join(Paths.tmp_dir,'book_info.json')
@@ -128,11 +128,11 @@ module Val
 		def self.isbn_file
 			@@isbn_file
 		end
-    @@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		@@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
 		def self.alerts_json
 			@@alerts_json
 		end
-    @@alertmessages_file = File.join(Paths.mailer_dir,'warning-error_text.json')
+		@@alertmessages_file = File.join(Paths.mailer_dir,'warning-error_text.json')
 		def self.alertmessages_file
 			@@alertmessages_file
 		end
@@ -156,10 +156,10 @@ module Val
 		def self.errFile
 			@@errFile
 		end
-    @@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
-    def self.section_start_rules_json
-      @@section_start_rules_json
-    end
+		@@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
+		def self.section_start_rules_json
+			@@section_start_rules_json
+		end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -193,10 +193,10 @@ module Val
 		def self.staff_defaults_hash
 			readjson(Files.imprint_defaultPMs)
 		end
-    def self.alerts_hash
+		def self.alerts_hash
 			readjson(Files.alerts_json)
 		end
-    def self.alertmessages_hash
+		def self.alertmessages_hash
 			readjson(Files.alertmessages_file)
 		end
 	end
@@ -233,12 +233,12 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-    @@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
+		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
 		def self.generated_access_token_file
 			@@generated_access_token_file
 		end
 		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+				 updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
 				updated_txt
 		end
 	end
@@ -302,7 +302,7 @@ module Val
 				@@logger
 			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
-			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
+				"#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
 			end
 			@@std_logfile = logfile
 			def self.std_logfile
@@ -336,7 +336,7 @@ module Val
 		def self.status_file
 			@@status_file
 		end
-    @@alerts_json = File.join(tmp_dir,'alerts.json')
+		@@alerts_json = File.join(tmp_dir,'alerts.json')
 		def self.alerts_json
 			@@alerts_json
 		end

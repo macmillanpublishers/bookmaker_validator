@@ -105,25 +105,25 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
 		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
-    		isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-    		if isbn_condensed != isbn
-    			done_file = working_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
-    			logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
+				isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+				if isbn_condensed != isbn
+					done_file = working_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
+					logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
 				else
 					done_file = working_file_updated
-    		end
-  	else
-    		logger.info {"adding isbn to done_filename because it was missing"}
-			  done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
-  	end
-  	done_file = done_file.gsub(/.docx$/,"_DONE_#{index}.docx")
+				end
+		else
+				logger.info {"adding isbn to done_filename because it was missing"}
+				done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
+		end
+		done_file = done_file.gsub(/.docx$/,"_DONE_#{index}.docx")
 		Mcmlln::Tools.copyFile(working_file_updated, done_file)
-    Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
+		Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
 		#rename working file to keep it distinct from infile
 		new_workingfile = working_file_updated.gsub(/.docx$/,"_workingfile.docx")
 		File.rename(working_file_updated, new_workingfile)
 		#make a copy of infile so we have a reference to it for posts
-	  Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
+		Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
 	else
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end
@@ -137,7 +137,7 @@ else	#if not bookmaker_ready, clean up
 		#errors found!  use the text from mailer to write file:
 		# text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
 		# Mcmlln::Tools.overwriteFile(err_notice, text)
-    Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
+		Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		#save the Val::Paths.tmp_dir for review
 		if Dir.exists?(Val::Paths.tmp_dir) && status_hash['docfile'] == true
 			FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
@@ -149,7 +149,7 @@ else	#if not bookmaker_ready, clean up
 		#warnings found!  use the text from mailer to write file:
 		# text = status_hash['warnings']
 		# Mcmlln::Tools.overwriteFile(warn_notice, text)
-    Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
+		Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		logger.info {"warnings found, writing warn_notice"}
 	end
 
