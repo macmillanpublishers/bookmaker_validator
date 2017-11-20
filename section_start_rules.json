@@ -531,7 +531,7 @@
         "section_type": "backmatter",
         "order": "first",        
         "contiguous_block_criteria_01": {
-            "multiple": false,
+            "multiple": true,
             "styles": [
                 "Teaser Opening Text (totx)",
                 "Teaser Opening Text No-Indent (totx1)"
