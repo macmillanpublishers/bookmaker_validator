@@ -97,11 +97,11 @@ if send_ok
 	end
 	unless File.file?(Val::Paths.testing_value_file)
 		if contacts_hash['ebooksDept_submitter'] == true
-				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-				to_email = contacts_hash['submitter_email']
+			to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+			to_email = contacts_hash['submitter_email']
 		else
-				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-				to_email = contacts_hash['production_manager_email']
+			to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+			to_email = contacts_hash['production_manager_email']
 		end
 		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
 		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
@@ -149,11 +149,11 @@ MESSAGE_END_B
 
 	#sending a failure notice to PM
 	if contacts_hash['ebooksDept_submitter'] == true
-			to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-			to_email = contacts_hash['submitter_email']
+		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+		to_email = contacts_hash['submitter_email']
 	else
-			to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-			to_email = contacts_hash['production_manager_email']
+		to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+		to_email = contacts_hash['production_manager_email']
 	end
 	firstname = to_header.split(' ')[0]
 	body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)

@@ -105,16 +105,16 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
 		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
-				isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-				if isbn_condensed != isbn
-					done_file = working_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
-					logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
-				else
-					done_file = working_file_updated
-				end
+			isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+			if isbn_condensed != isbn
+				done_file = working_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
+				logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
+			else
+				done_file = working_file_updated
+      end
 		else
-				logger.info {"adding isbn to done_filename because it was missing"}
-				done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
+			logger.info {"adding isbn to done_filename because it was missing"}
+			done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
 		end
 		done_file = done_file.gsub(/.docx$/,"_DONE_#{index}.docx")
 		Mcmlln::Tools.copyFile(working_file_updated, done_file)
