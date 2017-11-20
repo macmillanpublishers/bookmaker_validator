@@ -459,14 +459,23 @@ for(ss in rulesjson) {
 // Create a hash to contain created Rule objects
 var sectionStartObject = {};
 
-// Priority 1: rules with section_required criteria need to run before all others
+// Priority 1: Apply rules for Section Starts with order:first
 for(ss in rulesjson) {
-  if (rulesjson[ss].hasOwnProperty('section_required')) {
+  if (rulesjson[ss]['order'] == 'first') {
     // The '1' is to start with 1st contiguous block criteria
     sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
   }
 }
-// Priority 2: Apply rules for Section Starts WITHOUT order:last or position_requirement
+// Priority 2: rules with section_required criteria need to run before all others
+for(ss in rulesjson) {
+  if (rulesjson[ss].hasOwnProperty('section_required')) {
+    // exclude Section Starts we've already processed
+    if (!sectionStartObject.hasOwnProperty(ss)) {
+      sectionStartObject[ss] = new Rule(ss, rulesjson[ss], 1, section_types);
+    }
+  }
+}
+// Priority 3: Apply rules for Section Starts WITHOUT order:last or position_requirement
 for(ss in rulesjson) {
   if (!rulesjson[ss].hasOwnProperty('order') && !rulesjson[ss].hasOwnProperty('position')) {
     // exclude Section Starts we've already processed
@@ -475,7 +484,7 @@ for(ss in rulesjson) {
     }
   }
 }
-// Priority 3: Apply rules for Section Starts with position requirement
+// Priority 4: Apply rules for Section Starts with position requirement
 for(ss in rulesjson) {
   if (rulesjson[ss].hasOwnProperty('position')) {
     // exclude Section Starts we've already processed
@@ -484,7 +493,7 @@ for(ss in rulesjson) {
     }
   }
 }
-// Priority 4: Apply rules for Section Starts with order:last
+// Priority 5: Apply rules for Section Starts with order:last
 for(ss in rulesjson) {
   if (rulesjson[ss]['order'] == 'last') {
     // exclude Section Starts we've already processed
