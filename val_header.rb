@@ -191,10 +191,6 @@ module Val
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing
 		end
-		@@testing_Prod = false			#this allows to test on prod without emailing Patrick for epubQA
-		def self.testing_Prod
-			@@testing_Prod
-		end
 		@@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
 		def self.pilot
 			@@pilot
