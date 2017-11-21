@@ -112,9 +112,17 @@ module Val
 		def self.bookinfo_file
 			@@bookinfo_file
 		end
-		@@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
-		def self.stylecheck_file
-			@@stylecheck_file
+		# @@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
+		# def self.stylecheck_file
+		# 	@@stylecheck_file
+		# end
+    @@stylereport_json = File.join(Paths.tmp_dir,'stylereport.json')
+		def self.stylereport_json
+			@@stylereport_json
+		end
+    @@stylereport_txt = File.join(Paths.tmp_dir,"#{Doc.basename_normalized}_StyleReport.txt")
+		def self.stylereport_txt
+			@@stylereport_txt
 		end
 		@@contacts_file = File.join(Paths.tmp_dir,'contacts.json')
 		def self.contacts_file
@@ -129,6 +137,10 @@ module Val
 			@@isbn_file
 		end
 		@@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
+		end
+    @@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
 		def self.alerts_json
 			@@alerts_json
 		end
@@ -181,8 +193,8 @@ module Val
 		def self.bookinfo_hash
 			readjson(Files.bookinfo_file)
 		end
-		def self.stylecheck_hash
-			readjson(Files.stylecheck_file)
+		def self.stylereport_hash
+			readjson(Files.stylereport_json)
 		end
 		def self.isbn_hash
 			readjson(Files.isbn_file)
@@ -336,6 +348,10 @@ module Val
 		def self.alerts_json
 			@@alerts_json
 		end
+    # @@stylereport_txt = File.join(tmp_dir,"#{Doc.basename_normalized}_StyleReport.txt")
+		# def self.stylereport_txt
+		# 	@@stylereport_txt
+		# end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
 				if Resources.thisscript =~ /post_/
 					info_file = Posts.bookinfo_file
@@ -358,12 +374,14 @@ module Val
 				end
 				return bookinfo
 		end
-		@@working_file, @@val_infile_name, @@logfile_name = '','infile_not_present',Logs.logfilename
+		@@working_file, @@stylereport_txt, @@val_infile_name, @@logfile_name = '','','infile_not_present',Logs.logfilename
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
 			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
 				if file =~ /_workingfile#{Doc.extension}$/
 					@@working_file = file
+        elsif file =~ /_StyleReport.txt$/
+          @@stylereport_txt = file
 				else
 					@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 				end

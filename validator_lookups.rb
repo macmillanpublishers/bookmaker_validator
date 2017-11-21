@@ -299,7 +299,7 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
                             # log to alerts.json as warning
                             alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnmatch_msg']['message']} #{status_hash['docisbn_match_fail'].uniq}"
                             Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-                            if !status_hash['filename_isbn_lookup_ok']  #this is a showstopping error if we don't have a filename_isbn
+                            if !status_hash['filename_isbn_lookup_ok']  #in this context this is a showstopping error if we don't have a filename_isbn
                                 status_hash['isbn_match_ok'] = false
                                 # log to alerts.json as error
                                 alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}"
@@ -360,6 +360,14 @@ else
       # log as notice to alerts.json
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"]['message'])
     end
+end
+
+# (moved form mailer) this error might as well stay / get logged here, since it depends on other isbn fields that are more easily reviewed post-lookups
+if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
+	# nogoodisbn = true
+  # log to alerts.json as error
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['nogoodisbn_msg']['message'])
+	status_hash['status'] = 'isbn error'
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

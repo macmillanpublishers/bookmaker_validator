@@ -21,7 +21,7 @@ error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt')
 cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
-nogoodisbn = false
+# nogoodisbn = false
 addPEcc = false 		#to cc PE's on isbn errors
 
 #--------------------- RUN
@@ -127,13 +127,14 @@ end
 # 	status_hash['status'] = 'isbn error'
 # end
 
-# this error might as well stay / get logged here, since it depends on other isbn fields that are more easily reviewed post-lookups
-if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
-	nogoodisbn = true
-  # log to alerts.json as error
-  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['nogoodisbn_msg']['message'])
-	status_hash['status'] = 'isbn error'
-end
+# ### moving this to lookups
+# # this error might as well stay / get logged here, since it depends on other isbn fields that are more easily reviewed post-lookups
+# if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
+# 	nogoodisbn = true
+#   # log to alerts.json as error
+#   Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['nogoodisbn_msg']['message'])
+# 	status_hash['status'] = 'isbn error'
+# end
 
 # if nogoodisbn
 # 	nogoodisbn_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='no_good_isbn' then nogoodisbn_msg = h['message'] end}}

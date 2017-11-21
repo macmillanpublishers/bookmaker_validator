@@ -165,6 +165,10 @@ else	#if not bookmaker_ready, clean up
 	end
 	logger.info {"moved the original doc to outfolder, now cleaning up!"}
 
+  # now let's move the stylereport.txt to the out folder!
+  logger.info {"moving stylereport.txt file to outfolder.."}
+  Mcmlln::Tools.moveFile(Val::Files.stylereport_txt, outfolder)
+
 	#and delete tmp files
 	if Dir.exists?(Val::Paths.tmp_dir)	then FileUtils.rm_rf Val::Paths.tmp_dir end
 	if File.file?(Val::Files.errFile) then FileUtils.rm Val::Files.errFile end

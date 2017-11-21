@@ -72,6 +72,10 @@ logger.info {"moving original file to outfolder.."}
 # Mcmlln::Tools.moveFile(validator_infile, outfolder)
 Mcmlln::Tools.copyAllFiles(Val::Posts.tmp_original_dir, outfolder)
 
+# move the stylereport.txt to out folder!
+logger.info {"moving stylereport.txt file to outfolder.."}
+Mcmlln::Tools.moveFile(Val::Posts.stylereport_txt, outfolder)
+
 #deal with errors & warnings!
 if File.file?(Val::Posts.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)

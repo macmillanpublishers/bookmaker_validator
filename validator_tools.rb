@@ -252,6 +252,25 @@ MESSAGE_END
         FileUtils.mkdir_p outfolder
       end
     end
+    def self.runpython(py_script, args)
+      #stop console log redirect to file
+      Val::Logs.return_stdOutErr
+      # select python path and run script
+			if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
+				`python #{py_script} #{args}`
+			elsif Bkmkr::Tools.os == "windows"
+				pythonpath = File.join(Bkmkr::Paths.resource_dir, "Python27", "python.exe")
+				py_output = `#{pythonpath} #{py_script} #{args}`
+			else
+        py_output = "ERROR: I can't seem to run python. Is it installed and part of your system PATH?"
+			end
+      return py_output
+    rescue => e
+      p e
+    ensure
+      #turn console log redirect back on
+      Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)
+		end
     def self.runnode(js, args)
       if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
         node_output = `node #{js} #{args}`
