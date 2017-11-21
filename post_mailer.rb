@@ -75,7 +75,7 @@ if File.file?(Val::Posts.status_file)
 	errors = status_hash['errors']
 	if !errtxt_files.empty?
 		# log to alerts.json as error
-		Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["bookmaker_error"].gsub(/PROJECT/,Val::Paths.project_name)
+		Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)
 		# bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
 		# errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
 		status_hash['errors'] = errors
@@ -87,6 +87,7 @@ else
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
 end
 
+alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Files.alerts_json)
 
 #send a success notification email!
 if send_ok
@@ -102,7 +103,7 @@ if send_ok
 			to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 			to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(bot_success_txt, alerttxt_string, Val::Posts.bookinfo)
 		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -142,7 +143,7 @@ MESSAGE_END_B
 		to_email = contacts_hash['production_manager_email']
 	end
 	firstname = to_header.split(' ')[0]
-	body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
+	body = Val::Resources.mailtext_gsubs(error_notifyPM, alerttxt_string, Val::Posts.bookinfo)
 	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/PMNAME/,firstname)
 	message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>

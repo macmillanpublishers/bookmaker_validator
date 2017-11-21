@@ -30,7 +30,7 @@ if File.file?(Val::Files.stylecheck_file)
 		status_hash['validator_macro_complete'] = false
 		logger.info {"stylecheck.json present, but 'complete' value not present, looks like macro crashed"}
 		# log to alerts.json as error
-		Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"].gsub(/PROJECT/,Val::Paths.project_name)
+		Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
 		status_hash['status'] = 'validator error'
 	else
 		#set vars for status.json fro stylecheck.json
@@ -42,26 +42,31 @@ else
 	logger.info {"style_check.json not present or unavailable"}
 	status_hash['validator_macro_complete'] = false
 	# log to alerts.json as error
-	Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"].gsub(/PROJECT/,Val::Paths.project_name)
+	Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
 	status_hash['status'] = 'validator error'
 end
 
 if status_hash['document_styled'] == false
 	# log to alerts.json as error
-	Vldtr::Tools.log_alert_to_json(alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["unstyled"])
+	Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["unstyled"]["message"])
 end
 
 #check for alert or other unplanned items in Val::Paths.tmp_dir:
 if Dir.exist?(Val::Paths.tmp_dir)
+	unknownfile_found = false
 	Find.find(Val::Paths.tmp_dir) { |file|
-		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file && file != Val::Files.isbn_file && !File.directory?(file) && file != Val::Files.original_file
+		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file && file != Val::Files.isbn_file && !File.directory?(file) && file != Val::Files.original_file && file != Val::Files.alerts_json
 			logger.info {"error log found in tmpdir: file: #{file}"}
-			status_hash['validator_macro_complete'] = false
-			# log to alerts.json as error
-			Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"].gsub(/PROJECT/,Val::Paths.project_name)
-			status_hash['status'] = 'validator error'
+			unknownfile_found = true
 		end
 	}
+  # make sure we are not duplicating an error already generated
+	if unknownfile_found == true && File.file?(Val::Files.stylecheck_file) && !stylecheck_hash['completed'].nil?
+		# log to alerts.json as error
+		Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
+		status_hash['status'] = 'validator error'
+		status_hash['validator_macro_complete'] = false
+	end
 end
 
 #if file is ready for bookmaker to run, tag it in status.json so the deploy.rb can scoop it up

@@ -13,4 +13,4 @@ Please contact the workflows team with further questions or issues: workflows@ma
 See below for book info, and any warnings detected in the manuscript:
 
 BOOKINFO
-WARNINGS
+ALERTS

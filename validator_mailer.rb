@@ -131,7 +131,7 @@ end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
 	nogoodisbn = true
   # log to alerts.json as error
-  Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["nogoodisbn_msg"])
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['nogoodisbn_msg']['message'])
 	status_hash['status'] = 'isbn error'
 end
 
@@ -167,6 +167,11 @@ end
 
 alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Files.alerts_json)
 
+#add errors/warnings to status.json
+if alerts_hash.has_key?("error") then status_hash['errors'] = alerts_hash['error'] end
+if alerts_hash.has_key?("warning") then status_hash['warnings'] = alerts_hash['warning'] end
+
+
 #send error emails
 if alerts_hash.has_key?("error") && send_ok
 	unless File.file?(Val::Paths.testing_value_file)
@@ -182,14 +187,14 @@ if alerts_hash.has_key?("error") && send_ok
 					to_email = contacts_hash['production_manager_email']
 			end
 			firstname = to_header.split(' ')[0]
-			body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
+			body = Val::Resources.mailtext_gsubs(error_notifyPM, alerttxt_string, Val::Posts.bookinfo)
 			body = body.gsub(/PMNAME/,firstname)
 			logger.info {"sending message to PE re: fatal validator errors encountered"}
 		else
 		#send PM an error notification for validator errors
 			to_header = "#{submitter_name} <#{submitter_mail}>"
 			to_email = contacts_hash['submitter_email']
-			body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
+			body = Val::Resources.mailtext_gsubs(error_text, alerttxt_string, Val::Posts.bookinfo)
 			#add the PE to the email for isbn errors
 			if status_hash['status'] == 'isbn error' && contacts_hash['ebooksDept_submitter'] != true
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
@@ -218,7 +223,7 @@ if !alerts_hash.has_key?("error") && status_hash['document_styled'] == false && 
 				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 				to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(unstyled_notify, alerttxt_string, Val::Posts.bookinfo)
 		message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -240,7 +245,7 @@ if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_forma
 				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 				to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, alerttxt_string, Val::Posts.bookinfo)
 		message_c = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -263,7 +268,7 @@ if status_hash['epub_format'] == false && send_ok
 				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 				to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, alerttxt_string, Val::Posts.bookinfo)
 		message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -282,10 +287,6 @@ if !alerts_hash.has_key?("error") && status_hash['document_styled'] == true && s
 		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
 	end
 end
-
-#add errors/warnings to status.json for cleanup
-if alerts_hash.has_key?("error") then status_hash['errors'] = alerts_hash['error'] end
-if alerts_hash.has_key?("warning") then status_hash['warnings'] = alerts_hash['warning'] end
 
 Vldtr::Tools.write_json(status_hash,Val::Files.status_file)
 

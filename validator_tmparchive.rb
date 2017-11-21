@@ -28,7 +28,7 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
     contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
     logger.info {"dropbox api may have failed, not finding file metadata"}
     # adding to alerts.json:
-    Vldtr::Tools.log_alert_to_json(alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"])
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"]["message"])
   else
     #check to see if submitter is in ebooks dept.:
     staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)  		#read in our static pe/pm json
@@ -39,7 +39,7 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
           logger.info {"#{user_name} is a member of ebooks or Workflow dept, flagging that to edit user comm. addressees"}
           # log as notice to alerts.json
           alertstring = "All email communications normally slated for PM or PE are being redirected to a submitter from Ebooks or Workflow dept."
-          Vldtr::Tools.log_alert_to_json(alerts_json, "notice", alertstring)
+          Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", alertstring)
         end
       end
     end
@@ -57,7 +57,7 @@ def nondoc(logger,status_hash)
   #   f.puts "Unable to process \"#{Val::Doc.filename_normalized}\". Your document is not a .doc or .docx file."
   # }
   # logging err directly to json:
-  Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["not_a_docfile"])
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["not_a_docfile"]["message"])
   # pulling this from mailer:
   status_hash['status'] = 'not a .doc(x)'
 end
@@ -126,12 +126,12 @@ else
   if Val::Hashes.isbn_hash['completed'] == false
       logger.info {"isbnsearch macro error!"}
       # log alert to alerts JSON (for now, continuing to log as 'validator error')
-      Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"].gsub(/PROJECT/,Val::Paths.project_name))
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
   end
   if status_hash['password_protected'] == true
       logger.info {"document is password protected!"}
       # log alert to alerts JSON
-      Vldtr::Tools.log_alert_to_json(alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["protected_doc"])
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["protected_doc"]["message"])
       # pulled thisfrom mailer in case its needed
   		status_hash['status'] = 'protected .doc(x)'
   end

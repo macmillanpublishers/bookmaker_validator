@@ -233,8 +233,8 @@ module Val
 		def self.generated_access_token_file
 			@@generated_access_token_file
 		end
-		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-				 updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		def self.mailtext_gsubs(mailtext,alerts,bookinfo)
+				 updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/ALERTS/,alerts).gsub(/BOOKINFO/,bookinfo)
 				updated_txt
 		end
 	end

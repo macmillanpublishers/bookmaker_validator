@@ -24,14 +24,14 @@ def testisbn(isbn, whichisbn, status_hash)
             if whichisbn == 'filename_isbn'
               status_hash['filename_isbn_lookup_ok'] = false
               # log to alert json as warning
-              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['filename_isbn_lookup_fail']} #{status_hash['filename_isbn']['isbn']}"
-              Vldtr::Tools.log_alert_to_json(alerts_json, "warning", alertstring)
+              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['filename_isbn_lookup_fail']['message']} #{status_hash['filename_isbn']['isbn']}"
+              Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
             end
             if whichisbn == 'docisbn'
               status_hash['docisbn_lookup_fail'] << isbn
               # log to alert json as warning
-              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnlookup_msg']} #{status_hash['docisbn_lookup_fail'].uniq}"
-              Vldtr::Tools.log_alert_to_json(alerts_json, "warning", alertstring)
+              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnlookup_msg']['message']} #{status_hash['docisbn_lookup_fail'].uniq}"
+              Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
             end
         else  #isbn checks out
             lookup = true
@@ -40,16 +40,16 @@ def testisbn(isbn, whichisbn, status_hash)
         if whichisbn == 'filename_isbn'
             status_hash['filename_isbn']['checkdigit'] = false
             # log to alerts json
-            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['filename_isbn_checkdigit_fail']} #{status_hash['filename_isbn']['isbn']}"
-            Vldtr::Tools.log_alert_to_json(alerts_json, "warning", alertstring)
+            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['filename_isbn_checkdigit_fail']['message']} #{status_hash['filename_isbn']['isbn']}"
+            Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
             # still set larger category status as false in case we still have dependencies
             status_hash['filename_isbn_lookup_ok'] = false
         end
         if whichisbn == 'docisbn'
             status_hash['docisbn_checkdigit_fail'] << isbn
             # log to alerts json
-            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_checkdigit_fail']} #{status_hash['docisbn_checkdigit_fail'].uniq}"
-            Vldtr::Tools.log_alert_to_json(alerts_json, "warning", alertstring)
+            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_checkdigit_fail']['message']} #{status_hash['docisbn_checkdigit_fail'].uniq}"
+            Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
         end
         loginfo = "checkdigit failed for #{whichisbn} \"#{isbn}\""
     end
@@ -186,8 +186,8 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
     elsif pm_or_pe == "PE"
       msg_detail = "\'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\'"
     end
-    alertstring = "#{Val::Hashes.alertmessages_hash['warnings']["#{pm_or_pe.downcase}_lookup_fail"]}: #{msg_detail}"
-    Vldtr::Tools.log_alert_to_json(alerts_json, "warning", alertstring)
+    alertstring = "#{Val::Hashes.alertmessages_hash['warnings']["#{pm_or_pe.downcase}_lookup_fail"]['message']}: #{msg_detail}"
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
   elsif newname.empty?
     status = 'no bookinfo file?'
     mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
@@ -297,13 +297,13 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
                             logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
                             status_hash['docisbn_match_fail'] << i
                             # log to alerts.json as warning
-                            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnmatch_msg']} #{status_hash['docisbn_match_fail'].uniq}"
-                            Vldtr::Tools.log_alert_to_json(alerts_json, "warning", alertstring)
+                            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnmatch_msg']['message']} #{status_hash['docisbn_match_fail'].uniq}"
+                            Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
                             if !status_hash['filename_isbn_lookup_ok']  #this is a showstopping error if we don't have a filename_isbn
                                 status_hash['isbn_match_ok'] = false
                                 # log to alerts.json as error
-                                alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}"
-                                Vldtr::Tools.log_alert_to_json(alerts_json, "error", alertstring)
+                                alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}"
+                                Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
                                 # this helps determine recipients of err mail:
                                 status_hash['status'] = 'isbn error'
                             end
@@ -352,13 +352,13 @@ else
     if status_hash['msword_copyedit'] == false
       logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
       # log as notice to alerts.json
-      Vldtr::Tools.log_alert_to_json(alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"])
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
     end
     #log re: fixed layout:
     if status_hash['epub_format'] == false
       logger.info {"This looks like fixed layout, will skip validator macro"}
       # log as notice to alerts.json
-      Vldtr::Tools.log_alert_to_json(alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"])
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"]['message'])
     end
 end
 

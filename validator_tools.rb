@@ -95,11 +95,11 @@ MESSAGE_END
         alerttxt_list = []
         unless alerts_hash.empty?
             # make sure errors come first
-            alerts_hash = alerts_hash.sort
+            alerts_hash = Hash[alerts_hash.sort]
             # cycle through the hash and write the formatted key (category) folloed by values
             alerts_hash.each { |category, errtext|
                 if category == 'error'
-                  cat_string = "#{category.upcase}(s): #{Val::Hashes.alertmessages_hash["errors"]["error_header"]}"
+                  cat_string = "#{category.upcase}(s): #{Val::Hashes.alertmessages_hash['errors']['error_header']['message']}"
                 else
                   cat_string = "#{category.upcase}(s):"
                 end
@@ -108,22 +108,23 @@ MESSAGE_END
                 alerttxt_list.push("")
             }
             alerttxt_string = alerttxt_list.join("\n")
+        end
         return alerttxt_string, alerts_hash
     end
     def self.write_alerts_to_txtfile(alerts_json, outfolder)
         alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(alerts_json)
-            # now we figure outwhat to call the file, based on highest level of alert
-            if alerts_hash.has_key? "error"
-                alertfile = File.join(outfolder, "ERROR.txt")
-            elsif alerts_hash.has_key? "warning"
-                alertfile = File.join(outfolder, "WARNING.txt")
-            else
-                alertfile = File.join(outfolder, "NOTCE.txt")
-            end
-            # write our file
-            File.open(alertfile, "w") do |f|
-                f.puts(alerttxt_string)
-            end
+        # now we figure outwhat to call the file, based on highest level of alert
+        if alerts_hash.has_key? "error"
+            alertfile = File.join(outfolder, "ERROR.txt")
+        elsif alerts_hash.has_key? "warning"
+            alertfile = File.join(outfolder, "WARNING.txt")
+        else
+            alertfile = File.join(outfolder, "NOTCE.txt")
+        end
+        # write our file
+        File.open(alertfile, "w") do |f|
+            f.puts(alerttxt_string)
+        end
         return alerttxt_string, alerts_hash
     end
     def self.sendrescue_mail(orig_to,orig_ccs,orig_header)

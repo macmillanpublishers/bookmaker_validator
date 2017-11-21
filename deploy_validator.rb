@@ -38,7 +38,7 @@ begin
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_macro} \'#{Val::Doc.input_file}\'", output_hash, "validator_macro", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_htmlconvert} \'#{Val::Doc.input_file}\'", output_hash, "validator_htmlconvert", json_logfile)  
+	# Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_htmlconvert} \'#{Val::Doc.input_file}\'", output_hash, "validator_htmlconvert", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_mailer} \'#{Val::Doc.input_file}\'", output_hash, "validator_mailer", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "validator_cleanup", json_logfile)
 	#mark the process done for process watcher
