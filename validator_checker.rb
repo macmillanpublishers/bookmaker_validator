@@ -16,8 +16,8 @@ logger = Val::Logs.logger
 if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
 	status_hash['validator_py_complete'] = false
-	status_hash['percent_styled'] = ''
-  status_hash['document_styled'] = ''
+	status_hash['percent_styled'] = nil
+  status_hash['document_styled'] = 'n-a'
 	status_hash['bookmaker_ready'] = false
 else
 	logger.info {"status.json not present or unavailable"}
@@ -28,19 +28,19 @@ case
 when !File.file?(Val::Files.stylereport_json)
   status_hash['validator_py_complete'] = false
   logger.info {"stylereport_json not present"}
-when stylereport_hash.empty?
+when Val::Hashes.stylereport_hash.empty?
   status_hash['validator_py_complete'] = false
   logger.info {"stylereport_json not present"}
-when !stylereport_hash.has_key?('validator_py_complete')
+when !Val::Hashes.stylereport_hash.has_key?('validator_py_complete')
   status_hash['validator_py_complete'] = false
   logger.info {"stylecheck_hash key 'validator_py_complete' not present"}
-when stylereport_hash['validator_py_complete'] != true
+when Val::Hashes.stylereport_hash['validator_py_complete'] != true
   status_hash['validator_py_complete'] = false
-  logger.info {"stylecheck_hash key 'validator_py_complete' value is \"#{stylereport_hash['validator_py_complete']}\""}
-when stylereport_hash['validator_py_complete'] == true && File.file?(Val::Files.stylereport_txt)
+  logger.info {"stylecheck_hash key 'validator_py_complete' value is \"#{Val::Hashes.stylereport_hash['validator_py_complete']}\""}
+when Val::Hashes.stylereport_hash['validator_py_complete'] == true && File.file?(Val::Files.stylereport_txt)
   status_hash['validator_py_complete'] = true
-  status_hash['percent_styled'] = stylereport_hash['percent_styled']
-  logger.info {"retrieved from style_check.json- styled:\"#{stylereport_hash['percent_styled']}\", complete:\"#{status_hash['validator_py_complete']}\""}
+  status_hash['percent_styled'] = Val::Hashes.stylereport_hash['percent_styled']
+  logger.info {"retrieved from style_check.json- styled:\"#{Val::Hashes.stylereport_hash['percent_styled']}\", complete:\"#{status_hash['validator_py_complete']}\""}
 else
   status_hash['validator_py_complete'] = false
   logger.info {"unknown err checking on validator_py status, marking \"validator_py_complete\" as false"}
@@ -70,14 +70,16 @@ end
 # end
 
 # check if doc is styled, log etc
-if !status_hash['percent_styled'].empty? && !status_hash['percent_styled'].to_i >= 50
+if !status_hash['percent_styled'].nil? && status_hash['percent_styled'].to_i >= 50
   status_hash['document_styled'] = true
+elsif !status_hash['percent_styled'].nil?
+  status_hash['document_styled'] = false
 	# log to alerts.json as notice
 	Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["unstyled"]["message"])
 end
 
 # check if we already have presenting errors:
-if !Val::Hashes.alerts_hash.has_key?('error') && status_hash['validator_py_complete'] = false
+if !Val::Hashes.alerts_hash.has_key?('error') && status_hash['validator_py_complete'] == false
   # log to alerts.json as error
   Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
   status_hash['status'] = 'validator error'
@@ -102,7 +104,7 @@ end
 # end
 
 #if file is ready for bookmaker to run, tag it in status.json so the deploy.rb can scoop it up
-if File.file?(Val::Files.bookinfo_file) && status_hash['validator_py_complete'] && status_hash['document_styled'] == true
+if File.file?(Val::Files.bookinfo_file) && status_hash['validator_py_complete'] == true && status_hash['document_styled'] == true
 	status_hash['bookmaker_ready'] = true
 end
 

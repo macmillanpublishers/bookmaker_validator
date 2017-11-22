@@ -74,6 +74,8 @@ if File.file?(Val::Files.status_file)
 	permalog_hash[index]['warnings'] = status_hash['warnings']
 	permalog_hash[index]['bookmaker_ready'] = status_hash['bookmaker_ready']
 	permalog_hash[index]['status'] = status_hash['status']
+	permalog_hash[index]['styled?'] = status_hash['document_styled']
+	permalog_hash[index]['validator_completed?'] = status_hash['validator_py_complete']
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}
@@ -84,11 +86,11 @@ else
 	status_hash[errors] = "Error occurred, validator failed: no status.json available"
 	logger.info {"status.json not present or unavailable, creating error txt"}
 end
-if File.file?(Val::Files.stylecheck_file)
-	stylecheck_hash = Mcmlln::Tools.readjson(Val::Files.stylecheck_file)
-	permalog_hash[index]['styled?'] = stylecheck_hash['styled']
-	permalog_hash[index]['validator_completed?'] = stylecheck_hash['completed']
-end
+# if File.file?(Val::Files.stylecheck_file)
+# 	stylecheck_hash = Mcmlln::Tools.readjson(Val::Files.stylecheck_file)
+# 	permalog_hash[index]['styled?'] = status_hash['percent_styled']
+# 	permalog_hash[index]['validator_completed?'] = status_hash['validator_py_complete']
+# end
 #write to json Val::Logs.permalog!
 Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 

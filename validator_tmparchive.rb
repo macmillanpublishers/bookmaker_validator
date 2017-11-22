@@ -72,6 +72,7 @@ def movedoc(logger)
   #if its a .doc(x) lets go ahead and move it to tmpdir, keep a pristing copy in subfolder
   FileUtils.mkdir_p Val::Paths.tmp_original_dir
   Mcmlln::Tools.moveFile(Val::Doc.input_file_untag_chars, Val::Files.original_file)
+  # Mcmlln::Tools.copyFile(Val::Doc.input_file_untag_chars, Val::Files.original_file) # for debug
   # constructing 'working' destination since the new 'working' file might still be a .doc at this point
   Mcmlln::Tools.copyFile(Val::Files.original_file, doc_or_docx_workingfile)
   if Val::Doc.filename_split == Val::Doc.filename_normalized

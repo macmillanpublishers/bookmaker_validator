@@ -348,10 +348,6 @@ module Val
 		def self.alerts_json
 			@@alerts_json
 		end
-    # @@stylereport_txt = File.join(tmp_dir,"#{Doc.basename_normalized}_StyleReport.txt")
-		# def self.stylereport_txt
-		# 	@@stylereport_txt
-		# end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
 				if Resources.thisscript =~ /post_/
 					info_file = Posts.bookinfo_file
@@ -392,6 +388,9 @@ module Val
 			end
 			def self.val_infile_name
 				@@val_infile_name
+			end
+			def self.stylereport_txt
+				@@stylereport_txt
 			end
 			@@logfile_name = File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt')
 			def self.logfile_name

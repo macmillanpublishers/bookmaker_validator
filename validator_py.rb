@@ -32,12 +32,13 @@ else
   elsif Val::Hashes.status_hash['status'] == 'isbn error'
 		logger.info {"skipping script: fatal isbn error"}
 	else
-    ## run the python script
-    # version std logfile for stylecheck
-		# py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file}")
-    # version with shared logfile
-    py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file} #{Val::Logs.logfilename}") #run the python script
-    # capture any random output from the runpython funciton call
+    ### run the python script
+    ## version std logfile for stylecheck
+		py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file}")
+    ## version with shared logfile
+		# logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
+    # py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
+    ## capture any random output from the runpython funciton call
 		logger.info {"output from \"#{py_script_name}\": #{py_output}"}
 	end
 end
