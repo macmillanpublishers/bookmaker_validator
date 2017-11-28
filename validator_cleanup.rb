@@ -147,7 +147,8 @@ else	#if not bookmaker_ready, clean up
 			logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
 		end
 	end
-	if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
+	# if !status_hash['warnings'].empty? && status_hash['errors'].empty? && !status_hash['bookmaker_ready']
+	if !Val::Hashes.alerts_hash.empty?
 		#warnings found!  use the text from mailer to write file:
 		# text = status_hash['warnings']
 		# Mcmlln::Tools.overwriteFile(warn_notice, text)

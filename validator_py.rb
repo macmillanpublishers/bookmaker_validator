@@ -13,7 +13,8 @@ notify_egalleymaker_begun = File.read(File.join(Val::Paths.mailer_dir,'notify_eg
 py_script_name = "validator_main.py"
 py_script_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', py_script_name)
 # script_name="Validator.Launch"
-
+status_hash = Val::Hashes.status_hash
+status_hash['val_py_started'] = false
 
 #--------------------- RUN
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
@@ -32,6 +33,8 @@ else
   elsif Val::Hashes.status_hash['status'] == 'isbn error'
 		logger.info {"skipping script: fatal isbn error"}
 	else
+    # log that we're beginning the python validator!
+		status_hash['val_py_started'] = true
     ### run the python script
     ## version std logfile for stylecheck
 		py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file}")
@@ -42,3 +45,5 @@ else
 		logger.info {"output from \"#{py_script_name}\": #{py_output}"}
 	end
 end
+
+Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

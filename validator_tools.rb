@@ -97,14 +97,16 @@ MESSAGE_END
             # make sure errors come first
             alerts_hash = Hash[alerts_hash.sort]
             # cycle through the hash and write the formatted key (category) folloed by values
-            alerts_hash.each { |category, errtext|
+            alerts_hash.each { |category, errlist|
                 if category == 'error'
                   cat_string = "#{category.upcase}(s): #{Val::Hashes.alertmessages_hash['errors']['error_header']['message']}"
                 else
                   cat_string = "#{category.upcase}(s):"
                 end
                 alerttxt_list.push(cat_string)
-                alerttxt_list.push("- #{errtext}")
+                errlist.each { |errtext|
+                  alerttxt_list.push("- #{errtext}")
+                }
                 alerttxt_list.push("")
             }
             alerttxt_string = alerttxt_list.join("\n")
@@ -119,7 +121,7 @@ MESSAGE_END
         elsif alerts_hash.has_key? "warning"
             alertfile = File.join(outfolder, "WARNING.txt")
         else
-            alertfile = File.join(outfolder, "NOTCE.txt")
+            alertfile = File.join(outfolder, "NOTICE.txt")
         end
         # write our file
         File.open(alertfile, "w") do |f|
