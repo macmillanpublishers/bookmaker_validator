@@ -30,7 +30,7 @@ def testisbn(isbn, whichisbn, status_hash)
             if whichisbn == 'docisbn'
               status_hash['docisbn_lookup_fail'] << isbn
               # log to alert json as warning
-              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnlookup_msg']['message']} #{status_hash['docisbn_lookup_fail'].uniq}"
+              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_lookup_fail']['message']} #{status_hash['docisbn_lookup_fail'].uniq}"
               Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
             end
         else  #isbn checks out
@@ -151,7 +151,7 @@ def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_h
   if mail == 'not found'   #this means dropbox api failed, or submitter is not in staff.json just sentall emails to Workflows
     newstatus = "#{newstatus}, and submitter email not in staff.json"
     name, mail = 'Workflows', 'workflows@macmillan.com'
-    # alert Worfklows that a fallback lookup failed:
+    # alert Workflows that a fallback lookup failed:
      body = <<MESSAGE_END
 Subject: Alert - egalleymaker staff.json lookup failed
 
@@ -167,7 +167,7 @@ time: #{Time.now}
 file: #{Val::Doc.filename_normalized}
 submitter email: #{submitter_mail}
 MESSAGE_END
-    message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+    message = Vldtr::Mailtexts.generic('Workflows','workflows@macmillan.com',"#{body}")
     unless File.file?(Val::Paths.testing_value_file)
       Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
     end
@@ -182,9 +182,9 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
     mail, newname, status = lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)
     # adding to alerts.json:
     if pm_or_pe == "PM"
-      msg_detail = "\'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\'"
+      msg_detail = "\'#{newname}\'/\'#{mail}\'"
     elsif pm_or_pe == "PE"
-      msg_detail = "\'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\'"
+      msg_detail = "\'#{newname}\'/\'#{mail}\'"
     end
     alertstring = "#{Val::Hashes.alertmessages_hash['warnings']["#{pm_or_pe.downcase}_lookup_fail"]['message']}: #{msg_detail}"
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
@@ -202,7 +202,7 @@ def staff_lookup(name, pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash
     if mail == 'not found'    #this means pm/pe's email was not in staff.json
       status = "#{status}, their email is not in staff.json"
       newname, mail = 'Workflows', 'workflows@macmillan.com'
-      # alert Worfklows that a PM/PE email lookup failed:
+      # alert Workflows that a PM/PE email lookup failed:
       body = <<MESSAGE_END
 Subject: Alert - egalleymaker staff.json lookup failed
 
@@ -218,7 +218,7 @@ file: #{Val::Doc.filename_normalized}
 #{pm_or_pe} name: #{name}
 submitter email: #{submitter_mail}
 MESSAGE_END
-      message = Vldtr::Mailtexts.generic('Worfklows','workflows@macmillan.com',"#{body}")
+      message = Vldtr::Mailtexts.generic('Workflows','workflows@macmillan.com',"#{body}")
       unless File.file?(Val::Paths.testing_value_file)
         Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
       end
@@ -268,7 +268,7 @@ if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,
         lookuplog, alt_isbn_array, status_hash['epub_format'] = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file)
 		    if !lookuplog.empty? then logger.info {"#{lookuplog}"} end
     end
-elsif !Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
+elsif Val::Doc.filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
     logger.info {"no isbn in filename"}
     # this value is important b/c it helps us determine 'nogoodisbn' in mailer for isbnerror
     status_hash['filename_isbn_lookup_ok'] = false
@@ -297,12 +297,13 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
                             logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
                             status_hash['docisbn_match_fail'] << i
                             # log to alerts.json as warning
-                            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbnmatch_msg']['message']} #{status_hash['docisbn_match_fail'].uniq}"
+                            alldocisbns = status_hash['docisbn_match_fail'] + status_hash['docisbns']
+                            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_match_fail']['message']} #{alldocisbns.uniq}"
                             Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
                             if !status_hash['filename_isbn_lookup_ok']  #in this context this is a showstopping error if we don't have a filename_isbn
                                 status_hash['isbn_match_ok'] = false
                                 # log to alerts.json as error
-                                alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}"
+                                alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{alldocisbns.uniq}"
                                 Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
                                 # this helps determine recipients of err mail:
                                 status_hash['status'] = 'isbn error'
@@ -366,7 +367,7 @@ end
 if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
 	# nogoodisbn = true
   # log to alerts.json as error
-  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['nogoodisbn_msg']['message'])
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['no_good_isbn']['message'])
 	status_hash['status'] = 'isbn error'
 end
 

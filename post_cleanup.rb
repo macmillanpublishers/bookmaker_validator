@@ -104,6 +104,7 @@ end
 #update Val::Logs.permalog
 if File.file?(Val::Posts.permalog)
 	permalog_hash = Mcmlln::Tools.readjson(Val::Posts.permalog)
+	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
 	permalog_hash[Val::Posts.index]['epub_found'] = epub_found
 	if epub_found && status_hash['errors'].empty?
 		permalog_hash[Val::Posts.index]['status'] = 'In-house egalley'

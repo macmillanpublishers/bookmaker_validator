@@ -75,7 +75,8 @@ if File.file?(Val::Posts.status_file)
 	errors = status_hash['errors']
 	if !errtxt_files.empty?
 		# log to alerts.json as error
-		Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)
+		alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
+		Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
 		# bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
 		# errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
 		status_hash['errors'] = errors
@@ -87,7 +88,7 @@ else
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
 end
 
-alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Files.alerts_json)
+alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Posts.alerts_json)
 
 #send a success notification email!
 if send_ok

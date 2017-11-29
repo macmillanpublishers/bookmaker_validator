@@ -108,7 +108,7 @@ set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
 unless File.file?(Val::Paths.testing_value_file)
   if status_hash['api_ok'] && user_email =~ /@/
-    body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
+    body = Val::Resources.mailtext_gsubs(file_recd_txt,'','')
     message = Vldtr::Mailtexts.generic(user_name,user_email,body) #or "#{body}" ?
     Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
   else
@@ -124,17 +124,16 @@ else
   logger.info {"running isbnsearch/password_check macro"}
   status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
   status_hash['password_protected'] = Val::Hashes.isbn_hash['initialize']['password_protected']
-  if Val::Hashes.isbn_hash['completed'] == false
-      logger.info {"isbnsearch macro error!"}
-      # log alert to alerts JSON (for now, continuing to log as 'validator error')
-      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
-  end
   if status_hash['password_protected'] == true
       logger.info {"document is password protected!"}
       # log alert to alerts JSON
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["protected_doc"]["message"])
       # pulled thisfrom mailer in case its needed
   		status_hash['status'] = 'protected .doc(x)'
+  elsif Val::Hashes.isbn_hash['completed'] == false
+      logger.info {"isbnsearch macro error!"}
+      # log alert to alerts JSON (for now, continuing to log as 'validator error')
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
   end
 end
 

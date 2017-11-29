@@ -21,7 +21,7 @@
       "description": "Egalleymaker tried to use the ISBN it found in the manuscript filename to lookup the book information from Biblio, but this lookup failed."
     },
     "docisbn_match_fail": {
-      "message": "ISBN(s) in the manuscript found for different works, one or more may be incorrect:",
+      "message": "ISBN(s) for different works were found, one or more may be incorrect. The filename ISBN was used to process the file. Manuscript ISBN(s) found:",
       "description": "Egalleymaker requires an ISBN, and it found some in the manuscript text, however these ISBNs were for different books, and Egalleymaker didn't know which one is correct."
     },
     "pm_lookup_fail": {
@@ -34,7 +34,7 @@
     }},
   "errors": {
     "error_header": {
-      "message": "One or more problems prevented PROJECT from completing successfully:",
+      "message": "One or more problems prevented Egalleymaker from completing successfully:",
       "description": "This is just a generic header telling you that Egalleymaker found some problems that prevented an EPUB from being created. The errors will be listed below."
     },
     "isbn_match_fail": {
@@ -54,7 +54,7 @@
       "description": "Egalleymaker does its best to format the manuscript so it meets the Bookmaker requirements. However, there was a problem with the manuscript formatting that Egalleymaker didn't know how to handle, and so it wasn't able to run. The Ebooks team should be able to help you identify (and fix) this formatting problem."
     },
     "not_a_docfile": {
-      "message": "The submitted document was not a .doc or .docx:",
+      "message": "The submitted document was not a .doc or .docx.",
       "description": "Files submitted to Egalleymaker must use the Microsoft Word .doc or .docx file format."
     },
     "bookmaker_error": {

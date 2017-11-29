@@ -22,7 +22,7 @@ if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 else
 	unless File.file?(Val::Paths.testing_value_file)		#send a mail to PM that we're starting
 		user_name, user_email = Vldtr::Tools.ebooks_mail_check()
-		body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'','',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
+		body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
 		message = Vldtr::Mailtexts.generic(user_name,user_email,"#{body}")
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
 	end
