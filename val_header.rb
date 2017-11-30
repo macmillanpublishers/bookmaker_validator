@@ -8,8 +8,8 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-			@input_file = File.expand_path(@unescapeargv)
-			@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
+		@input_file = File.expand_path(@unescapeargv)
+		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 		def self.input_file
 			@@input_file
 		end
@@ -116,11 +116,11 @@ module Val
 		# def self.stylecheck_file
 		# 	@@stylecheck_file
 		# end
-    @@stylereport_json = File.join(Paths.tmp_dir,'stylereport.json')
+		@@stylereport_json = File.join(Paths.tmp_dir,'stylereport.json')
 		def self.stylereport_json
 			@@stylereport_json
 		end
-    @@stylereport_txt = File.join(Paths.tmp_dir,"#{Doc.basename_normalized}_StyleReport.txt")
+		@@stylereport_txt = File.join(Paths.tmp_dir,"#{Doc.basename_normalized}_StyleReport.txt")
 		def self.stylereport_txt
 			@@stylereport_txt
 		end
@@ -140,7 +140,7 @@ module Val
 		def self.alerts_json
 			@@alerts_json
 		end
-    @@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		@@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
 		def self.alerts_json
 			@@alerts_json
 		end
@@ -376,8 +376,8 @@ module Val
 			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
 				if file =~ /_workingfile#{Doc.extension}$/
 					@@working_file = file
-        elsif file =~ /_StyleReport.txt$/
-          @@stylereport_txt = file
+				elsif file =~ /_StyleReport.txt$/
+					@@stylereport_txt = file
 				else
 					@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 				end

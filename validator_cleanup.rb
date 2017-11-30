@@ -103,7 +103,7 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 				logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
 			else
 				done_file = working_file_updated
-      end
+			end
 		else
 			logger.info {"adding isbn to done_filename because it was missing"}
 			done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
@@ -132,8 +132,8 @@ else	#if not bookmaker_ready, clean up
 			logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
 		end
 	end
-  
-  #write alert text file!
+
+	#write alert text file!
 	if !Val::Hashes.alerts_hash.empty?
 		Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		logger.info {"warnings found, writing warn_notice"}
@@ -151,10 +151,10 @@ else	#if not bookmaker_ready, clean up
 	end
 	logger.info {"moved the original doc to outfolder, now cleaning up!"}
 
-  # now let's move the stylereport.txt to the out folder! Unless doc was unstyled
+	# now let's move the stylereport.txt to the out folder! Unless doc was unstyled
 	if status_hash['document_styled'] == true
-	  logger.info {"moving stylereport.txt file to outfolder.."}
-	  Mcmlln::Tools.moveFile(Val::Files.stylereport_txt, outfolder)
+		logger.info {"moving stylereport.txt file to outfolder.."}
+		Mcmlln::Tools.moveFile(Val::Files.stylereport_txt, outfolder)
 	end
 
 	#and delete tmp files

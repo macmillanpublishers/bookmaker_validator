@@ -35,7 +35,7 @@ Process.detach(pid)
 begin
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
-  Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_py} \'#{Val::Doc.input_file}\'", output_hash, "validator_py", json_logfile)
+	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_py} \'#{Val::Doc.input_file}\'", output_hash, "validator_py", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_mailer} \'#{Val::Doc.input_file}\'", output_hash, "validator_mailer", json_logfile)
 	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "validator_cleanup", json_logfile)

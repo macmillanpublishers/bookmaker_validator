@@ -61,22 +61,22 @@ MESSAGE_END
       #run python api script
       dropboxmodifier = Bkmkr::Tools.runpython(py_script, "#{generated_access_token} #{dropbox_filepath}")
       if dropboxmodifier.nil? or dropboxmodifier.empty? or !dropboxmodifier
-      	user_email, user_name = '', ''
+        user_email, user_name = '', ''
       else
         user_email = dropboxmodifier.split(' ', 2)[0]
         user_name = dropboxmodifier.split(' ', 2)[1].gsub(/\n/,'')
       end
       return user_email, user_name
     rescue Exception => e
-    	p e   #puts e.inspect
+      p e   #puts e.inspect
     end
     def self.write_json(hash, json)
       finaljson = JSON.pretty_generate(hash)
       File.open(json, 'w+:UTF-8') { |f| f.puts finaljson }
     end
     def self.update_json(newhash, currenthash, json)
-    	currenthash.merge!(newhash)
-    	Vldtr::Tools.write_json(currenthash,json)
+      currenthash.merge!(newhash)
+      Vldtr::Tools.write_json(currenthash,json)
     end
     # expecting alert_type of "error", "warning", or "notice", but will accept anything.
     def self.log_alert_to_json(alerts_json, alert_category, new_errtext)
@@ -139,21 +139,21 @@ MESSAGE_END
     p e   #puts e.inspect
     end
     def self.sendmail(message, to_email, cc_emails)
-    	if cc_emails.empty?
-      		Net::SMTP.start('10.249.0.12') do |smtp|
-    	  		smtp.send_message message, 'workflows@macmillan.com',
-                                  		to_email
-      		end
-    	else
-      		Net::SMTP.start('10.249.0.12') do |smtp|
-    	  		smtp.send_message message, 'workflows@macmillan.com',
-                                  		to_email, cc_emails
-    	  	end
+      if cc_emails.empty?
+          Net::SMTP.start('10.249.0.12') do |smtp|
+            smtp.send_message message, 'workflows@macmillan.com',
+                                      to_email
+          end
+      else
+          Net::SMTP.start('10.249.0.12') do |smtp|
+            smtp.send_message message, 'workflows@macmillan.com',
+                                      to_email, cc_emails
+          end
       end
     rescue Exception => e
-    	p e   #puts e.inspect
-    	puts "Original mail failed, now attempting to send alertmail to workflows:"
-    	sendrescue_mail(to_email,cc_emails,message.lines[0..3])
+      p e   #puts e.inspect
+      puts "Original mail failed, now attempting to send alertmail to workflows:"
+      sendrescue_mail(to_email,cc_emails,message.lines[0..3])
     end
     def self.ebooks_mail_check()  #alternate will always be submitter, so far om is std_recipient in all cases
       if Val::Hashes.contacts_hash['ebooksDept_submitter'] == true
@@ -166,24 +166,24 @@ MESSAGE_END
       return user_name, user_email
     end
     def self.checkisbn(isbn)
-    	isbn.gsub!(/[^0-9,]/,'')
-    	isbntwelve = isbn[0..11]
-    	i=1
-    	sum=0
-    	isbntwelve.scan(/\d/) { |int|
-    		int=int.to_i
-    		 if i%2 == 0 then int=int*3 end
-    		 sum=sum+int
-    		 i+=1
-    	}
+      isbn.gsub!(/[^0-9,]/,'')
+      isbntwelve = isbn[0..11]
+      i=1
+      sum=0
+      isbntwelve.scan(/\d/) { |int|
+        int=int.to_i
+         if i%2 == 0 then int=int*3 end
+         sum=sum+int
+         i+=1
+      }
       if isbn.length==13 && ((10-(sum%10)) == isbn[12].to_i)
-    		cd=true
-    	elsif isbn.length==13 && (sum%10) == 0 && isbn[12].to_i == 0
-    		cd=true
-    	else
-    		cd=false
-    	end
-    	cd
+        cd=true
+      elsif isbn.length==13 && (sum%10) == 0 && isbn[12].to_i == 0
+        cd=true
+      else
+        cd=false
+      end
+      cd
     end
     def self.log_time(currenthash,scriptname,txt,jsonlog)
       timestamp_colon = Time.now.strftime('%y%m%d_%H:%M:%S')
@@ -205,7 +205,7 @@ MESSAGE_END
     end
     def self.run_macro(logger,macro_name)
       macro_output = ''
-    	Val::Logs.return_stdOutErr  #stop console log redirect to file
+      Val::Logs.return_stdOutErr  #stop console log redirect to file
       #run macro
       Open3.popen2e("#{Val::Resources.powershell_exe} \"#{Val::Resources.run_macro_ps} \'#{Val::Files.working_file}\' \'#{macro_name}\' \'#{Val::Logs.std_logfile}\'\"") do |stdin, stdouterr, wait_thr|
           stdin.close
@@ -213,20 +213,20 @@ MESSAGE_END
               macro_output << line
           }
       end
-    	Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)  #turn console log redirect back on
+      Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)  #turn console log redirect back on
       logger.info {"finished running #{macro_name} macro"}
       macro_output
     end
     def self.move_old_outfiles(outfolder,newfolder)
-     	prev_runs=File.join(outfolder,'previous_runs')
-     	FileUtils.mkdir_p newfolder
-     	Find.find(outfolder) { |f|
+       prev_runs=File.join(outfolder,'previous_runs')
+       FileUtils.mkdir_p newfolder
+       Find.find(outfolder) { |f|
         #the regex below is necessary to strip out parens- otherwise the match fails even with the regexp.escape. Ditto line 104)
         Find.prune if f.gsub(/(\(|\))/,"") =~ /#{Regexp.escape(prev_runs.gsub(/(\(|\))/,""))}/
         if f != outfolder
           FileUtils.mv f, newfolder
         end
-     	}
+       }
      end
     def self.setup_outfolder(outfolder)
       prev_runs=File.join(outfolder,'previous_runs')
@@ -258,21 +258,21 @@ MESSAGE_END
       #stop console log redirect to file
       Val::Logs.return_stdOutErr
       # select python path and run script
-			if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
-				`python #{py_script} #{args}`
-			elsif Bkmkr::Tools.os == "windows"
-				pythonpath = File.join(Bkmkr::Paths.resource_dir, "Python27", "python.exe")
-				py_output = `#{pythonpath} #{py_script} #{args}`
-			else
+      if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
+        `python #{py_script} #{args}`
+      elsif Bkmkr::Tools.os == "windows"
+        pythonpath = File.join(Bkmkr::Paths.resource_dir, "Python27", "python.exe")
+        py_output = `#{pythonpath} #{py_script} #{args}`
+      else
         py_output = "ERROR: I can't seem to run python. Is it installed and part of your system PATH?"
-			end
+      end
       return py_output
     rescue => e
       p e
     ensure
       #turn console log redirect back on
       Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)
-		end
+    end
     def self.runnode(js, args)
       if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
         node_output = `node #{js} #{args}`
