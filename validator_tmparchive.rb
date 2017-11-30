@@ -112,7 +112,7 @@ unless File.file?(Val::Paths.testing_value_file)
 end
 
 #test fileext for =~ .doc(x)
-if Val::Doc.extension !~ /.doc($|x$)/
+if Val::Doc.extension !~ /\.doc($|x$)/i
   nondoc(logger,status_hash)  #this is not renamed, and not moved until validator_cleanup
 else
   movedoc(logger)
