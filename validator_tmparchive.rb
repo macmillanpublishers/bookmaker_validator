@@ -53,12 +53,8 @@ end
 def nondoc(logger,status_hash)
   status_hash['docfile'] = false
   logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
-  # File.open(Val::Files.errFile, 'w') { |f|
-  #   f.puts "Unable to process \"#{Val::Doc.filename_normalized}\". Your document is not a .doc or .docx file."
-  # }
   # logging err directly to json:
   Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["not_a_docfile"]["message"])
-  # pulling this from mailer:
   status_hash['status'] = 'not a .doc(x)'
 end
 def convertDocToDocxPSscript(logger, doc_or_docx_workingfile)
@@ -72,7 +68,6 @@ def movedoc(logger)
   #if its a .doc(x) lets go ahead and move it to tmpdir, keep a pristing copy in subfolder
   FileUtils.mkdir_p Val::Paths.tmp_original_dir
   Mcmlln::Tools.moveFile(Val::Doc.input_file_untag_chars, Val::Files.original_file)
-  # Mcmlln::Tools.copyFile(Val::Doc.input_file_untag_chars, Val::Files.original_file) # for debug
   # constructing 'working' destination since the new 'working' file might still be a .doc at this point
   Mcmlln::Tools.copyFile(Val::Files.original_file, doc_or_docx_workingfile)
   if Val::Doc.filename_split == Val::Doc.filename_normalized

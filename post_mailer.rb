@@ -14,8 +14,6 @@ logger = Val::Logs.logger
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
-# alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
-# alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
 epub, epub_firstpass = '', ''
 send_ok = true
@@ -77,8 +75,6 @@ if File.file?(Val::Posts.status_file)
 		# log to alerts.json as error
 		alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
 		Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
-		# bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
-		# errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
 		status_hash['errors'] = errors
 		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
 		send_ok = false

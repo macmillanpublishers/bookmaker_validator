@@ -26,9 +26,6 @@ end
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE_#{Val::Posts.index}$/,'')
-# warn_notice = File.join(outfolder,"WARNING--#{Val::Doc.filename_normalized}.txt")
-# err_notice = File.join(outfolder,"ERROR--#{Val::Doc.filename_normalized}.txt")
-# validator_infile = File.join(et_project_dir,'IN',Val::Posts.val_infile_name)
 errFile = File.join(et_project_dir, "ERROR_RUNNING_#{Val::Posts.val_infile_name}#{Val::Doc.extension}.txt")
 
 epub_found = true
@@ -75,25 +72,6 @@ Mcmlln::Tools.copyAllFiles(Val::Posts.tmp_original_dir, outfolder)
 # move the stylereport.txt to out folder!
 logger.info {"moving stylereport.txt file to outfolder.."}
 Mcmlln::Tools.moveFile(Val::Posts.stylereport_txt, outfolder)
-
-# #deal with errors & warnings!
-# if File.file?(Val::Posts.status_file)
-# 	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
-# 	if !status_hash['errors'].empty?
-# 		# text = "#{status_hash['errors']}\n#{status_hash['warnings']}"
-# 		# Mcmlln::Tools.overwriteFile(err_notice, text)
-#     Vldtr::Tools.write_alerts_to_txtfile(Val::Posts.alerts_json, outfolder)
-# 		logger.info {"errors found, writing err_notice"}
-# 	end
-# 	if !status_hash['warnings'].empty? && status_hash['errors'].empty?
-# 		# text = status_hash['warnings']
-# 		# Mcmlln::Tools.overwriteFile(warn_notice, text)
-#     Vldtr::Tools.write_alerts_to_txtfile(Val::Posts.alerts_json, outfolder)
-# 		logger.info {"warnings found, writing warn_notice"}
-# 	end
-# else
-# 	logger.info {"status.json not present or unavailable!?"}
-# end
 
 #deal with errors & warnings!
 if !Val::Hashes.readjson(Val::Posts.alerts_json).empty?

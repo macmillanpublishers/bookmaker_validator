@@ -12,7 +12,6 @@ logger = Val::Logs.logger
 notify_egalleymaker_begun = File.read(File.join(Val::Paths.mailer_dir,'notify_egalleymaker_begun.txt'))
 py_script_name = "validator_main.py"
 py_script_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', py_script_name)
-# script_name="Validator.Launch"
 status_hash = Val::Hashes.status_hash
 status_hash['val_py_started'] = false
 
