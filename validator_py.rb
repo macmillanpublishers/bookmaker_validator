@@ -34,12 +34,12 @@ else
 	else
     # log that we're beginning the python validator!
 		status_hash['val_py_started'] = true
-    ### run the python script
-    ## version std logfile for stylecheck
-		py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file}")
-    ## version with shared logfile
-		# logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
-    # py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
+    #### run the python script
+    ## versionA std logfile for stylecheck (only outputs items not already piped to v.py logfile):
+		# py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file}")
+    ## versionB using shared logfile
+		logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
+    py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
     ## capture any random output from the runpython funciton call
 		logger.info {"output from \"#{py_script_name}\": #{py_output}"}
 	end

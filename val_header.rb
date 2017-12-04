@@ -373,10 +373,10 @@ module Val
 		@@working_file, @@stylereport_txt, @@val_infile_name, @@logfile_name = '','','infile_not_present',Logs.logfilename
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
-			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
+			if file !~ /_DONE_#{index}#{Doc.extension}$/# && File.extname(file) =~ /.doc($|x$)/
 				if file =~ /_workingfile#{Doc.extension}$/
 					@@working_file = file
-				elsif file =~ /_ValidationReport.txt$/
+				elsif file =~ /_ValidationReport\.txt$/
 					@@stylereport_txt = file
 				else
 					@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop

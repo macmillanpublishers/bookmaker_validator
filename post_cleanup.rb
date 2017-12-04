@@ -70,7 +70,7 @@ logger.info {"moving original file to outfolder.."}
 Mcmlln::Tools.copyAllFiles(Val::Posts.tmp_original_dir, outfolder)
 
 # move the stylereport.txt to out folder!
-logger.info {"moving stylereport.txt file to outfolder.."}
+logger.info {"moving stylereport.txt file to outfolder... #{File.exists?(Val::Posts.stylereport_txt)}"}
 Mcmlln::Tools.moveFile(Val::Posts.stylereport_txt, outfolder)
 
 #deal with errors & warnings!
