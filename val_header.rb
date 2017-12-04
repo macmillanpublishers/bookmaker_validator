@@ -120,7 +120,7 @@ module Val
 		def self.stylereport_json
 			@@stylereport_json
 		end
-		@@stylereport_txt = File.join(Paths.tmp_dir,"#{Doc.basename_normalized}_StyleReport.txt")
+		@@stylereport_txt = File.join(Paths.tmp_dir,"#{Doc.basename_normalized}_ValidationReport.txt")
 		def self.stylereport_txt
 			@@stylereport_txt
 		end
@@ -376,7 +376,7 @@ module Val
 			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
 				if file =~ /_workingfile#{Doc.extension}$/
 					@@working_file = file
-				elsif file =~ /_StyleReport.txt$/
+				elsif file =~ /_ValidationReport.txt$/
 					@@stylereport_txt = file
 				else
 					@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
