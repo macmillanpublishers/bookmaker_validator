@@ -104,6 +104,10 @@ module Val
 		def self.working_file
 			@@working_file
 		end
+    @@converted_file = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}_converted.docx")
+		def self.converted_file
+			@@converted_file
+		end    
 		@@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
 		def self.html_output
 			@@html_output

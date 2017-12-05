@@ -92,30 +92,32 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		#rename Val::Paths.tmp_dir so it doesn't get re-used and has index #s
 		tmp_dir_new = File.join(Val::Paths.working_dir,"#{isbn}_to_bookmaker_#{index}")
 		Mcmlln::Tools.moveFile(Val::Paths.tmp_dir, tmp_dir_new)
-		#update path for working_file
-		working_file_updated = File.join(tmp_dir_new, Val::Doc.filename_docx)
+		# #update path for working_file
+		# working_file_updated = File.join(tmp_dir_new, Val::Doc.filename_docx)
+    #update path for converted_file
+		converted_file_updated = File.join(tmp_dir_new, Val::Files.converted_file)
 		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
 		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
 			isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
 			if isbn_condensed != isbn
-				done_file = working_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
+				done_file = converted_file_updated.gsub(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/,isbn)
 				logger.info {"filename isbn is != lookup isbn, editing filename (for done_file)"}
 			else
-				done_file = working_file_updated
+				done_file = converted_file_updated
 			end
 		else
 			logger.info {"adding isbn to done_filename because it was missing"}
-			done_file = working_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
+			done_file = converted_file_updated.gsub(/.docx$/,"_#{isbn}.docx")
 		end
 		done_file = done_file.gsub(/.docx$/,"_DONE_#{index}.docx")
-		Mcmlln::Tools.copyFile(working_file_updated, done_file)
+		Mcmlln::Tools.copyFile(converted_file_updated, done_file)
 		Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
 		#rename working file to keep it distinct from infile
-		new_workingfile = working_file_updated.gsub(/.docx$/,"_workingfile.docx")
-		File.rename(working_file_updated, new_workingfile)
+		# new_workingfile = working_file_updated.gsub(/.docx$/,"_workingfile.docx")
+		# File.rename(working_file_updated, new_workingfile)
 		#make a copy of infile so we have a reference to it for posts
-		Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
+		# Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
 	else
 		logger.info {"for some reason, isbn is empty, can't do renames & moves :("}
 	end
