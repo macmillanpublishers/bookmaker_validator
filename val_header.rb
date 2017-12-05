@@ -47,6 +47,10 @@ module Val
 		def self.filename_docx
 			@@filename_docx
 		end
+		@@converted_docx_filename = "#{@@basename_normalized}_converted.docx"
+		def self.converted_docx_filename
+			@@converted_docx_filename
+		end
 	end
 	class Paths
 		@@testing_value_file = File.join("C:", "staging.txt")
@@ -104,10 +108,6 @@ module Val
 		def self.working_file
 			@@working_file
 		end
-    @@converted_file = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}_converted.docx")
-		def self.converted_file
-			@@converted_file
-		end    
 		@@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
 		def self.html_output
 			@@html_output
@@ -220,6 +220,10 @@ module Val
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing
+		end
+		@@testisbn = '9781137280046'
+		def self.testisbn			#it's only called in validator_cleanup & posts_cleanup
+			@@testisbn
 		end
 		@@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
 		def self.pilot
@@ -374,12 +378,12 @@ module Val
 				end
 				return bookinfo
 		end
-		@@working_file, @@stylereport_txt, @@val_infile_name, @@logfile_name = '','','infile_not_present',Logs.logfilename
+		@@converted_file, @@stylereport_txt, @@val_infile_name, @@logfile_name = '','','infile_not_present',Logs.logfilename
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
 			if file !~ /_DONE_#{index}#{Doc.extension}$/# && File.extname(file) =~ /.doc($|x$)/
-				if file =~ /_workingfile#{Doc.extension}$/
-					@@working_file = file
+				if file =~ /_converted#{Doc.extension}$/
+					@@converted_file = file
 				elsif file =~ /_ValidationReport\.txt$/
 					@@stylereport_txt = file
 				else
@@ -387,16 +391,13 @@ module Val
 				end
 			end
 			}
-			def self.working_file
-				@@working_file
-			end
 			def self.val_infile_name
 				@@val_infile_name
 			end
 			def self.stylereport_txt
 				@@stylereport_txt
 			end
-			@@logfile_name = File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt')
+			@@logfile_name = File.basename(@@converted_file, ".*").gsub(/_converted$/,'_log.txt')
 			def self.logfile_name
 				@@logfile_name
 			end
