@@ -27,6 +27,8 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
     contacts_hash.merge!(submitter_name: 'Workflows')
     contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
     logger.info {"dropbox api may have failed, not finding file metadata"}
+    # adding to alerts.json:
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"]["message"])
   else
     #check to see if submitter is in ebooks dept.:
     staff_hash = Mcmlln::Tools.readjson(Val::Files.staff_emails)  		#read in our static pe/pm json
@@ -35,6 +37,9 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
         if "#{staff_hash[i]['division']}" == 'Ebooks' || "#{staff_hash[i]['division']}" == 'Workflow'
           contacts_hash['ebooksDept_submitter'] = true
           logger.info {"#{user_name} is a member of ebooks or Workflow dept, flagging that to edit user comm. addressees"}
+          # log as notice to alerts.json
+          alertstring = "All email communications normally slated for PM or PE are being redirected to a submitter from Ebooks or Workflow dept."
+          Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", alertstring)
         end
       end
     end
@@ -48,9 +53,9 @@ end
 def nondoc(logger,status_hash)
   status_hash['docfile'] = false
   logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
-  File.open(Val::Files.errFile, 'w') { |f|
-    f.puts "Unable to process \"#{Val::Doc.filename_normalized}\". Your document is not a .doc or .docx file."
-  }
+  # logging err directly to json:
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["not_a_docfile"]["message"])
+  status_hash['status'] = 'not a .doc(x)'
 end
 def convertDocToDocxPSscript(logger, doc_or_docx_workingfile)
   `#{Val::Resources.powershell_exe} "#{File.join(Val::Paths.scripts_dir, 'save_doc_as_docx.ps1')} '#{doc_or_docx_workingfile}'"`
@@ -98,7 +103,7 @@ set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
 unless File.file?(Val::Paths.testing_value_file)
   if status_hash['api_ok'] && user_email =~ /@/
-    body = Val::Resources.mailtext_gsubs(file_recd_txt,'','','')
+    body = Val::Resources.mailtext_gsubs(file_recd_txt,'','')
     message = Vldtr::Mailtexts.generic(user_name,user_email,body) #or "#{body}" ?
     Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
   else
@@ -107,15 +112,24 @@ unless File.file?(Val::Paths.testing_value_file)
 end
 
 #test fileext for =~ .doc(x)
-if Val::Doc.extension !~ /.doc($|x$)/
+if Val::Doc.extension !~ /\.doc($|x$)/i
   nondoc(logger,status_hash)  #this is not renamed, and not moved until validator_cleanup
 else
   movedoc(logger)
   logger.info {"running isbnsearch/password_check macro"}
   status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
   status_hash['password_protected'] = Val::Hashes.isbn_hash['initialize']['password_protected']
-  if Val::Hashes.isbn_hash['completed'] == false then logger.info {"isbnsearch macro error!"} end
-  if status_hash['password_protected'] == true then logger.info {"document is password protected!"} end
+  if status_hash['password_protected'] == true
+      logger.info {"document is password protected!"}
+      # log alert to alerts JSON
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["protected_doc"]["message"])
+      # pulled thisfrom mailer in case its needed
+  		status_hash['status'] = 'protected .doc(x)'
+  elsif Val::Hashes.isbn_hash['completed'] == false
+      logger.info {"isbnsearch macro error!"}
+      # log alert to alerts JSON (for now, continuing to log as 'validator error')
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
+  end
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

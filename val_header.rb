@@ -8,8 +8,8 @@ require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 module Val
 	class Doc
 		@unescapeargv = ARGV[0].chomp('"').reverse.chomp('"').reverse
-  		@input_file = File.expand_path(@unescapeargv)
-  		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
+		@input_file = File.expand_path(@unescapeargv)
+		@@input_file = @input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).join(File::SEPARATOR)
 		def self.input_file
 			@@input_file
 		end
@@ -43,9 +43,13 @@ module Val
 		def self.filename_normalized
 			@@filename_normalized
 		end
-    @@filename_docx = "#{@@basename_normalized}.docx"
+		@@filename_docx = "#{@@basename_normalized}.docx"
 		def self.filename_docx
 			@@filename_docx
+		end
+		@@converted_docx_filename = "#{@@basename_normalized}_converted.docx"
+		def self.converted_docx_filename
+			@@converted_docx_filename
 		end
 	end
 	class Paths
@@ -57,12 +61,12 @@ module Val
 		def self.working_dir
 			@@working_dir
 		end
-    @@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
+		@@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
 		def self.bookmaker_scripts_dir
 			@@bookmaker_scripts_dir
 		end
 		@@scripts_dir = File.join(bookmaker_scripts_dir, 'bookmaker_validator')
-    # @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
+		# @@scripts_dir = File.join(File.dirname(__FILE__))  # for testing on Mac
 		def self.scripts_dir
 			@@scripts_dir
 		end
@@ -104,17 +108,25 @@ module Val
 		def self.working_file
 			@@working_file
 		end
-    @@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
-    def self.html_output
+		@@html_output = File.join(Paths.tmp_dir, "#{Doc.basename_normalized}.html")
+		def self.html_output
 			@@html_output
 		end
 		@@bookinfo_file = File.join(Paths.tmp_dir,'book_info.json')
 		def self.bookinfo_file
 			@@bookinfo_file
 		end
-		@@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
-		def self.stylecheck_file
-			@@stylecheck_file
+		# @@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
+		# def self.stylecheck_file
+		# 	@@stylecheck_file
+		# end
+		@@stylereport_json = File.join(Paths.tmp_dir,'stylereport.json')
+		def self.stylereport_json
+			@@stylereport_json
+		end
+		@@stylereport_txt = File.join(Paths.tmp_dir,"#{Doc.basename_normalized}_ValidationReport.txt")
+		def self.stylereport_txt
+			@@stylereport_txt
 		end
 		@@contacts_file = File.join(Paths.tmp_dir,'contacts.json')
 		def self.contacts_file
@@ -127,6 +139,18 @@ module Val
 		@@isbn_file = File.join(Paths.tmp_dir,'isbn_check.json')
 		def self.isbn_file
 			@@isbn_file
+		end
+		@@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
+		end
+		@@alerts_json = File.join(Paths.tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
+		end
+		@@alertmessages_file = File.join(Paths.mailer_dir,'warning-error_text.json')
+		def self.alertmessages_file
+			@@alertmessages_file
 		end
 		@@typesetfrom_file = File.join(Paths.static_data_files,'typeset_from_report','typeset_from.xml')
 		def self.typesetfrom_file
@@ -148,10 +172,10 @@ module Val
 		def self.errFile
 			@@errFile
 		end
-    @@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
-    def self.section_start_rules_json
-      @@section_start_rules_json
-    end
+		@@section_start_rules_json = File.join(Paths.scripts_dir, "section_start_rules.json")
+		def self.section_start_rules_json
+			@@section_start_rules_json
+		end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -173,8 +197,8 @@ module Val
 		def self.bookinfo_hash
 			readjson(Files.bookinfo_file)
 		end
-		def self.stylecheck_hash
-			readjson(Files.stylecheck_file)
+		def self.stylereport_hash
+			readjson(Files.stylereport_json)
 		end
 		def self.isbn_hash
 			readjson(Files.isbn_file)
@@ -185,11 +209,21 @@ module Val
 		def self.staff_defaults_hash
 			readjson(Files.imprint_defaultPMs)
 		end
+		def self.alerts_hash
+			readjson(Files.alerts_json)
+		end
+		def self.alertmessages_hash
+			readjson(Files.alertmessages_file)
+		end
 	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing
+		end
+		@@testisbn = '9781137280046'
+		def self.testisbn			#it's only called in validator_cleanup & posts_cleanup
+			@@testisbn
 		end
 		@@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
 		def self.pilot
@@ -215,12 +249,12 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-    @@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
+		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
 		def self.generated_access_token_file
 			@@generated_access_token_file
 		end
-		def self.mailtext_gsubs(mailtext,warnings,errors,bookinfo)
-   			updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/WARNINGS/,warnings).gsub(/ERRORS/,errors).gsub(/BOOKINFO/,bookinfo)
+		def self.mailtext_gsubs(mailtext,alerts,bookinfo)
+				 updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/ALERTS/,alerts).gsub(/BOOKINFO/,bookinfo)
 				updated_txt
 		end
 	end
@@ -284,7 +318,7 @@ module Val
 				@@logger
 			end
 			logger.formatter = proc do |severity, datetime, progname, msg|
-			  "#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
+				"#{datetime}: #{Resources.thisscript.upcase} -- #{msg}\n"
 			end
 			@@std_logfile = logfile
 			def self.std_logfile
@@ -318,6 +352,10 @@ module Val
 		def self.status_file
 			@@status_file
 		end
+		@@alerts_json = File.join(tmp_dir,'alerts.json')
+		def self.alerts_json
+			@@alerts_json
+		end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
 				if Resources.thisscript =~ /post_/
 					info_file = Posts.bookinfo_file
@@ -340,24 +378,26 @@ module Val
 				end
 				return bookinfo
 		end
-		@@working_file, @@val_infile_name, @@logfile_name = '','infile_not_present',Logs.logfilename
+		@@converted_file, @@stylereport_txt, @@val_infile_name, @@logfile_name = '','','infile_not_present',Logs.logfilename
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
-			if file !~ /_DONE_#{index}#{Doc.extension}$/ && File.extname(file) =~ /.doc($|x$)/
-				if file =~ /_workingfile#{Doc.extension}$/
-					@@working_file = file
+			if file !~ /_DONE_#{index}#{Doc.extension}$/# && File.extname(file) =~ /.doc($|x$)/
+				if file =~ /_converted#{Doc.extension}$/
+					@@converted_file = file
+				elsif file =~ /_ValidationReport\.txt$/
+					@@stylereport_txt = file
 				else
 					@@val_infile_name = file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact)).pop
 				end
 			end
 			}
-			def self.working_file
-				@@working_file
-			end
 			def self.val_infile_name
 				@@val_infile_name
 			end
-			@@logfile_name = File.basename(working_file, ".*").gsub(/_workingfile$/,'_log.txt')
+			def self.stylereport_txt
+				@@stylereport_txt
+			end
+			@@logfile_name = File.basename(@@converted_file, ".*").gsub(/_converted$/,'_log.txt')
 			def self.logfile_name
 				@@logfile_name
 			end

@@ -15,13 +15,11 @@ unstyled_notify = File.read(File.join(Val::Paths.mailer_dir,'unstyled_notify.txt
 notify_paper_copyedit = File.read(File.join(Val::Paths.mailer_dir,'notify_paper_copyedit.txt'))
 notify_fixed_layout = File.read(File.join(Val::Paths.mailer_dir,'notify_fixed_layout.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
-alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
-alert_hash = Mcmlln::Tools.readjson(alerts_file)
 
 cc_mails = ['workflows@macmillan.com']
 cc_mails_b = ['workflows@macmillan.com']
 cc_address = 'Cc: Workflows <workflows@macmillan.com>'
-nogoodisbn = false
+# nogoodisbn = false
 addPEcc = false 		#to cc PE's on isbn errors
 
 #--------------------- RUN
@@ -55,108 +53,15 @@ else
 	logger.info {"Val::Files.contacts_file.json not present or unavailable, unable to send mails"}
 end
 
+#get alert string, alerts_hash
+alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Files.alerts_json)
 
-#Prepare warning/error text
-warnings = "WARNING(s):\n"
-if !status_hash['api_ok']
-	api_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='api' then api_msg = h['message'] end}}
-	warnings = "#{warnings}- #{api_msg}\n"
-end
-if status_hash['pm_lookup'] =~ /not in biblio/
-	pmlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pm_lookup_fail' then pmlookup_msg = h['message'] end}}
-	warnings = "#{warnings}- #{pmlookup_msg}: \'#{contacts_hash['production_manager_name']}\'/\'#{contacts_hash['production_manager_email']}\' \n"
-end
-if status_hash['pe_lookup'] =~ /not in biblio/
-	pelookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='pe_lookup_fail' then pelookup_msg = h['message'] end}}
-	warnings = "#{warnings}- #{pelookup_msg}: \'#{contacts_hash['production_editor_name']}\'/\'#{contacts_hash['production_editor_email']}\' \n"
-end
-if !status_hash['filename_isbn']["checkdigit"]
-	fileisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_checkdigit_fail' then fileisbncd_msg = h['message'] end}}
-	warnings = "#{warnings}- #{fileisbncd_msg} #{status_hash['filename_isbn']['isbn']}\n"
-end
-if !status_hash['filename_isbn_lookup_ok'] && status_hash['filename_isbn']["checkdigit"] == true
-	fileisbnlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='filename_isbn_lookup_fail' then fileisbnlookup_msg = h['message'] end}}
-	warnings = "#{warnings}- #{fileisbnlookup_msg} #{status_hash['filename_isbn']['isbn']}\n"
-end
-if !status_hash['docisbn_checkdigit_fail'].empty?
-	docisbncd_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_checkdigit_fail' then docisbncd_msg = h['message'] end}}
-	warnings = "#{warnings}- #{docisbncd_msg} #{status_hash['docisbn_checkdigit_fail'].uniq}\n"
-end
-if !status_hash['docisbn_lookup_fail'].empty?
-	docisbnlookup_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_lookup_fail' then docisbnlookup_msg = h['message'] end}}
-	warnings = "#{warnings}- #{docisbnlookup_msg} #{status_hash['docisbn_lookup_fail'].uniq}\n"
-end
-if !status_hash['docisbn_match_fail'].empty? && status_hash['isbn_match_ok']
-	docisbnmatch_msg=''; alert_hash['warnings'].each {|h| h.each {|k,v| if v=='docisbn_match_fail' then docisbnmatch_msg = h['message'] end}}
-	warnings = "#{warnings}- #{docisbnmatch_msg} #{status_hash['docisbn_match_fail'].uniq}\n"
-end
-if warnings == "WARNING(s):\n"
-	warnings = ''
-end
-
-#adding notices to Warnings for mailer & cleanup (only unstyled should be attached ot mailers
-notices = "NOTICE(s):\n"
-if status_hash['document_styled'] == false
-	unstyled_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='unstyled' then unstyled_msg=h['message'] end}}
-	notices = "#{notices}- #{unstyled_msg}\n"
-end
-if status_hash['epub_format'] == false
-	fixlayout_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='fixed_layout' then fixlayout_msg=h['message'] end}}
-	notices = "#{notices}- #{fixlayout_msg}\n"
-end
-if status_hash['msword_copyedit'] == false
-	paprcopyedit_msg=''; alert_hash['notices'].each {|h| h.each {|k,v| if v=='paper_copyedit' then paprcopyedit_msg=h['message'] end}}
-	notices = "#{notices}- #{paprcopyedit_msg}\n"
-end
-if contacts_hash['ebooksDept_submitter'] == true
-	notices = "#{notices}- All email communications normally slated for PM or PE are being redirected to a submitter from Ebooks or Workflow dept.\n"
-end
-if notices != "NOTICE(s):\n"
-	warnings = "#{notices}\n#{warnings}"
-end
-
-
-#Errors
-errheader_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='error_header' then errheader_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
-errors = "ERROR(s): #{errheader_msg}\n"
-if !status_hash['isbn_match_ok']
-	isbnmatch_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='isbn_match_fail' then isbnmatch_msg = h['message'] end}}
-	errors = "#{errors}- #{isbnmatch_msg} #{status_hash['docisbns']}, #{status_hash['docisbn_match_fail']}.\n"
-	status_hash['status'] = 'isbn error'
-end
-if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && status_hash['isbn_match_ok']
-	nogoodisbn = true
-end
-if nogoodisbn
-	nogoodisbn_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='no_good_isbn' then nogoodisbn_msg = h['message'] end}}
-	errors = "#{errors}- #{nogoodisbn_msg}\n"
-	status_hash['status'] = 'isbn error'
-end
-if (!status_hash['validator_macro_complete'] || Val::Hashes.isbn_hash['completed'] == false || status_hash['html_conversion'] == false || status_hash['section_starts_applied'] == false) && !nogoodisbn && status_hash['isbn_match_ok'] && status_hash['epub_format'] && status_hash['msword_copyedit']
-	validatorerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='validator_error' then validatorerr_msg = h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
-	errors = "#{errors}- #{validatorerr_msg}\n"
-	status_hash['status'] = 'validator error'
-end
-if !status_hash['docfile'] || status_hash['password_protected'] == true
-	#reset warnings & errors for a simpler message
-	warnings, errors = '',"ERROR(s): #{errheader_msg}\n"
-	if !status_hash['docfile']
-		docfileerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='not_a_docfile' then docfileerr_msg = h['message'] end}}
-		errors = "#{errors}- #{docfileerr_msg} \"#{Val::Doc.filename_normalized}\"\n"
-		status_hash['status'] = 'not a .doc(x)'
-	elsif status_hash['password_protected'] == true
-		protecteddoc_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='protected_doc' then protecteddoc_msg = h['message'] end}}
-		errors = "#{errors}- #{protecteddoc_msg}\n"
-		status_hash['status'] = 'protected .doc(x)'
-	end
-end
-if errors == "ERROR(s): #{errheader_msg}\n"
-	errors = ''
-end
-
+#add errors/warnings to status.json
+if alerts_hash.has_key?("error") then status_hash['errors'] = alerts_hash['error'] end
+if alerts_hash.has_key?("warning") then status_hash['warnings'] = alerts_hash['warning'] end
 
 #send error emails
-if !errors.empty? && send_ok
+if alerts_hash.has_key?("error") && send_ok
 	unless File.file?(Val::Paths.testing_value_file)
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
@@ -170,14 +75,14 @@ if !errors.empty? && send_ok
 					to_email = contacts_hash['production_manager_email']
 			end
 			firstname = to_header.split(' ')[0]
-			body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
+			body = Val::Resources.mailtext_gsubs(error_notifyPM, alerttxt_string, Val::Posts.bookinfo)
 			body = body.gsub(/PMNAME/,firstname)
 			logger.info {"sending message to PE re: fatal validator errors encountered"}
 		else
 		#send PM an error notification for validator errors
 			to_header = "#{submitter_name} <#{submitter_mail}>"
 			to_email = contacts_hash['submitter_email']
-			body = Val::Resources.mailtext_gsubs(error_text, warnings, errors, Val::Posts.bookinfo)
+			body = Val::Resources.mailtext_gsubs(error_text, alerttxt_string, Val::Posts.bookinfo)
 			#add the PE to the email for isbn errors
 			if status_hash['status'] == 'isbn error' && contacts_hash['ebooksDept_submitter'] != true
 				cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
@@ -196,7 +101,7 @@ MESSAGE_END
 end
 
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
-if errors.empty? && status_hash['document_styled'] == false && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
+if !alerts_hash.has_key?("error") && status_hash['document_styled'] == false && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
 		status_hash['status'] = 'Westchester egalley'
 		unless File.file?(Val::Paths.testing_value_file)
 		if contacts_hash['ebooksDept_submitter'] == true
@@ -206,7 +111,7 @@ if errors.empty? && status_hash['document_styled'] == false && send_ok && status
 				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 				to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(unstyled_notify, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(unstyled_notify, alerttxt_string, Val::Posts.bookinfo)
 		message_b = <<MESSAGE_END_B
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -228,7 +133,7 @@ if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_forma
 				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 				to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(notify_paper_copyedit, alerttxt_string, Val::Posts.bookinfo)
 		message_c = <<MESSAGE_END_C
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -251,7 +156,7 @@ if status_hash['epub_format'] == false && send_ok
 				to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
 				to_email = contacts_hash['production_manager_email']
 		end
-		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, warnings, errors, Val::Posts.bookinfo)
+		body = Val::Resources.mailtext_gsubs(notify_fixed_layout, alerttxt_string, Val::Posts.bookinfo)
 		message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
@@ -264,16 +169,12 @@ MESSAGE_END_D
 		end
 end
 
-if errors.empty? && status_hash['document_styled'] == true && send_ok
+if !alerts_hash.has_key?("error") && status_hash['document_styled'] == true && send_ok
 	logger.info {"this file looks bookmaker_ready, no mailer at this point"}
-	if !warnings.empty?
+	if alerts_hash.has_key?("warning")
 		logger.info {"warnings were found, no error ; warnings will be attached to the mailer at end of bookmaker run"}
 	end
 end
-
-#add errors/warnings to status.json for cleanup
-if !errors.empty? then status_hash['errors'] = errors end
-if !warnings.empty? then status_hash['warnings'] = warnings end
 
 Vldtr::Tools.write_json(status_hash,Val::Files.status_file)
 
