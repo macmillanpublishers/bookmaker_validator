@@ -12,6 +12,8 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
+py_script_name = "validator_isbncheck.py"
+py_script_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', py_script_name)
 
 contacts_hash = {}
 contacts_hash['ebooksDept_submitter'] = false
@@ -115,18 +117,27 @@ end
 if Val::Doc.extension !~ /\.doc($|x$)/i
   nondoc(logger,status_hash)  #this is not renamed, and not moved until validator_cleanup
 else
+  # move and rename IN/inputfile to tmp/working_file
   movedoc(logger)
-  logger.info {"running isbnsearch/password_check macro"}
-  status_hash['docisbn_string'] = Vldtr::Tools.run_macro(logger,macro_name) #run macro
-  status_hash['password_protected'] = Val::Hashes.isbn_hash['initialize']['password_protected']
-  if status_hash['password_protected'] == true
+
+  # run the python version of isbncheck
+  logger.info {"running isbnsearch/password_check python tool"}
+  logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
+  py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
+
+  ## capture any random output from the runpython funciton call
+  logger.info {"output from \"#{py_script_name}\": #{py_output}"}
+  status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
+
+  # capture and handle unexpected values
+  if !status_hash['password_protected'].empty?
       logger.info {"document is password protected!"}
       # log alert to alerts JSON
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["protected_doc"]["message"])
       # pulled thisfrom mailer in case its needed
   		status_hash['status'] = 'protected .doc(x)'
   elsif Val::Hashes.isbn_hash['completed'] == false
-      logger.info {"isbnsearch macro error!"}
+      logger.info {"isbn_check_py error!"}
       # log alert to alerts JSON (for now, continuing to log as 'validator error')
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
   end

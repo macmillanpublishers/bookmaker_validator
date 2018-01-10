@@ -282,7 +282,7 @@ end
 #get isbns from json, verify checkdigit, create array of good isbns
 if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'] == false
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
-  	docisbn_array = isbn_hash['isbn']['list']
+  	docisbn_array = isbn_hash['manuscript_isbns']
     if docisbn_array.length < 10 && !docisbn_array.empty?
         docisbn_array.each { |i|
             i.gsub!(/-/,'')
