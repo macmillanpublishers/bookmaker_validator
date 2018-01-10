@@ -131,10 +131,9 @@ else
 
   # capture and handle unexpected values
   if !status_hash['password_protected'].empty?
-      logger.info {"document is password protected!"}
-      # log alert to alerts JSON
-      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["protected_doc"]["message"])
-      # pulled thisfrom mailer in case its needed
+      logger.info {"document is password protected! Skipping alert here, error message will get logged from validator_isbncheck.py"}
+      # rm'd the protection alert to JSON here, it's already piped out from isbn_check.py
+      # pulled this from mailer in case its needed
   		status_hash['status'] = 'protected .doc(x)'
   elsif Val::Hashes.isbn_hash['completed'] == false
       logger.info {"isbn_check_py error!"}

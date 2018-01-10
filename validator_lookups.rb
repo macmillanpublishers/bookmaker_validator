@@ -48,7 +48,7 @@ def testisbn(isbn, whichisbn, status_hash)
         if whichisbn == 'docisbn'
             status_hash['docisbn_checkdigit_fail'] << isbn
             # log to alerts json
-            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_checkdigit_fail']['message']} #{status_hash['docisbn_checkdigit_fail'].uniq}"
+            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_checkdigit_fail']['message']} '#{isbn}'"
             Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
         end
         loginfo = "checkdigit failed for #{whichisbn} \"#{isbn}\""
@@ -280,7 +280,7 @@ elsif Val::Doc.filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{
 end
 
 #get isbns from json, verify checkdigit, create array of good isbns
-if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'] == false
+if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].empty?
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
   	docisbn_array = isbn_hash['manuscript_isbns']
     if docisbn_array.length < 10 && !docisbn_array.empty?
