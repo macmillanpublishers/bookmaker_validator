@@ -130,6 +130,7 @@ else
   logger.info {"output from \"#{py_script_name}\": #{py_output}"}
   if Val::Hashes.isbn_hash.has_key?('password_protected')
     status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
+  end
 
   # capture and handle unexpected values
   if !status_hash['password_protected'].empty?
