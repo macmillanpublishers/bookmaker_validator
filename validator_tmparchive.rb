@@ -20,6 +20,7 @@ contacts_hash['ebooksDept_submitter'] = false
 status_hash = {}
 status_hash['api_ok'] = true
 status_hash['docfile'] = true
+status_hash['password_protected'] = ''
 user_email = ''
 
 #---------------------  METHODS
@@ -127,7 +128,8 @@ else
 
   ## capture any random output from the runpython funciton call
   logger.info {"output from \"#{py_script_name}\": #{py_output}"}
-  status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
+  if Val::Hashes.isbn_hash.has_key?('password_protected')
+    status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
 
   # capture and handle unexpected values
   if !status_hash['password_protected'].empty?
