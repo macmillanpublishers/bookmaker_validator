@@ -79,7 +79,7 @@ MESSAGE_END
     end
     def self.sendrescue_mail(orig_to,orig_ccs,orig_header)
     message = Mailtexts.rescuemail(orig_to,orig_ccs,orig_header)
-    Net::SMTP.start('10.249.0.12') do |smtp|
+    Net::SMTP.start(Val::Resources.smtp_address) do |smtp|
         smtp.send_message message, 'workflows@macmillan.com',
                                   'workflows@macmillan.com'
     end
@@ -88,12 +88,12 @@ MESSAGE_END
     end
     def self.sendmail(message, to_email, cc_emails)
     	if cc_emails.empty?
-      		Net::SMTP.start('10.249.0.12') do |smtp|
+      		Net::SMTP.start(Val::Resources.smtp_address) do |smtp|
     	  		smtp.send_message message, 'workflows@macmillan.com',
                                   		to_email
       		end
     	else
-      		Net::SMTP.start('10.249.0.12') do |smtp|
+      		Net::SMTP.start(Val::Resources.smtp_address) do |smtp|
     	  		smtp.send_message message, 'workflows@macmillan.com',
                                   		to_email, cc_emails
     	  	end

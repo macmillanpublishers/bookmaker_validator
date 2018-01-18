@@ -206,6 +206,10 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
+    @@smtp_address = File.read(File.join(authkeys_repo,'smtp.txt')).strip
+		def self.smtp_address
+			@@smtp_address
+		end
 		@@generated_access_token = File.read(File.join(authkeys_repo,'access_token.txt'))
 		def self.generated_access_token
 			@@generated_access_token
