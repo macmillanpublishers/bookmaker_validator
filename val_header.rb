@@ -206,7 +206,7 @@ module Val
 		def self.authkeys_repo
 			@@authkeys_repo
 		end
-    @@smtp_address = File.read(File.join(authkeys_repo,'smtp.txt'))
+    @@smtp_address = File.read(File.join(authkeys_repo,'smtp.txt')).strip
 		def self.smtp_address
 			@@smtp_address
 		end
