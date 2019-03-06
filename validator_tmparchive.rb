@@ -108,7 +108,7 @@ def versionCompare(v1, v2, logger)
   elsif v1.empty?
     return false
   elsif v1.match(/[^\d.]/) || v2.match(/[^\d.]/)
-    logger.error {"doctemplate_version string includes nondigit chars: v1: \"#{v1}\", v2\"#{v2}\"}
+    logger.error {"doctemplate_version string includes nondigit chars: v1: \"#{v1}\", v2\"#{v2}\""}
     return false
   elsif v1 == v2
     return true
