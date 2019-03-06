@@ -195,7 +195,7 @@ else
   if rsuite_versioncompare == true
     doctemplatetype = "rsuite"
   else
-    sectionstart_versioncompare = versionCompare(doctemplate_version, sectionstart_template_version)
+    sectionstart_versioncompare = versionCompare(doctemplate_version, sectionstart_template_version, logger)
     if sectionstart_versioncompare == true
       doctemplatetype = "sectionstart"
     else
