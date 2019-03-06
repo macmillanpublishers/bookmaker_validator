@@ -253,9 +253,9 @@ module Val
 		def self.smtp_address
 			@@smtp_address
 		end
-		@@generated_access_token = File.read(File.join(authkeys_repo,'access_token.txt'))
-		def self.generated_access_token
-			@@generated_access_token
+		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
+		def self.generated_access_token_file
+			@@generated_access_token_file
 		end
 		def self.mailtext_gsubs(mailtext,alerts,bookinfo)
 				 updated_txt = mailtext.gsub(/FILENAME_NORMALIZED/,Doc.filename_normalized).gsub(/FILENAME_SPLIT/,Doc.filename_normalized).gsub(/PROJECT_NAME/,Paths.project_name).gsub(/ALERTS/,alerts).gsub(/BOOKINFO/,bookinfo)
