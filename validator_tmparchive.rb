@@ -16,6 +16,8 @@ isbncheck_py = "validator_isbncheck.py"
 isbncheck_py_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', isbncheck_py)
 docversion_py = "getTemplateVersion.py"
 docversion_py_path = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_addons", docversion_py)
+sectionstart_template_version = '5.0'
+rsuite_template_version = '6.0'
 
 contacts_hash = {}
 contacts_hash['ebooksDept_submitter'] = false
@@ -95,6 +97,40 @@ def movedoc(logger)
   end
 end
 
+# returns false if v1 is empty, nil, has bad characters, or is less than v2
+def versionCompare(v1, v2, logger)
+  # eliminate leading 'v' if present
+  if v1[0] == 'v'
+    v1 = v1[1..-1]
+  end
+  if v1.nil?
+    return false
+  elsif v1.empty?
+    return false
+  elsif v1.match(/[^\d.]/) || v2.match(/[^\d.]/)
+    logger.error {"doctemplate_version string includes nondigit chars: v1: \"#{v1}\", v2\"#{v2}\"}
+    return false
+  elsif v1 == v2
+    return true
+  else
+    v1long = v1.split('.').length
+    v2long = v2.split('.').length
+    maxlength = v1long > v2long ? v1long : v2long
+    0.upto(maxlength-1) { |n|
+      # puts "n is #{n}"  ## < debug
+      v1split = v1.split('.')[n].to_i
+      v2split = v2.split('.')[n].to_i
+      if v1split > v2split
+        return true
+      elsif v1split < v2split
+        return false
+      elsif n == maxlength-1 && v1split == v2split
+        return true
+      end
+    }
+  end
+end
+
 #--------------------- RUN
 logger.info "############################################################################"
 logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Paths.project_name} folder"}
@@ -150,7 +186,25 @@ else
   end
 
   # get & log the document version custom property value
-  status_hash['doctemplate_version'] = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file)
+  doctemplate_version = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file)
+  status_hash['doctemplate_version'] = doctemplate_version
+
+  # determine & log documenttemplatetype.
+  #   Most of this (& versioncompare function) lifted directly from bookmaker_addons, with updated messaging
+  rsuite_versioncompare = versionCompare(doctemplate_version, rsuite_template_version, logger)
+  if rsuite_versioncompare == true
+    doctemplatetype = "rsuite"
+  else
+    sectionstart_versioncompare = versionCompare(doctemplate_version, sectionstart_template_version)
+    if sectionstart_versioncompare == true
+      doctemplatetype = "sectionstart"
+    else
+      doctemplatetype = "pre-sectionstart"
+    end
+  end
+  status_hash['doctemplatetype'] = doctemplatetype
+
+  logger.info {"doctemplate_version is \"#{doctemplate_version}\", doctemplatetype: \"#{doctemplatetype}\""}
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
