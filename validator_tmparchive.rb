@@ -186,7 +186,7 @@ else
   end
 
   # get & log the document version custom property value
-  doctemplate_version = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file)
+  doctemplate_version = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file).strip
   status_hash['doctemplate_version'] = doctemplate_version
 
   # determine & log documenttemplatetype.
