@@ -12,8 +12,10 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
-py_script_name = "validator_isbncheck.py"
-py_script_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', py_script_name)
+isbncheck_py = "validator_isbncheck.py"
+isbncheck_py_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', isbncheck_py)
+docversion_py = "getTemplateVersion.py"
+docversion_py_path = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_addons", docversion_py)
 
 contacts_hash = {}
 contacts_hash['ebooksDept_submitter'] = false
@@ -22,6 +24,7 @@ status_hash['api_ok'] = true
 status_hash['docfile'] = true
 status_hash['password_protected'] = ''
 user_email = ''
+status_hash['doctemplate_version'] = ''
 
 #---------------------  METHODS
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
@@ -53,6 +56,7 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
     logger.info {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
   end
 end
+
 def nondoc(logger,status_hash)
   status_hash['docfile'] = false
   logger.info {"This is not a .doc or .docx file. Posting error.txt to the project_dir for user."}
@@ -65,6 +69,7 @@ def convertDocToDocxPSscript(logger, doc_or_docx_workingfile)
 rescue => e
   logger.info {"Error converting to .docx: #{e}"}
 end
+
 def movedoc(logger)
   # setting a var for the workingfile before its converted to .docx
   doc_or_docx_workingfile = File.join(Val::Paths.tmp_dir, Val::Doc.filename_normalized)
@@ -124,10 +129,10 @@ else
   # run the python version of isbncheck
   logger.info {"running isbnsearch/password_check python tool"}
   logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
-  py_output = Vldtr::Tools.runpython(py_script_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
+  py_output = Vldtr::Tools.runpython(isbncheck_py_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
 
-  ## capture any random output from the runpython funciton call
-  logger.info {"output from \"#{py_script_name}\": #{py_output}"}
+  ## capture any random output from the runpython function call
+  logger.info {"output from \"#{isbncheck_py}\": #{py_output}"}
   if Val::Hashes.isbn_hash.has_key?('password_protected')
     status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
   end
@@ -143,6 +148,9 @@ else
       # log alert to alerts JSON (for now, continuing to log as 'validator error')
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
   end
+
+  # get & log the document version custom property value
+  status_hash['doctemplate_version'] = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file)
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
