@@ -116,10 +116,10 @@ module Val
 		def self.bookinfo_file
 			@@bookinfo_file
 		end
-		# @@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
-		# def self.stylecheck_file
-		# 	@@stylecheck_file
-		# end
+		@@stylecheck_file = File.join(Paths.tmp_dir,'style_check.json')
+		def self.stylecheck_file
+			@@stylecheck_file
+		end
 		@@stylereport_json = File.join(Paths.tmp_dir,'stylereport.json')
 		def self.stylereport_json
 			@@stylereport_json

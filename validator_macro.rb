@@ -12,6 +12,7 @@ logger = Val::Logs.logger
 notify_egalleymaker_begun = File.read(File.join(Val::Paths.mailer_dir,'notify_egalleymaker_begun.txt'))
 macro_name="Validator.Launch"
 macro_output=""
+status_hash = Val::Hashes.status_hash
 
 #--------------------- RUN
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
