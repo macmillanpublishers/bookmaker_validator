@@ -57,8 +57,8 @@ if status_hash["doctemplatetype"] == "sectionstart"
   	Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["unstyled"]["message"])
   end
 
-  # check if we already have presenting errors:
-  if !Val::Hashes.alerts_hash.has_key?('error') && status_hash['validator_py_complete'] == false
+  # log errors
+  if status_hash['val_py_started'] == true && status_hash['validator_py_complete'] == false
     # log to alerts.json as error
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
     status_hash['status'] = 'validator error'
@@ -89,10 +89,11 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   	status_hash['validator_macro_complete'] = false
   end
 
-  #check for alert or other unplanned items in Val::Paths.tmp_dir:
+  #check for alert in Val::Paths.tmp_dir:
   if Dir.exist?(Val::Paths.tmp_dir)
   	Find.find(Val::Paths.tmp_dir) { |file|
-  		if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file && file != Val::Files.isbn_file && !File.directory?(file) && file != Val::Files.original_file
+  		# if file != Val::Files.stylecheck_file && file != Val::Files.bookinfo_file && file != Val::Files.working_file && file != Val::Files.contacts_file && file != Val::Paths.tmp_dir && file != Val::Files.status_file && file != Val::Files.isbn_file && !File.directory?(file) && file != Val::Files.original_file
+      if file.include? "ALERT_"
   			logger.info {"error log found in tmpdir: file: #{file}"}
   			status_hash['validator_macro_complete'] = false
   		end
@@ -100,9 +101,9 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   end
 
   # log alerts & errors as notices to alerts.json
-  if status_hash['validator_macro_complete'] = true && status_hash['document_styled'] == false
+  if status_hash['validator_macro_complete'] == true && status_hash['document_styled'] == false
   	Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["unstyled"]["message"])
-  elsif !Val::Hashes.alerts_hash.has_key?('error') && status_hash['validator_macro_complete'] = false # <- only log if we dont already have presenting errors
+elsif status_hash['val_macro_started'] == true && status_hash['validator_macro_complete'] == false
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
     status_hash['status'] = 'validator error'
   end

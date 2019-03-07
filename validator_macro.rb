@@ -13,6 +13,7 @@ notify_egalleymaker_begun = File.read(File.join(Val::Paths.mailer_dir,'notify_eg
 macro_name="Validator.Launch"
 macro_output=""
 status_hash = Val::Hashes.status_hash
+status_hash['val_macro_started'] = false
 
 #--------------------- RUN
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
@@ -31,7 +32,14 @@ else
 	elsif Val::Hashes.status_hash['epub_format'] == false
 		logger.info {"skipping macro #{macro_name}, no EPUB format epub edition (fixed layout)"}
 	else
-		macro_output = Vldtr::Tools.run_macro(logger,macro_name) #run the macro
-		logger.info {"output from run_macro.ps1: #{macro_output}"}
+    begin
+  		status_hash['val_macro_started'] = true
+  		macro_output = Vldtr::Tools.run_macro(logger,macro_name) #run the macro
+  		logger.info {"output from run_macro.ps1: #{macro_output}"}    
+    ensure
+      Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
+    end
 	end
 end
+
+Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
