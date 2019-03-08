@@ -71,6 +71,7 @@ if File.file?(Val::Files.status_file)
 	permalog_hash[index]['status'] = status_hash['status']
 	permalog_hash[index]['styled?'] = status_hash['document_styled']
 	permalog_hash[index]['validator_completed?'] = status_hash['validator_py_complete']
+  permalog_hash[index]['doctemplatetype'] = status_hash['doctemplatetype']
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}
@@ -92,9 +93,13 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		#rename Val::Paths.tmp_dir so it doesn't get re-used and has index #s
 		tmp_dir_new = File.join(Val::Paths.working_dir,"#{isbn}_to_bookmaker_#{index}")
 		Mcmlln::Tools.moveFile(Val::Paths.tmp_dir, tmp_dir_new)
-    #update path for converted_file
-		converted_file_updated = File.join(tmp_dir_new, Val::Doc.converted_docx_filename)
-		#make a copy of working file and give it a DONE in filename for troubleshooting from this folder
+    #update path for converted_file / working_file
+    if status_hash['doctemplatetype'] == 'pre-sectionstart'
+      converted_file_updated= File.join(tmp_dir_new, Val::Doc.filename_docx)
+    else
+      converted_file_updated = File.join(tmp_dir_new, Val::Doc.converted_docx_filename)
+    end
+    #make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
 		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
 			isbn_condensed = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
@@ -111,7 +116,7 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		done_file = done_file.gsub(/_converted.docx$/,"_DONE_#{index}.docx")
 		logger.info("checking renaming: converted file exist? #{File.exists?(converted_file_updated)}")
 		Mcmlln::Tools.copyFile(converted_file_updated, done_file)
-		logger.info("checking rename 2: done file exist? #{File.exists?(done_file)}")		
+		logger.info("checking rename 2: done file exist? #{File.exists?(done_file)}")
 		Mcmlln::Tools.copyFile(done_file, bookmaker_bot_IN)
 		#make a copy of infile so we have a reference to it for posts
 		Mcmlln::Tools.copyFile(Val::Files.original_file, tmp_dir_new)
