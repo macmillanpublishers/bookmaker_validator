@@ -99,7 +99,6 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
     else
       converted_file_updated = File.join(tmp_dir_new, Val::Doc.converted_docx_filename)
     end
-    logger.info {"cp 1: converted_file_updated is #{converted_file_updated}"}
     #make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
 		if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
@@ -112,10 +111,11 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 			end
 		else
 			logger.info {"adding isbn to done_filename because it was missing"}
-			done_file = converted_file_updated.gsub(/_converted.docx$/,"_#{isbn}_converted.docx")
+			# converted_file_updated features '_converted' suffix for section-start, new regex looks for either
+			done_file = converted_file_updated.gsub(/((_converted)*.docx)$/,"_#{isbn}\\1")
 		end
-    logger.info {"cp 2: converted_file_updated is \"#{converted_file_updated}\",done_file is \"#{done_file}\""}
-		done_file = done_file.gsub(/_converted.docx$/,"_DONE_#{index}.docx")
+		# same as above: converted_file_updated features '_converted' suffix for section-start, new regex looks for either
+		done_file = done_file.gsub(/(_converted)*.docx$/,"_DONE_#{index}.docx")
 		logger.info("checking renaming: converted file exist? #{File.exists?(converted_file_updated)}")
     logger.info {"cp 3: converted_file_updated is \"#{converted_file_updated}\",done_file is \"#{done_file}\""}
 		Mcmlln::Tools.copyFile(converted_file_updated, done_file)

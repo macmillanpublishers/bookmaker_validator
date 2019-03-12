@@ -386,7 +386,7 @@ module Val
 		if Dir.exists?(tmp_dir)
 			Find.find(tmp_dir) { |file|
 			if file !~ /_DONE_#{index}#{Doc.extension}$/# && File.extname(file) =~ /.doc($|x$)/
-				if file =~ /_converted#{Doc.extension}$/
+				if file =~ /(_converted)*#{Doc.extension}$/
 					@@converted_file = file
 				elsif file =~ /_ValidationReport\.txt$/
 					@@stylereport_txt = file
