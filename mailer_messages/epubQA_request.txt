@@ -2,15 +2,14 @@ Subject: Please QA EPUB for FILENAME_NORMALIZED
 
 Hello Workflows!
 
-An Egalley has been automatically generated for the file "FILENAME_NORMALIZED".
-
-It has the 'DOCTEMPLATETYPE' template attached, so has been put into bookmaker_bot's 'OUTPUTFOLDER' folder.
-You can also find it in the "PROJECT_NAME/OUT" Macmillan Dropbox folder with accompanying report.
+An Egalley has been generated for file "FILENAME_NORMALIZED".
+It used 'DOCTEMPLATETYPE' template, so has been put in bookmaker_bot/OUTPUTFOLDER folder pending review.
 
 
-Can you please QA this EPUB to verify everything looks ok?
+Can you please QA this EPUB and upload to Coresource/RSuite?
 
 
+You can also find it (with accompanying validation report) in the "PROJECT_NAME/OUT" folder.
 
 Book details:
 BOOKINFO
