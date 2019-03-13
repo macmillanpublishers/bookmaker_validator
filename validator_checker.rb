@@ -103,7 +103,7 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   # log alerts & errors as notices to alerts.json
   if status_hash['validator_macro_complete'] == true && status_hash['document_styled'] == false
   	Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["unstyled"]["message"])
-elsif status_hash['val_macro_started'] == true && status_hash['validator_macro_complete'] == false
+  elsif status_hash['val_macro_started'] == true && status_hash['validator_macro_complete'] == false
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
     status_hash['status'] = 'validator error'
   end
@@ -112,6 +112,12 @@ elsif status_hash['val_macro_started'] == true && status_hash['validator_macro_c
   if File.file?(Val::Files.bookinfo_file) && status_hash['validator_macro_complete'] == true && status_hash['document_styled'] == true
   	status_hash['bookmaker_ready'] = true
   end
+
+# allow rsuite files to pass through
+elsif status_hash["doctemplatetype"] == "rsuite"
+  status_hash['bookmaker_ready'] = true
 end
+
+
 #update status file with new news!
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
