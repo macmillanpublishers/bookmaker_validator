@@ -408,7 +408,7 @@ module Val
 			def self.stylereport_txt
 				@@stylereport_txt
 			end
-			@@logfile_name = File.basename(@@converted_file, ".*").gsub(/_converted$/,'_log.txt')
+			@@logfile_name = File.basename(@@converted_file, ".*").sub(/(_converted)*$/,'_log.txt')
 			def self.logfile_name
 				@@logfile_name
 			end
