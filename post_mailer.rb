@@ -119,18 +119,19 @@ MESSAGE_END
 
   # now, if epub needs QA,
   #   we send a mail to workflows requesting QA!
-if doctypes_requiringQA.include? doctemplatetype
-  unless File.file?(Val::Paths.testing_value_file)
-		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
-		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
-		message = <<MESSAGE_END
+  if doctypes_requiringQA.include? doctemplatetype
+    unless File.file?(Val::Paths.testing_value_file)
+  		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
+  		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
-		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
-		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"#{doctemplatetype}\""}
-  end
+  		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
+  		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"#{doctemplatetype}\""}
+    end
+  end  
 else
 
 	#sending a failure email to Workflows
