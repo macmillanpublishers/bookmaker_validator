@@ -176,6 +176,10 @@ module Val
 		def self.section_start_rules_json
 			@@section_start_rules_json
 		end
+    @@epub_outputdir_json = File.join(Paths.bookmaker_scripts_dir, "bookmaker_connectors", "bookmakerbot_outputdirs.json")
+    def self.epub_outputdir_json
+			@@epub_outputdir_json
+		end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -215,6 +219,9 @@ module Val
 		def self.alertmessages_hash
 			readjson(Files.alertmessages_file)
 		end
+    def self.epub_outputdir_hash
+      readjson(Files.epub_outputdir_json)
+    end
 	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths

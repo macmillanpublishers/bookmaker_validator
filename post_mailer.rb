@@ -14,12 +14,15 @@ logger = Val::Logs.logger
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
+epubQA_request = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
 
 epub, epub_firstpass = '', ''
 send_ok = true
 errtxt_files = []
 to_address = 'To: '
-
+doctypes_requiringQA = ['sectionstart', 'rsuite']
+doctemplatetype = ''
+epub_outputdir = ''
 
 #--------------------- RUN
 ##find our epubs, check for error files in bookmaker
@@ -71,6 +74,8 @@ if File.file?(Val::Posts.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
+  doctemplatetype = status_hash['doctemplatetype']
+  epub_outputdir = Val::Hashes.epub_outputdir_hash[doctemplatetype]
 	if !errtxt_files.empty?
 		# log to alerts.json as error
 		alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
@@ -111,6 +116,21 @@ MESSAGE_END
 		Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
 		logger.info {"Sending epub success message to PM"}
 	end
+
+  # now, if epub needs QA,
+  #   we send a mail to workflows requesting QA!
+if doctypes_requiringQA.include? doctemplatetype
+  unless File.file?(Val::Paths.testing_value_file)
+		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
+		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
+		message = <<MESSAGE_END
+From: Workflows <workflows@macmillan.com>
+To: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END
+		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
+		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"#{doctemplatetype}\""}
+  end
 else
 
 	#sending a failure email to Workflows
