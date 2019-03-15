@@ -162,29 +162,6 @@ else
   # move and rename IN/inputfile to tmp/working_file
   movedoc(logger)
 
-  # run the python version of isbncheck
-  logger.info {"running isbnsearch/password_check python tool"}
-  logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
-  py_output = Vldtr::Tools.runpython(isbncheck_py_path, "#{Val::Files.working_file} \"#{logfile_for_py}\"")
-
-  ## capture any random output from the runpython function call
-  logger.info {"output from \"#{isbncheck_py}\": #{py_output}"}
-  if Val::Hashes.isbn_hash.has_key?('password_protected')
-    status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
-  end
-
-  # capture and handle unexpected values
-  if !status_hash['password_protected'].empty?
-      logger.info {"document is password protected! Skipping alert here, error message will get logged from validator_isbncheck.py"}
-      # rm'd the protection alert to JSON here, it's already piped out from isbn_check.py
-      # pulled this from mailer in case its needed
-  		status_hash['status'] = 'protected .doc(x)'
-  elsif Val::Hashes.isbn_hash['completed'] == false
-      logger.info {"isbn_check_py error!"}
-      # log alert to alerts JSON (for now, continuing to log as 'validator error')
-      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
-  end
-
   # get & log the document version custom property value
   doctemplate_version = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file).strip
   status_hash['doctemplate_version'] = doctemplate_version
@@ -203,8 +180,30 @@ else
     end
   end
   status_hash['doctemplatetype'] = doctemplatetype
-
   logger.info {"doctemplate_version is \"#{doctemplate_version}\", doctemplatetype: \"#{doctemplatetype}\""}
+
+  # run the python version of isbncheck
+  logger.info {"running isbnsearch/password_check python tool"}
+  logfile_for_py = File.join(Val::Logs.logfolder, Val::Logs.logfilename)
+  py_output = Vldtr::Tools.runpython(isbncheck_py_path, "#{Val::Files.working_file} \"#{logfile_for_py}\" #{doctemplatetype}")
+
+  ## capture any random output from the runpython function call
+  logger.info {"output from \"#{isbncheck_py}\": #{py_output}"}
+  if Val::Hashes.isbn_hash.has_key?('password_protected')
+    status_hash['password_protected'] = Val::Hashes.isbn_hash['password_protected']
+  end
+
+  # capture and handle unexpected values
+  if !status_hash['password_protected'].empty?
+      logger.info {"document is password protected! Skipping alert here, error message will get logged from validator_isbncheck.py"}
+      # rm'd the protection alert to JSON here, it's already piped out from isbn_check.py
+      # pulled this from mailer in case its needed
+  		status_hash['status'] = 'protected .doc(x)'
+  elsif Val::Hashes.isbn_hash['completed'] == false
+      logger.info {"isbn_check_py error!"}
+      # log alert to alerts JSON (for now, continuing to log as 'validator error')
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash["errors"]["validator_error"]["message"].gsub(/PROJECT/,Val::Paths.project_name))
+  end
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)
