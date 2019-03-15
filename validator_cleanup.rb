@@ -94,10 +94,12 @@ if status_hash['bookmaker_ready'] && Val::Paths.project_name =~ /egalleymaker/
 		tmp_dir_new = File.join(Val::Paths.working_dir,"#{isbn}_to_bookmaker_#{index}")
 		Mcmlln::Tools.moveFile(Val::Paths.tmp_dir, tmp_dir_new)
     #update path for converted_file / working_file
-    if status_hash['doctemplatetype'] == 'pre-sectionstart'
+    if status_hash['doctemplatetype'] == 'sectionstart'
+		  converted_file_updated = File.join(tmp_dir_new, Val::Doc.converted_docx_filename)
+    elsif status_hash['doctemplatetype'] == 'rsuite'
       converted_file_updated= File.join(tmp_dir_new, Val::Doc.filename_docx)
-    else
-      converted_file_updated = File.join(tmp_dir_new, Val::Doc.converted_docx_filename)
+		else status_hash['doctemplatetype'] == 'pre-sectionstart'
+      converted_file_updated= File.join(tmp_dir_new, Val::Doc.filename_docx)
     end
     #make a copy of working file and give it a DONE in filename for troubleshooting from this folder
 		#setting up name for done_file: this needs to include working isbn, DONE, and index.  Here we go:
