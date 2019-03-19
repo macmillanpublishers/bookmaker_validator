@@ -17,15 +17,22 @@ styles_json = File.join(htmlmakerjs_path, 'styles.json')
 
 stylefunctions_js = File.join(htmlmakerjs_path, 'style-functions.js')
 
+vba_styleconfig_json = File.join(Val::Paths.bookmaker_scripts_dir, 'Word-template_assets', 'StyleTemplate_auto-generate', 'vba_style_config.json')
+
 status_hash = Val::Hashes.status_hash
 
 status_hash['html_conversion'] = ''
+
+status_hash['section_starts_applied'] = ''
+
+section_start_rules_js = File.join(Val::Paths.scripts_dir, "section_start_rules.js")
 
 
 # ---------------------- METHOD
 ## wrapping Bkmkr::Tools.runnode in a new method for this script
 def localRunNode(jsfile, args, status_hash)
-  	Bkmkr::Tools.runnode(jsfile, args)
+  	node_output = Vldtr::Tools.runnode(jsfile, args)
+    return node_output
 rescue => e
   p e
   @logger.info {"error occurred while running #{__method__.to_s}/#{jsfile}: #{e}"}
@@ -54,6 +61,18 @@ if Val::Hashes.status_hash['bookmaker_ready'] == true
 
 else
   @logger.info {"this .docx is not ready for HTML conversion"}
+end
+
+if status_hash['html_conversion'] == true
+  # Run our section start rules js on the html
+  node_output = localRunNode(section_start_rules_js, "#{Val::Files.html_output} #{Val::Files.section_start_rules_json} #{vba_styleconfig_json}", status_hash)
+  @logger.info {"output from running section_start_rules_js: \"#{node_output.split("\n").last}\""}
+  # mark this as a success (true) or failure (false) in the status_hash
+  if node_output.split("\n").last == "Content has been updated!"
+    status_hash['section_starts_applied'] = true
+  else
+    status_hash['section_starts_applied'] = false
+  end
 end
 
 #update status file with new news!

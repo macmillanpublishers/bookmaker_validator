@@ -8,6 +8,6 @@ You can also find the EPUB generated from your manuscript in the following folde
 The book metadata from Biblio is below, as well as any problems we found with the manuscript as we were doing the conversion:
 
 BOOKINFO
-WARNINGS
+ALERTS
 
 Please contact the Ebooks team at ebook.production@macmillanusa.com with any questions.

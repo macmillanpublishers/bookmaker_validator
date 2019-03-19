@@ -1,6 +1,6 @@
 Subject: PROJECT_NAME cannot create an egalley for "FILENAME_SPLIT" (paper-copyedit)
 
-All editions of the work associated with your file, "FILENAME_SPLIT", are set as "typeset from:" 'Manuscript' in Biblio. 
+All editions of the work associated with your file, "FILENAME_SPLIT", are set as "typeset from:" 'Manuscript' in Biblio.
 This means that the book had a traditional paper copyedit, and as such, PROJECT_NAME cannot create an egalley for "FILENAME_SPLIT".
 
 If you would still like to have an egalley created for this manuscript, please reach out to the ebooks team directly:
@@ -11,4 +11,4 @@ The submitted original file can be found in the "PROJECT_NAME/OUT" Macmillan Dro
 See below for book info, and any warnings detected in the manuscript:
 
 BOOKINFO
-WARNINGS
+ALERTS

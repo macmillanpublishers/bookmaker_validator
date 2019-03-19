@@ -14,14 +14,15 @@ logger = Val::Logs.logger
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
-alerts_file = File.join(Val::Paths.mailer_dir,'warning-error_text.json')
-alert_hash = Mcmlln::Tools.readjson(alerts_file)
+epubQA_request = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
 
 epub, epub_firstpass = '', ''
 send_ok = true
 errtxt_files = []
 to_address = 'To: '
-
+doctypes_requiringQA = ['sectionstart', 'rsuite']
+doctemplatetype = ''
+epub_outputdir = ''
 
 #--------------------- RUN
 ##find our epubs, check for error files in bookmaker
@@ -58,7 +59,7 @@ logger.info {"Reading in jsons from validator run"}
 if File.file?(Val::Posts.contacts_file)
 	contacts_hash = Mcmlln::Tools.readjson(Val::Posts.contacts_file)
 	submitter_name = contacts_hash['submitter_name']
-    submitter_mail = contacts_hash['submitter_email']
+	submitter_mail = contacts_hash['submitter_email']
 	pm_name = contacts_hash['production_manager_name']
 	pm_mail = contacts_hash['production_manager_email']
 	pe_name = contacts_hash['production_editor_name']
@@ -73,9 +74,12 @@ if File.file?(Val::Posts.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
+  doctemplatetype = status_hash['doctemplatetype']
+  epub_outputdir = Val::Hashes.epub_outputdir_hash[doctemplatetype]
 	if !errtxt_files.empty?
-		bkmkrerr_msg=''; alert_hash['errors'].each {|h| h.each {|k,v| if v=='bookmaker_error' then bkmkrerr_msg=h['message'].gsub(/PROJECT/,Val::Paths.project_name) end}}
-		errors = "ERROR(s):\n- #{bkmkrerr_msg} #{errtxt_files}"
+		# log to alerts.json as error
+		alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
+		Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
 		status_hash['errors'] = errors
 		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
 		send_ok = false
@@ -85,6 +89,7 @@ else
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
 end
 
+alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Posts.alerts_json)
 
 #send a success notification email!
 if send_ok
@@ -94,13 +99,13 @@ if send_ok
 	end
 	unless File.file?(Val::Paths.testing_value_file)
 		if contacts_hash['ebooksDept_submitter'] == true
-        to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-        to_email = contacts_hash['submitter_email']
-    else
-        to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-        to_email = contacts_hash['production_manager_email']
-    end
-		body = Val::Resources.mailtext_gsubs(bot_success_txt, warnings, errors, Val::Posts.bookinfo)
+			to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+			to_email = contacts_hash['submitter_email']
+		else
+			to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+			to_email = contacts_hash['production_manager_email']
+		end
+		body = Val::Resources.mailtext_gsubs(bot_success_txt, alerttxt_string, Val::Posts.bookinfo)
 		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
 		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -111,6 +116,22 @@ MESSAGE_END
 		Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
 		logger.info {"Sending epub success message to PM"}
 	end
+
+  # now, if epub needs QA,
+  #   we send a mail to workflows requesting QA!
+  if doctypes_requiringQA.include? doctemplatetype
+    unless File.file?(Val::Paths.testing_value_file)
+  		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
+  		message = <<MESSAGE_END
+From: Workflows <workflows@macmillan.com>
+To: Workflows <workflows@macmillan.com>
+#{body}
+MESSAGE_END
+  		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
+  		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"#{doctemplatetype}\""}
+    end
+  end  
 else
 
 	#sending a failure email to Workflows
@@ -133,14 +154,14 @@ MESSAGE_END_B
 
 	#sending a failure notice to PM
 	if contacts_hash['ebooksDept_submitter'] == true
-      to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-      to_email = contacts_hash['submitter_email']
-  else
-      to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-      to_email = contacts_hash['production_manager_email']
-  end
+		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+		to_email = contacts_hash['submitter_email']
+	else
+		to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+		to_email = contacts_hash['production_manager_email']
+	end
 	firstname = to_header.split(' ')[0]
-	body = Val::Resources.mailtext_gsubs(error_notifyPM, warnings, errors, Val::Posts.bookinfo)
+	body = Val::Resources.mailtext_gsubs(error_notifyPM, alerttxt_string, Val::Posts.bookinfo)
 	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/PMNAME/,firstname)
 	message_d = <<MESSAGE_END_D
 From: Workflows <workflows@macmillan.com>
