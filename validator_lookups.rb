@@ -72,6 +72,8 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
         lookup_edition = print_isbn
         loginfo = "#{loginfo}lookup found no value for lead_edition, using alternate print_isbn from lookup as backup.\n"
       end
+    else
+      lookup_edition = lead_edition
     end
 
     #now do lookups for PM & PE
