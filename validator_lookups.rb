@@ -138,7 +138,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
     Vldtr::Tools.write_json(book_hash, bookinfo_file)
 
     status_hash[hash_lookup_string] = true
-		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{book_hash[title]}\", author: \"#{book_hash[author]}\", imprint: \"#{book_hash[imprint]}\", product_type: \"#{book_hash[product_type]}\""
+		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{book_hash['title']}\", author: \"#{book_hash['author']}\", imprint: \"#{book_hash['imprint']}\", product_type: \"#{book_hash['product_type']}\""
 
 	  return loginfo, alt_isbn_array, epub_format, typeset_from
 end
