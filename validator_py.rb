@@ -19,7 +19,7 @@ status_hash['val_py_started'] = false
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 	logger.info {"skipping script: #{py_script_name}, no bookinfo file or no status file"}
 elsif status_hash["doctemplatetype"] != "sectionstart"
-  logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}  
+  logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}
 else
 	unless File.file?(Val::Paths.testing_value_file)		#send a mail to PM that we're starting
 		user_name, user_email = Vldtr::Tools.ebooks_mail_check()
@@ -27,7 +27,7 @@ else
 		message = Vldtr::Mailtexts.generic(user_name,user_email,"#{body}")
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
 	end
-	if Val::Hashes.status_hash['msword_copyedit'] == false
+	if Val::Hashes.status_hash['typeset_from'].keys.include?("paper_copyedit")
 		logger.info {"skipping script: #{py_script_name}, paper-copyedit"}
 	elsif Val::Hashes.status_hash['epub_format'] == false
 		logger.info {"skipping script: #{py_script_name}, no EPUB format epub edition (fixed layout)"}
