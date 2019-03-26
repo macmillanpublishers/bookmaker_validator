@@ -375,12 +375,16 @@ if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
      status_hash['typeset_from'], status_hash['epub_format'] = {}, ''
 else
-    #check for paper_copyedits
-    # status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
-    if status_hash['typeset_from'].keys.include?("paper_copyedit")
-      logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
-      # log as notice to alerts.json
-      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
+    #check for paper_copyedits, set exception when using Val::Resources.testisbn
+    if isbn == Val::Resources.testisbn && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
+      logger.info {"This looksup as a paper_copyedit, but we isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
+      status_hash['test_isbn'] = true
+    else
+      if status_hash['typeset_from'].keys.include?("paper_copyedit")
+        logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
+        # log as notice to alerts.json
+        Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
+      end
     end
     #log re: fixed layout:
     if status_hash['epub_format'] == false
