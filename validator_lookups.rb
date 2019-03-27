@@ -99,27 +99,6 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
     thissql_F = exactSearchSingleKey(lookup_edition, "EDITION_EAN")
     myhash_F = runQuery(thissql_F)
 
-    # #write to var for logs:
-    # title =
-    # author =
-    # imprint =
-    # product_type =
-    # work_id =
-
-    # #get alternate isbns:
-    # alt_isbn_array = []
-    # epub_format = false
-    # thissql_E = exactSearchSingleKey(work_id, "WORK_ID")
-    # editionshash_B = runQuery(thissql_E)
-    # editionshash_B.each { |book, hash|
-    #   hash.each { |k,v|
-    #     if k == 'EDITION_EAN' then alt_isbn_array << v end
-    #     if k == 'FORMAT_LONGNAME'
-    #         if v == 'EPUB' then epub_format = true end
-    #     end
-    #   }
-    # }
-
     #write to hash
     book_hash = {}
     book_hash.merge!(production_editor: pe_name)
@@ -142,24 +121,6 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 
 	  return loginfo, alt_isbn_array, epub_format, typeset_from
 end
-
-# def typeset_from_check(typesetfrom_file, isbn_array)
-#     file_xml = File.open(typesetfrom_file) { |f| Nokogiri::XML(f)}
-#     msword_copyedit = false
-#     isbn_array.each { |isbn|
-#       	next if isbn.empty?
-#         # allow our testing isbn through if on staging / testing
-#         if isbn == Val::Resources.testisbn && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
-#           msword_copyedit = true
-#         else
-#           check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from").to_s
-#           if check =~ /Copyedited Word File/m || check =~ /Word Styles File/m
-#               msword_copyedit = true
-#           end
-#         end
-#     }
-#     return msword_copyedit
-# end
 
 def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)   #no name associated in biblio, lookup backup PM/PE via submitter division
   mail, newstatus = 'not found', status
@@ -376,7 +337,7 @@ if !File.file?(Val::Files.bookinfo_file)
      status_hash['typeset_from'], status_hash['epub_format'] = {}, ''
 else
     #check for paper_copyedits, set exception when using Val::Resources.testisbn
-    if isbn == Val::Resources.testisbn && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
+    if alt_isbn_array.include?(Val::Resources.testisbn) && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
       logger.info {"This looksup as a paper_copyedit, but we isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
     else
