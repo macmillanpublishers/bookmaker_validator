@@ -64,6 +64,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 
     # if lead_edition value is blank, determine whether we use looked up print_isbn or lookup_isbn as backup:
     #   (prefer lookup_isbn if it is filename_isbn, as filename_isbn implies intent on the user's part)
+    loginfo = ''
     if status_hash['filename_isbn_lookup_ok'] == true # <--indicates this is a filename isbn
       lookup_edition = lookup_isbn
       loginfo = "#{loginfo}filename isbn is avail., using that as lookup_edition.\n"
@@ -97,7 +98,6 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
 		end
 
     # do lookup on lookup_edition for metainfo
-    loginfo = ''
     thissql_F = exactSearchSingleKey(lookup_edition, "EDITION_EAN")
     myhash_F = runQuery(thissql_F)
 
@@ -119,7 +119,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
     Vldtr::Tools.write_json(book_hash, bookinfo_file)
 
     status_hash[hash_lookup_string] = true
-		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{book_hash['title']}\", author: \"#{book_hash['author']}\", imprint: \"#{book_hash['imprint']}\", product_type: \"#{book_hash['product_type']}\""
+		loginfo = "#{loginfo}bookinfo from #{lookup_isbn} OK- title: \"#{book_hash[:title]}\", author: \"#{book_hash[:author]}\", imprint: \"#{book_hash[:imprint]}\", product_type: \"#{book_hash[:product_type]}\""
 
 	  return loginfo, alt_isbn_array, epub_format, typeset_from
 end
