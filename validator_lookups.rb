@@ -63,17 +63,19 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file)
     alt_isbn_array, lead_edition, print_isbn, typeset_from, epub_format = getLeadEdition_TypesetFrom(lookup_isbn)
 
     # if lead_edition value is blank, determine whether we use looked up print_isbn or lookup_isbn as backup:
-    #   (prefer lookup_isbn if it is filename_isbn)
-    if lead_edition.empty?
-      if status_hash['filename_isbn_lookup_ok'] == true or print_isbn.empty?
-        lookup_edition = lookup_isbn
-        loginfo = "#{loginfo}lookup found no value for lead_edition, using filename isbn as backup.\n"
-      else
-        lookup_edition = print_isbn
-        loginfo = "#{loginfo}lookup found no value for lead_edition, using alternate print_isbn from lookup as backup.\n"
-      end
-    else
+    #   (prefer lookup_isbn if it is filename_isbn, as filename_isbn implies intent on the user's part)
+    if status_hash['filename_isbn_lookup_ok'] == true # <--indicates this is a filename isbn
+      lookup_edition = lookup_isbn
+      loginfo = "#{loginfo}filename isbn is avail., using that as lookup_edition.\n"
+    elsif !lead_edition.empty?
       lookup_edition = lead_edition
+      loginfo = "#{loginfo}no (good) filename isbn, using lead_edition as lookup_edition.\n"
+    elsif !print_isbn.empty?
+      lookup_edition = print_isbn
+      loginfo = "#{loginfo}no (good) filename isbn, & no value for lead_edition, using alt print_isbn as lookup_edition.\n"
+    else
+      lookup_edition = lookup_isbn
+      loginfo = "#{loginfo}no (good) filename isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition.\n"
     end
 
     #now do lookups for PM & PE
