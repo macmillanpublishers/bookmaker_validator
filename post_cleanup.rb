@@ -17,12 +17,13 @@ if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
 else
 	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalleymaker')
 end
-if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true || Val::Resources.pilot == true
-	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
-	FileUtils.mkdir_p coresource_dir
-else
-	coresource_dir = 'O:'
-end
+### COMMENTING: the copying to coresourcesend is all handled through bookmaker_connectors repo now.
+# if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true || Val::Resources.pilot == true
+# 	coresource_dir = File.join('S:','validator_tmp','logs','CoreSource-pretend')
+# 	FileUtils.mkdir_p coresource_dir
+# else
+# 	coresource_dir = 'O:'
+# end
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 outfolder = File.join(et_project_dir,'OUT',Val::Doc.basename_normalized).gsub(/_DONE_#{Val::Posts.index}$/,'')
@@ -47,22 +48,23 @@ end
 #create outfolder:
 Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
 
-#presumes epub is named properly, moves a copy to coresource (if not on staging server)
-if !File.file?(epub) && !File.file?(epub_firstpass)
-	epub_found = false
-elsif File.file?(epub_firstpass)
-	FileUtils.cp epub_firstpass, coresource_dir
-	logger.info {"copied epub_firstpass to coresource_dir"}
-	FileUtils.cp epub_firstpass, outfolder
-	logger.info {"copied epub_firstpass to validator outfolder"}
-elsif File.file?(epub)
-	epub_fp = epub.gsub(/_EPUB.epub$/,'_EPUBfirstpass.epub')
-	File.rename(epub, epub_fp)
-	FileUtils.cp epub_fp, coresource_dir
-	logger.info {"renamed epub to epub_firstpass, copied to coresource_dir"}
-	FileUtils.cp epub_fp, outfolder
-	logger.info {"copied epub_firstpass to validator outfolder"}
-end
+### COMMENTING: the copying to coresourcesend is all handled through bookmaker_connectors repo now.
+# #presumes epub is named properly, moves a copy to coresource (if not on staging server)
+# if !File.file?(epub) && !File.file?(epub_firstpass)
+# 	epub_found = false
+# elsif File.file?(epub_firstpass)
+# 	FileUtils.cp epub_firstpass, coresource_dir
+# 	logger.info {"copied epub_firstpass to coresource_dir"}
+# 	FileUtils.cp epub_firstpass, outfolder
+# 	logger.info {"copied epub_firstpass to validator outfolder"}
+# elsif File.file?(epub)
+# 	epub_fp = epub.gsub(/_EPUB.epub$/,'_EPUBfirstpass.epub')
+# 	File.rename(epub, epub_fp)
+# 	FileUtils.cp epub_fp, coresource_dir
+# 	logger.info {"renamed epub to epub_firstpass, copied to coresource_dir"}
+# 	FileUtils.cp epub_fp, outfolder
+# 	logger.info {"copied epub_firstpass to validator outfolder"}
+# end
 
 #let's move the original to outbox!
 logger.info {"moving original file to outfolder.."}
