@@ -63,7 +63,8 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
     alt_isbn_array, lead_edition, print_isbns, typeset_from, epub_format = getLeadEdition_TypesetFrom(lookup_isbn)
     logger.info {"alt_isbn_array: #{alt_isbn_array}, lead_edition: #{lead_edition}, print_isbns: #{print_isbns}, typeset_from: #{typeset_from}, epub_format: #{epub_format}, styled_isbns: #{styled_isbns}"}
 
-    # determine what isbn to use for lookup_isbn:
+    # determine what isbn to use for lookup_edition:
+    lookup_edition = ''
     if status_hash['filename_isbn_lookup_ok'] == true # <--indicates this is a filename isbn
       lookup_edition = lookup_isbn
       logger.info {"filename isbn is avail., using that as lookup_edition: #{lookup_edition}."}
@@ -76,15 +77,19 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
           break
         end
       end
-    elsif !lead_edition.empty?
-      lookup_edition = lead_edition
-      logger.info {"no (good) filename isbn, no styled print_isbns, using lead_edition as lookup_edition: #{lookup_edition}."}
-    elsif !print_isbns.empty?
-      lookup_edition = print_isbns[0]
-      logger.info {"no (good) filename isbn, no styled print_isbns, & no value for lead_edition, using a print_isbn as lookup_edition: #{lookup_edition}."}
-    else
-      lookup_edition = lookup_isbn
-      logger.info {"no (good) filename isbn, no styled print_isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition: #{lookup_edition}."}
+    end
+    # if the above two tests didn't turn up a lookup_edition, go on down the list
+    if lookup_edition == ''
+      if !lead_edition.empty?
+        lookup_edition = lead_edition
+        logger.info {"no (good) filename isbn, no styled print_isbns, using lead_edition as lookup_edition: #{lookup_edition}."}
+      elsif !print_isbns.empty?
+        lookup_edition = print_isbns[0]
+        logger.info {"no (good) filename isbn, no styled print_isbns, & no value for lead_edition, using a print_isbn as lookup_edition: #{lookup_edition}."}
+      else
+        lookup_edition = lookup_isbn
+        logger.info {"no (good) filename isbn, no styled print_isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition: #{lookup_edition}."}
+      end
     end
 
     #now do lookups for PM & PE
