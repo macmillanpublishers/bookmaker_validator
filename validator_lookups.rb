@@ -58,24 +58,31 @@ def testisbn(isbn, whichisbn, status_hash)
 end
 
 #this function takes our good isbn, gathers info and writes it to file.
-def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, logger)
+def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, logger, styled_isbns = [])
     # get typeset_from & lead_edition known good lookup_isbn (print_isbn is a fallback for lead_edition)
-    alt_isbn_array, lead_edition, print_isbn, typeset_from, epub_format = getLeadEdition_TypesetFrom(lookup_isbn)
+    alt_isbn_array, lead_edition, print_isbns, typeset_from, epub_format = getLeadEdition_TypesetFrom(lookup_isbn)
 
-    # if lead_edition value is blank, determine whether we use looked up print_isbn or lookup_isbn as backup:
-    #   (prefer lookup_isbn if it is filename_isbn, as filename_isbn implies intent on the user's part)
+    # determine what isbn to use for lookup_isbn:
     if status_hash['filename_isbn_lookup_ok'] == true # <--indicates this is a filename isbn
       lookup_edition = lookup_isbn
       logger.info {"filename isbn is avail., using that as lookup_edition."}
+    # next prefer a styled_isbn that is a print_isbn
+    elsif !styled_isbns.empty? and !print_isbns.empty?
+      for styled_isbn in styled_isbns
+        if print_isbns.include?(styled_isbn)
+          lookup_isbn = styled_isbn
+          break
+        end
+      end
     elsif !lead_edition.empty?
       lookup_edition = lead_edition
-      logger.info {"no (good) filename isbn, using lead_edition as lookup_edition."}
-    elsif !print_isbn.empty?
-      lookup_edition = print_isbn
-      logger.info {"no (good) filename isbn, & no value for lead_edition, using alt print_isbn as lookup_edition."}
+      logger.info {"no (good) filename isbn, no styled print_isbns, using lead_edition as lookup_edition."}
+    elsif !print_isbns.empty?
+      lookup_edition = print_isbns[0]
+      logger.info {"no (good) filename isbn, no styled print_isbns, & no value for lead_edition, using a print_isbn as lookup_edition."}
     else
       lookup_edition = lookup_isbn
-      logger.info {"no (good) filename isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition."}
+      logger.info {"no (good) filename isbn, no styled print_isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition."}
     end
 
     #now do lookups for PM & PE
@@ -267,6 +274,7 @@ end
 if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].empty?
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
   	docisbn_array = isbn_hash['manuscript_isbns']
+    styled_isbns = isbn_hash['styled_isbns']
     if docisbn_array.length < 10 && !docisbn_array.empty?
         docisbn_array.each { |i|
             i.gsub!(/-/,'')
@@ -279,7 +287,7 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
                     if testlookup_b == true
                         if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
                             logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
-                            alt_isbn_array, status_hash['epub_format'], status_hash['typeset_from'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file, logger)
+                            alt_isbn_array, status_hash['epub_format'], status_hash['typeset_from'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file,logger,styled_isbns)
                     		    # if !lookuplog_b.empty? then logger.info {lookuplog_b} end
                             status_hash['docisbns'] << i
                         else            #since an isbn array exists that we don't match, we have a mismatch;
