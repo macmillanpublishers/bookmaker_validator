@@ -230,6 +230,19 @@ MESSAGE_END
   return mail, newname, status
 end
 
+def typeset_from_check(typesetfrom_file, isbn_array)
+  file_xml = File.open(typesetfrom_file) { |f| Nokogiri::XML(f)}
+  msword_copyedit = false
+  isbn_array.each { |isbn|
+  	next if isbn.empty?
+    check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from").to_s
+    if check =~ /Copyedited Word File/m || check =~ /Word Styles File/m
+      msword_copyedit = true
+    end
+  }
+  return msword_copyedit
+end
+
 #--------------------- RUN
 #load key jsons, create some local vars
 if File.file?(Val::Files.status_file)
@@ -350,14 +363,18 @@ logger.info {"retrieved info--  PM mail:\"#{contacts_hash['production_manager_em
 
 if !File.file?(Val::Files.bookinfo_file)
 	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
-     status_hash['typeset_from'], status_hash['epub_format'] = {}, ''
+     status_hash['typeset_from'], status_hash['msword_copyedit'], status_hash['epub_format'] = {}, '', ''
+     status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
+     # the data warehouse lookup proved inconsistent, awaiting more info from Grace. Reverting to nokogiri/xml route for now.
+     #  if lookup ends up working I can comment the line above and uncomment the line below.
+     # if status_hash['typeset_from'].keys.include?("paper_copyedit") then status_hash['msword_copyedit'] = false end
 else
     #check for paper_copyedits, set exception when using Val::Resources.testisbn
     if alt_isbn_array.include?(Val::Resources.testisbn) && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
       logger.info {"This looksup as a paper_copyedit, but we isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
     else
-      if status_hash['typeset_from'].keys.include?("paper_copyedit")
+      if status_hash['msword_copyedit'] == false
         logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
         # log as notice to alerts.json
         Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])

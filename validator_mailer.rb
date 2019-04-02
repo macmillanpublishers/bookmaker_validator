@@ -124,7 +124,7 @@ MESSAGE_END_B
 end
 
 #paper_copyedit
-if status_hash['typeset_from'].keys.include?("paper_copyedit") && send_ok && status_hash['epub_format'] == true
+if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
 		status_hash['status'] = 'paper copyedit'
 		if contacts_hash['ebooksDept_submitter'] == true
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
