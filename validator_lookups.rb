@@ -362,30 +362,31 @@ Vldtr::Tools.write_json(contacts_hash, Val::Files.contacts_file)
 logger.info {"retrieved info--  PM mail:\"#{contacts_hash['production_manager_email']}\", status: \'#{status_hash['pm_lookup']}\'.  PE mail:\"#{contacts_hash['production_editor_email']}\", status: \'#{status_hash['pe_lookup']}\'"}
 
 if !File.file?(Val::Files.bookinfo_file)
-	   logger.info {"no bookinfo file present, will be skipping Validator macro"}
-     status_hash['typeset_from'], status_hash['msword_copyedit'], status_hash['epub_format'] = {}, '', ''
-     status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
-     # the data warehouse lookup proved inconsistent, awaiting more info from Grace. Reverting to nokogiri/xml route for now.
-     #  if lookup ends up working I can comment the line above and uncomment the line below.
-     # if status_hash['typeset_from'].keys.include?("paper_copyedit") then status_hash['msword_copyedit'] = false end
+ logger.info {"no bookinfo file present, will be skipping Validator macro"}
+ status_hash['typeset_from'], status_hash['msword_copyedit'], status_hash['epub_format'] = {}, '', ''
 else
-    #check for paper_copyedits, set exception when using Val::Resources.testisbn
-    if alt_isbn_array.include?(Val::Resources.testisbn) && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
-      logger.info {"This looksup as a paper_copyedit, but we isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
-      status_hash['test_isbn'] = true
+  status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
+  #check for paper_copyedits, allow it to pass regardless when using Val::Resources.testisbn
+  if status_hash['msword_copyedit'] == false
+  # the data warehouse lookup proved inconsistent, awaiting more info from Grace. Reverting to nokogiri/xml route for now.
+  #  if lookup ends up working I can comment the line above and uncomment the line below.
+  # if status_hash['typeset_from'].keys.include?("paper_copyedit") then status_hash['msword_copyedit'] = false end
+    unless alt_isbn_array.include?(Val::Resources.testisbn) && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
+      logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
+      # log as notice to alerts.json
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
     else
-      if status_hash['msword_copyedit'] == false
-        logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
-        # log as notice to alerts.json
-        Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
-      end
+      logger.info {"This looks-up as a paper_copyedit, but isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
+      status_hash['test_isbn'] = true
     end
     #log re: fixed layout:
-    if status_hash['epub_format'] == false
-      logger.info {"This looks like fixed layout, will skip validator macro"}
-      # log as notice to alerts.json
-      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"]['message'])
-    end
+  elsif status_hash['epub_format'] == false
+    logger.info {"This looks like fixed layout, will skip validator macro"}
+    # log as notice to alerts.json
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"]['message'])
+  else
+    logger.info {"Neither fixed layour nor paper_copyedit detected, moving on!"}
+  end
 end
 
 # (moved form mailer) this error might as well stay / get logged here, since it depends on other isbn fields that are more easily reviewed post-lookups
