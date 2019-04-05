@@ -19,7 +19,7 @@ status_hash['val_py_started'] = false
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 	logger.info {"skipping script: #{py_script_name}, no bookinfo file or no status file"}
 elsif status_hash["doctemplatetype"] != "sectionstart"
-  logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}  
+  logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}
 else
 	unless File.file?(Val::Paths.testing_value_file)		#send a mail to PM that we're starting
 		user_name, user_email = Vldtr::Tools.ebooks_mail_check()

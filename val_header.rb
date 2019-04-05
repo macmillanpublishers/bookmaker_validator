@@ -232,10 +232,10 @@ module Val
 		def self.testisbn			#it's only called in validator_cleanup & posts_cleanup
 			@@testisbn
 		end
-		@@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
-		def self.pilot
-			@@pilot
-		end
+		# @@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
+		# def self.pilot
+		# 	@@pilot
+		# end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript
