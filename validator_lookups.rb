@@ -274,7 +274,7 @@ else
 end
 
 #try lookup on filename isbn
-if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'] == false && Val::Hashes.isbn_hash['completed'] == true
+if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'].empty? && Val::Hashes.isbn_hash['completed'] == true
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
     testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
@@ -378,7 +378,7 @@ else
     else
       logger.info {"This looks-up as a paper_copyedit, but isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
-      status_hash['msword_copyedit'] == true
+      status_hash['msword_copyedit'] = true
     end
     #log re: fixed layout:
   elsif status_hash['epub_format'] == false
