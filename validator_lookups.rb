@@ -378,6 +378,7 @@ else
     else
       logger.info {"This looks-up as a paper_copyedit, but isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
+      status_hash['msword_copyedit'] == true
     end
     #log re: fixed layout:
   elsif status_hash['epub_format'] == false
@@ -385,7 +386,7 @@ else
     # log as notice to alerts.json
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"]['message'])
   else
-    logger.info {"Neither fixed layour nor paper_copyedit detected, moving on!"}
+    logger.info {"Neither fixed-layout nor paper_copyedit detected, moving on!"}
   end
 end
 
