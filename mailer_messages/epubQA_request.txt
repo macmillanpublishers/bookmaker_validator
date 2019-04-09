@@ -2,7 +2,7 @@ Subject: Please QA EPUB for FILENAME_NORMALIZED
 
 Hello Workflows!
 
-An Egalley has been generated for file "FILENAME_NORMALIZED".
+Egalley "EPUB_FILENAME" has been generated for file "FILENAME_NORMALIZED".
 It used 'DOCTEMPLATETYPE' template, so has been put in "bookmaker_bot / bookmaker_egalley / OUTPUTFOLDER" folder pending review.
 
 Can you please QA this EPUB and upload to Coresource/RSuite?

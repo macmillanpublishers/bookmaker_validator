@@ -12,5 +12,8 @@ To upload it to RSuite, just move it to the "bookmaker_bot / bookmaker_egalley /
 Please reply to this email to confirm the result! Thank you!
 
 
+Word filename:
+FILENAME_NORMALIZED
+
 Book details:
 BOOKINFO
