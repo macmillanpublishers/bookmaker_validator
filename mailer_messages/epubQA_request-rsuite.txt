@@ -1,0 +1,18 @@
+Subject: Please QA EPUB for FILENAME_NORMALIZED
+
+Hello,
+
+An Egalley has been generated for file "FILENAME_NORMALIZED". It used the 'DOCTEMPLATETYPE' style-template, so is being sent to you for inspection.
+
+The egalley EPUB can be found in "bookmaker_bot/OUTPUTFOLDER" folder.
+
+
+Can you please QA this EPUB and, if it passes, upload to RSuite?
+To upload it to RSuite, just move it to the "bookmaker_bot/bookmaker_egalley/send_to_rsuite" folder.
+
+
+Please reply to this email to confirm the result! Thank you!
+
+
+Book details:
+BOOKINFO
