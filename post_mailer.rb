@@ -41,6 +41,8 @@ if Dir.exist?(done_isbn_dir)
 	if epub.empty? && epub_firstpass.empty?
 		send_ok = false
 		logger.info {"no epub exists! skip to the end :("}
+  else
+    if epub.empty? then epub = epub_firstpass end
 	end
 	logger.info {"checking for error files in bookmaker..."}
 	Find.find(done_isbn_dir) { |file|
@@ -125,9 +127,9 @@ MESSAGE_END
   if !File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
     if doctemplatetype == "sectionstart"
   		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
-  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,epub)
       if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
-        body = "* THIS IS A TEST EMAIL SENT FROM STG SERVER *\n\n#{body}"
+        body = "#{body}\n\n * * (TEST EMAIL SENT FROM STG SERVER) * *"
       end
   		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -138,9 +140,9 @@ MESSAGE_END
   		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"sectionstart\""}
     elsif doctemplatetype == "rsuite"
       body = Val::Resources.mailtext_gsubs(epubQA_request_rsuite, alerttxt_string, Val::Posts.bookinfo)
-  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,epub)
       if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
-        body = "* THIS IS A TEST EMAIL SENT FROM STG SERVER *\n\n#{body}"
+        body = "#{body}\n\n * * (TEST EMAIL SENT FROM STG SERVER) * *"
       end
       message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
