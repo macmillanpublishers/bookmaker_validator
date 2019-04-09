@@ -43,6 +43,7 @@ if Dir.exist?(done_isbn_dir)
 		logger.info {"no epub exists! skip to the end :("}
   else
     if epub.empty? then epub = epub_firstpass end
+    epub = File.basename(epub)
 	end
 	logger.info {"checking for error files in bookmaker..."}
 	Find.find(done_isbn_dir) { |file|
