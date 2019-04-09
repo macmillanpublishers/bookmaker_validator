@@ -126,8 +126,8 @@ MESSAGE_END
     if doctemplatetype == "sectionstart"
   		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
   		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
-      if Val::Resources.testing == true
-        body = "* THIS IS A TEST EMAIL SENT FROM STG SERVER *\n#{body}"
+      if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
+        body = "* THIS IS A TEST EMAIL SENT FROM STG SERVER *\n\n#{body}"
       end
   		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -139,8 +139,8 @@ MESSAGE_END
     elsif doctemplatetype == "rsuite"
       body = Val::Resources.mailtext_gsubs(epubQA_request_rsuite, alerttxt_string, Val::Posts.bookinfo)
   		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
-      if Val::Resources.testing == true
-        body = "* THIS IS A TEST EMAIL SENT FROM STG SERVER *\n#{body}"
+      if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
+        body = "* THIS IS A TEST EMAIL SENT FROM STG SERVER *\n\n#{body}"
       end
       message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
