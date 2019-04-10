@@ -33,7 +33,6 @@ if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
 	status_hash['warnings'] = ''
 	status_hash['errors'] = ''
-	status_hash['status'] = ''
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
@@ -66,7 +65,7 @@ if alerts_hash.has_key?("error") && send_ok
 		cc_address_err = cc_address
 		cc_mails_err = cc_mails
 		if status_hash['status'] == 'validator error'
-		#send submitter an error notification to submitter for errors prior to validator
+    #send PM an error notification for validator errors
 			if contacts_hash['ebooksDept_submitter'] == true
 					to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 					to_email = contacts_hash['submitter_email']
@@ -79,7 +78,7 @@ if alerts_hash.has_key?("error") && send_ok
 			body = body.gsub(/PMNAME/,firstname)
 			logger.info {"sending message to PE re: fatal validator errors encountered"}
 		else
-		#send PM an error notification for validator errors
+      #send submitter an error notification to submitter for errors prior to validator
 			to_header = "#{submitter_name} <#{submitter_mail}>"
 			to_email = contacts_hash['submitter_email']
 			body = Val::Resources.mailtext_gsubs(error_text, alerttxt_string, Val::Posts.bookinfo)
