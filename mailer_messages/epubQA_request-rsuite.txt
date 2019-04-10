@@ -1,0 +1,19 @@
+Subject: Please QA EPUB for EPUB_FILENAME
+
+Hello,
+
+Egalley "EPUB_FILENAME" has been created from a document that used the 'DOCTEMPLATETYPE' style-template.
+
+Can you please QA this EPUB and, if it passes, upload to RSuite?
+
+The egalley EPUB can be found in "bookmaker_bot / bookmaker_egalley / OUTPUTFOLDER" folder.
+To upload it to RSuite, just move it to the "bookmaker_bot / bookmaker_egalley / send_to_rsuite" folder.
+
+Please reply to this email to confirm the result! Thank you!
+
+
+Word filename:
+FILENAME_NORMALIZED
+
+Book details:
+BOOKINFO

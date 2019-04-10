@@ -15,12 +15,15 @@ done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 epubQA_request = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
+epubQA_request_rsuite = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request-rsuite.txt'))
+
+rsuiteQAaddress = File.read(File.join(Val::Resources.authkeys_repo,'rsuite-epub_QAaddress.txt')).strip
+rsuiteQAdisplayname = File.read(File.join(Val::Resources.authkeys_repo,'rsuite-epub_QAdisplayname.txt')).strip
 
 epub, epub_firstpass = '', ''
 send_ok = true
 errtxt_files = []
 to_address = 'To: '
-doctypes_requiringQA = ['sectionstart', 'rsuite']
 doctemplatetype = ''
 epub_outputdir = ''
 
@@ -38,6 +41,9 @@ if Dir.exist?(done_isbn_dir)
 	if epub.empty? && epub_firstpass.empty?
 		send_ok = false
 		logger.info {"no epub exists! skip to the end :("}
+  else
+    if epub.empty? then epub = epub_firstpass end
+    epub = File.basename(epub)
 	end
 	logger.info {"checking for error files in bookmaker..."}
 	Find.find(done_isbn_dir) { |file|
@@ -119,19 +125,35 @@ MESSAGE_END
 
   # now, if epub needs QA,
   #   we send a mail to workflows requesting QA!
-  if doctypes_requiringQA.include? doctemplatetype
-    unless File.file?(Val::Paths.testing_value_file)
+  if !File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
+    if doctemplatetype == "sectionstart"
   		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
-  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,epub)
+      if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
+        body = "#{body}\n\n * * (TEST EMAIL SENT FROM STG SERVER) * *"
+      end
   		message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
   		Vldtr::Tools.sendmail(message, 'workflows@macmillan.com', '')
-  		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"#{doctemplatetype}\""}
+  		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"sectionstart\""}
+    elsif doctemplatetype == "rsuite"
+      body = Val::Resources.mailtext_gsubs(epubQA_request_rsuite, alerttxt_string, Val::Posts.bookinfo)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,epub)
+      if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
+        body = "#{body}\n\n * * (TEST EMAIL SENT FROM STG SERVER) * *"
+      end
+      message = <<MESSAGE_END
+From: Workflows <workflows@macmillan.com>
+To: #{rsuiteQAdisplayname} <#{rsuiteQAaddress}>
+#{body}
+MESSAGE_END
+  		Vldtr::Tools.sendmail(message, rsuiteQAaddress, ['workflows@macmillan.com'])
+  		logger.info {"Sending epub_QA request to #{rsuiteQAdisplayname} from ebooks team b/c templatetype is \"rsuite\""}
     end
-  end  
+  end
 else
 
 	#sending a failure email to Workflows
