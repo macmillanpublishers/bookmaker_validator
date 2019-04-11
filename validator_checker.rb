@@ -113,7 +113,7 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   	status_hash['bookmaker_ready'] = true
   end
 
-# allow rsuite files to pass through unless there's something earlier wrong
+# allow rsuite files to pass through
 elsif status_hash["doctemplatetype"] == "rsuite"
   # right now we are not running any sort of validation ; fixed layout/paper_copyedit exceptions would otherwise be in validator_py or val_macro
   #   catching them here until we get rsuite_validate.py integrated into validate_py.
