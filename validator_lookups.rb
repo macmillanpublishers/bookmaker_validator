@@ -380,12 +380,14 @@ else
       status_hash['test_isbn'] = true
       status_hash['msword_copyedit'] = true
     end
-    #log re: fixed layout:
-  elsif status_hash['epub_format'] == false
+  end
+  #log re: fixed layout:
+  if status_hash['epub_format'] == false
     logger.info {"This looks like fixed layout, will skip validator macro"}
     # log as notice to alerts.json
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["fixed_layout"]['message'])
-  else
+  end
+  if !status_hash['epub_format'] == false && !status_hash['msword_copyedit'] == false
     logger.info {"Neither fixed-layout nor paper_copyedit detected, moving on!"}
   end
 end
