@@ -369,16 +369,16 @@ else
   # status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
   # if status_hash['msword_copyedit'] == false
   # check for paper_copyedits, allow it to pass regardless when using Val::Resources.testisbn
+  status_hash['msword_copyedit'] = true
   if status_hash['typeset_from'].keys.include?("paper_copyedit")
-    status_hash['msword_copyedit'] = false # < -- we have dependencies on this var in several other scripts .
     unless alt_isbn_array.include?(Val::Resources.testisbn) && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
       logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
+      status_hash['msword_copyedit'] = false # < -- we have dependencies on this var in several other scripts .
       # log as notice to alerts.json
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
     else
       logger.info {"This looks-up as a paper_copyedit, but isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
-      status_hash['msword_copyedit'] = true
     end
   end
   #log re: fixed layout:
