@@ -45,7 +45,7 @@ if Dir.exist?(done_isbn_dir)
   	if epub.empty?
       thiserrstring = "no epub found in bookmaker output."
     else
-      thiserrstring = "epub created, but error detecting '_firstpass'."
+      thiserrstring = "epub created but not named '_firstpass', workflows-team review needed."
   	end
     alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{thiserrstring}"
     logger.warn {"#{thiserrstring}"}
