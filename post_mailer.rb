@@ -26,6 +26,7 @@ errtxt_files = []
 to_address = 'To: '
 doctemplatetype = ''
 epub_outputdir = ''
+alertstring = ''
 
 #--------------------- RUN
 ##find our epubs, check for error files in bookmaker
@@ -38,13 +39,17 @@ if Dir.exist?(done_isbn_dir)
 			epub = file
 		end
 	}
-	if epub.empty? && epub_firstpass.empty?
-		send_ok = false
-		logger.info {"no epub exists! skip to the end :("}
-  else
-    if epub.empty? then epub = epub_firstpass end
-    epub = File.basename(epub)
-	end
+  if epub_firstpass.empty?  # << we used to accept final epubs here, but really that means a rename didn't go right in bookmaker_bot,
+                            #   and now a non firstpass_epub will get screened at upload regardless. So we need to send an alert mailer here
+    send_ok = false
+  	if epub.empty?
+      thiserrstring = "no epub found in bookmaker output."
+    else
+      thiserrstring = "epub created but not named '_firstpass', workflows-team review needed."
+  	end
+    alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{thiserrstring}"
+    logger.warn {"#{thiserrstring}"}
+  end
 	logger.info {"checking for error files in bookmaker..."}
 	Find.find(done_isbn_dir) { |file|
 		if file =~ /ERROR.txt/
@@ -84,12 +89,14 @@ if File.file?(Val::Posts.status_file)
   epub_outputdir = Val::Hashes.epub_outputdir_hash[doctemplatetype]
 	if !errtxt_files.empty?
 		# log to alerts.json as error
-		alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
-		Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
-		status_hash['errors'] = errors
-		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
+		alertstring = "#{alertstring}\n#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
 		send_ok = false
 	end
+  unless alertstring.empty?
+    Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
+		status_hash['errors'] = errors
+		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
+  end
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
@@ -128,7 +135,7 @@ MESSAGE_END
   if !File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
     if doctemplatetype == "sectionstart"
   		body = Val::Resources.mailtext_gsubs(epubQA_request, alerttxt_string, Val::Posts.bookinfo)
-  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,epub)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,File.basename(epub_firstpass))
       if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
         body = "#{body}\n\n * * (TEST EMAIL SENT FROM STG SERVER) * *"
       end
@@ -141,7 +148,7 @@ MESSAGE_END
   		logger.info {"Sending epub_QA request to Workflows b/c templatetype is \"sectionstart\""}
     elsif doctemplatetype == "rsuite"
       body = Val::Resources.mailtext_gsubs(epubQA_request_rsuite, alerttxt_string, Val::Posts.bookinfo)
-  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,epub)
+  		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2').gsub(/DOCTEMPLATETYPE/,doctemplatetype).gsub(/OUTPUTFOLDER/,epub_outputdir).gsub(/EPUB_FILENAME/,File.basename(epub_firstpass))
       if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
         body = "#{body}\n\n * * (TEST EMAIL SENT FROM STG SERVER) * *"
       end
