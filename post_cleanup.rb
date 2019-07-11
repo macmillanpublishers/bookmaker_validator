@@ -50,15 +50,18 @@ Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting t
 
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
 if !File.file?(epub_firstpass)
-	epub_found = false
+  epub_found = false
+  if File.file?(epub)
+    logger.info {"skipped copying epub to outfolder, b/c not named '_firstpass'. Related alertfile should be posted."}
+  else
+    logger.info {"no epub file found to copy to outfolder"}  
+  end
 elsif File.file?(epub_firstpass)
   ## COMMENTING: the copying to coresourcesend is all handled through bookmaker_connectors repo now.
 	# FileUtils.cp epub_firstpass, coresource_dir
 	# logger.info {"copied epub_firstpass to coresource_dir"}
 	FileUtils.cp epub_firstpass, outfolder
 	logger.info {"copied epub_firstpass to validator outfolder"}
-elsif File.file?(epub)
-	logger.info {"skipped copying epub to outfolder, b/c not named '_firstpass'. Related alertfile should be posted."}
 end
 
 #let's move the original to outbox!
