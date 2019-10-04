@@ -77,12 +77,18 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
     #get status on run from stylecheck items:
   	if stylecheck_hash['completed'].nil?
   		status_hash['validator_macro_complete'] = false
-  		logger.info {"stylecheck.json present, but 'complete' value not present, looks like macro crashed"}
+      macro_crashed_string = "stylecheck.json present, but 'complete' value not present, looks like macro crashed"
+  		logger.warn {macro_crashed_string}
   	else
   		#set vars for status.json fro stylecheck.json
     	status_hash['validator_macro_complete'] = stylecheck_hash['completed']
-    	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
-    	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\""}
+      if status_hash.key?('styled') && stylecheck_hash['styled'].key?('pass')
+      	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
+      	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\""}
+      else
+        status_hash['validator_macro_complete'] = false
+        logger.warn {macro_crashed_string}
+      end  
     end
   else
   	logger.info {"style_check.json not present or unavailable"}
