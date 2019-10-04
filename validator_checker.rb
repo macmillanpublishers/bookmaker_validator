@@ -74,21 +74,21 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   #get info from style_check.json
   if File.file?(Val::Files.stylecheck_file)
   	stylecheck_hash = Mcmlln::Tools.readjson(Val::Files.stylecheck_file)
+    macro_crashed_string = "stylecheck.json present, but 'complete' value not present, looks like macro crashed"
     #get status on run from stylecheck items:
   	if stylecheck_hash['completed'].nil?
   		status_hash['validator_macro_complete'] = false
-      macro_crashed_string = "stylecheck.json present, but 'complete' value not present, looks like macro crashed"
   		logger.warn {macro_crashed_string}
   	else
   		#set vars for status.json fro stylecheck.json
     	status_hash['validator_macro_complete'] = stylecheck_hash['completed']
-      if status_hash.key?('styled') && stylecheck_hash['styled'].key?('pass')
+      if stylecheck_hash.key?('styled') && stylecheck_hash['styled'].key?('pass')
       	status_hash['document_styled'] = stylecheck_hash['styled']['pass']
       	logger.info {"retrieved from style_check.json- styled:\"#{status_hash['document_styled']}\", complete:\"#{status_hash['validator_macro_complete']}\""}
       else
         status_hash['validator_macro_complete'] = false
         logger.warn {macro_crashed_string}
-      end  
+      end
     end
   else
   	logger.info {"style_check.json not present or unavailable"}
