@@ -42,7 +42,7 @@
       "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename. No ISBN was included in the filename, so Egalleymaker looked in the manuscript text, and found ISBNs for multiple books. It didn't know which ISBN was correct, and so it wasn't able to run. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
     },
     "no_good_isbn": {
-      "message": "No stled ISBN present in the filename or in the manuscript.",
+      "message": "No styled ISBN present in the filename or in the manuscript.",
       "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename, but neither was present for this book. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
     },
     "protected_doc": {
