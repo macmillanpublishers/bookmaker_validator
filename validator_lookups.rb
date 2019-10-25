@@ -293,45 +293,53 @@ end
 #get isbns from json, verify checkdigit, create array of good isbns
 if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].empty?
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
-  	docisbn_array = isbn_hash['manuscript_isbns']
+  	unstyled_isbns = isbn_hash['programatically_styled_isbns']
     styled_isbns = isbn_hash['styled_isbns']
-    if docisbn_array.length < 10 && !docisbn_array.empty?
-        docisbn_array.each { |i|
-            i.gsub!(/-/,'')
-            if i =~ /97(8|9)[0-9]{10}/
-                if alt_isbn_array.include?(i)   #if it matches a filename isbn already
-                    status_hash['docisbns'] << i
-                else
-                    testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
-                    if !testlog_b.empty? then logger.info {testlog_b} end
-                    if testlookup_b == true
-                        if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
-                            logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
-                            alt_isbn_array, status_hash['epub_format'], status_hash['typeset_from'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file,logger,styled_isbns)
-                    		    # if !lookuplog_b.empty? then logger.info {lookuplog_b} end
-                            status_hash['docisbns'] << i
-                        else            #since an isbn array exists that we don't match, we have a mismatch;
-                            logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
-                            status_hash['docisbn_match_fail'] << i
-                            # log to alerts.json as warning
-                            alldocisbns = status_hash['docisbn_match_fail'] + status_hash['docisbns']
-                            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_match_fail']['message']} #{alldocisbns.uniq}"
-                            Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-                            if !status_hash['filename_isbn_lookup_ok']  #in this context this is a showstopping error if we don't have a filename_isbn
-                                status_hash['isbn_match_ok'] = false
-                                # log to alerts.json as error
-                                alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{alldocisbns.uniq}"
-                                Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
-                                # this helps determine recipients of err mail:
-                                status_hash['status'] = 'isbn error'
-                            end
-                        end
-                    end
-                end
-            end
-        }
-    else
-        logger.info {"either 0 (or >10) good isbns found in status_hash['docisbn_string'] :( "}
+    alt_isbn_array, status_hash = get_good_isbns(styled_isbns, alt_isbn_array, status_hash)
+    if styled_isbns.empty? && !unstyled_isbns.empty?
+      logger.info {"no styled isbns from isbncheck.py, now trying out unstyled isbns"}
+      alt_isbn_array, status_hash = get_good_isbns(unstyled_isbns, alt_isbn_array, status_hash)
+    end
+    def get_good_isbns(isbns_from_file, alt_isbn_array, status_hash)
+      if isbns_from_file.length < 10 && !isbns_from_file.empty?
+          isbns_from_file.each { |i|
+              i.gsub!(/-/,'')
+              if i =~ /97(8|9)[0-9]{10}/
+                  if alt_isbn_array.include?(i)   #if it matches a filename isbn already
+                      status_hash['docisbns'] << i
+                  else
+                      testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
+                      if !testlog_b.empty? then logger.info {testlog_b} end
+                      if testlookup_b == true
+                          if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
+                              logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
+                              alt_isbn_array, status_hash['epub_format'], status_hash['typeset_from'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file,logger,styled_isbns)
+                      		    # if !lookuplog_b.empty? then logger.info {lookuplog_b} end
+                              status_hash['docisbns'] << i
+                          else            #since an isbn array exists that we don't match, we have a mismatch;
+                              logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
+                              status_hash['docisbn_match_fail'] << i
+                              # log to alerts.json as warning
+                              alldocisbns = status_hash['docisbn_match_fail'] + status_hash['docisbns']
+                              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_match_fail']['message']} #{alldocisbns.uniq}"
+                              Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
+                              if !status_hash['filename_isbn_lookup_ok']  #in this context this is a showstopping error if we don't have a filename_isbn
+                                  status_hash['isbn_match_ok'] = false
+                                  # log to alerts.json as error
+                                  alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{alldocisbns.uniq}"
+                                  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
+                                  # this helps determine recipients of err mail:
+                                  status_hash['status'] = 'isbn error'
+                              end
+                          end
+                      end
+                  end
+              end
+          }
+      else
+          logger.info {"either 0 (or >10) good isbns found in status_hash['docisbn_string'] :( "}
+      end
+      return alt_isbn_array, status_hash
     end
 else
   	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
