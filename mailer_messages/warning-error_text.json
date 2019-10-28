@@ -13,7 +13,7 @@
       "description": "Egalleymaker tried to use the ISBN it found in the manuscript filename to lookup the book information from Biblio, but this lookup failed."
     },
     "docisbn_checkdigit_fail": {
-      "message": "ISBN(s) found in the manuscript are invalid; the check-digit does not match:",
+      "message": "Styled ISBN(s) found in the manuscript are invalid; the check-digit does not match:",
       "description": "Every ISBN meets a particular format, and includes a special number as the last digit--called the check digit--that you can validate against a formula. The ISBN(s) found in the manuscript text for this title might have a typo, because the check digit does not conform to the special ISBN formula."
     },
     "docisbn_lookup_fail": {
@@ -21,7 +21,7 @@
       "description": "Egalleymaker tried to use the ISBN it found in the manuscript filename to lookup the book information from Biblio, but this lookup failed."
     },
     "docisbn_match_fail": {
-      "message": "ISBN(s) for different works were found, one or more may be incorrect. The filename ISBN was used to process the file. Manuscript ISBN(s) found:",
+      "message": "ISBN(s) for different works were found, one or more may be incorrect. The filename ISBN was used to process the file. Styled manuscript ISBN(s) found:",
       "description": "Egalleymaker requires an ISBN, and it found some in the manuscript text, however these ISBNs were for different books, and Egalleymaker didn't know which one is correct."
     },
     "pm_lookup_fail": {
@@ -38,11 +38,11 @@
       "description": "This is just a generic header telling you that Egalleymaker found some problems that prevented an EPUB from being created. The errors will be listed below."
     },
     "isbn_match_fail": {
-      "message": "No usable ISBN in filename, and ISBNs in the manuscript were for different works:",
+      "message": "No usable ISBN in filename, and any styled ISBNs in the manuscript were for different works:",
       "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename. No ISBN was included in the filename, so Egalleymaker looked in the manuscript text, and found ISBNs for multiple books. It didn't know which ISBN was correct, and so it wasn't able to run. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
     },
     "no_good_isbn": {
-      "message": "No usable ISBN present in the filename or in the manuscript.",
+      "message": "No styled ISBN present in the filename or in the manuscript.",
       "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename, but neither was present for this book. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
     },
     "protected_doc": {

@@ -293,10 +293,11 @@ end
 #get isbns from json, verify checkdigit, create array of good isbns
 if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].empty?
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
-  	docisbn_array = isbn_hash['manuscript_isbns']
+  	# docisbn_array = isbn_hash['manuscript_isbns']  # <<-- we don't really want these in an automated, non-QA environment.
+    # => requiring a styled isbn ~= user intent.
     styled_isbns = isbn_hash['styled_isbns']
-    if docisbn_array.length < 10 && !docisbn_array.empty?
-        docisbn_array.each { |i|
+    if styled_isbns.length < 10 && !styled_isbns.empty?
+        styled_isbns.each { |i|
             i.gsub!(/-/,'')
             if i =~ /97(8|9)[0-9]{10}/
                 if alt_isbn_array.include?(i)   #if it matches a filename isbn already
