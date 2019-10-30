@@ -235,7 +235,7 @@ def get_good_isbns(isbns_from_file, alt_isbn_array, status_hash, logger)
       isbns_from_file.each { |i|
           i.gsub!(/-/,'')
           if i =~ /97(8|9)[0-9]{10}/
-              if alt_isbn_array.include?(i)   #if it matches a filename isbn already
+              if alt_isbn_array.include?(i)   #if it matches a filename isbn / previously detected isbn already
                   status_hash['docisbns'] << i
               else
                   testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
@@ -338,7 +338,7 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
   	unstyled_isbns = isbn_hash['programatically_styled_isbns']
     styled_isbns = isbn_hash['styled_isbns']
     alt_isbn_array, status_hash = get_good_isbns(styled_isbns, alt_isbn_array, status_hash, logger)
-    if styled_isbns.empty? && !unstyled_isbns.empty? && status_hash['filename_isbn_lookup_ok'] == false
+    if status_hash['docisbns'].empty? && !unstyled_isbns.empty? && status_hash['filename_isbn_lookup_ok'] == false
       logger.info {"no styled isbns from isbncheck.py, now trying out unstyled isbns"}
       alt_isbn_array, status_hash = get_good_isbns(unstyled_isbns, alt_isbn_array, status_hash, logger)
     end
