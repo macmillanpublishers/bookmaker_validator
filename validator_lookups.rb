@@ -230,7 +230,7 @@ MESSAGE_END
   return mail, newname, status
 end
 
-def get_good_isbns(isbns_from_file, alt_isbn_array, status_hash, logger)
+def get_good_isbns(isbns_from_file, alt_isbn_array, status_hash, styled_isbns, logger)
   if isbns_from_file.length < 10 && !isbns_from_file.empty?
       isbns_from_file.each { |i|
           i.gsub!(/-/,'')
@@ -337,10 +337,10 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
   	unstyled_isbns = isbn_hash['programatically_styled_isbns']
     styled_isbns = isbn_hash['styled_isbns']
-    alt_isbn_array, status_hash = get_good_isbns(styled_isbns, alt_isbn_array, status_hash, logger)
+    alt_isbn_array, status_hash = get_good_isbns(styled_isbns, alt_isbn_array, status_hash, styled_isbns, logger)
     if status_hash['docisbns'].empty? && !unstyled_isbns.empty? && status_hash['filename_isbn_lookup_ok'] == false
       logger.info {"no styled isbns from isbncheck.py, now trying out unstyled isbns"}
-      alt_isbn_array, status_hash = get_good_isbns(unstyled_isbns, alt_isbn_array, status_hash, logger)
+      alt_isbn_array, status_hash = get_good_isbns(unstyled_isbns, alt_isbn_array, status_hash, styled_isbns, logger)
     end
 else
   	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
