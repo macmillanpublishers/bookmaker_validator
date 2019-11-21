@@ -377,19 +377,17 @@ if !File.file?(Val::Files.bookinfo_file)
  logger.info {"no bookinfo file present, will be skipping Validator macro"}
  status_hash['typeset_from'], status_hash['msword_copyedit'], status_hash['epub_format'] = {}, '', ''
 else
-  # # # commenting old nokogiri paper_copyedit lookup:
-  # status_hash['msword_copyedit'] = typeset_from_check(Val::Files.typesetfrom_file, alt_isbn_array)
-  # if status_hash['msword_copyedit'] == false
   # check for paper_copyedits, allow it to pass regardless when using Val::Resources.testisbn
   status_hash['msword_copyedit'] = true
   if status_hash['typeset_from'].keys.include?("paper_copyedit")
-    unless alt_isbn_array.include?(Val::Resources.testisbn) && (Val::Resources.testing == true || File.exists?(Val::Paths.testing_value_file))
+    # make sure none of this work's ISBN's are listed in paper_copyedit exclusions
+    unless (alt_isbn_array & Val::Hashes.papercopyedit_exceptions_hash).any?
       logger.info {"This appears to be a paper_copyedit, will skip validator macro"}
       status_hash['msword_copyedit'] = false # < -- we have dependencies on this var in several other scripts .
       # log as notice to alerts.json
       Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "notice", Val::Hashes.alertmessages_hash["notices"]["paper_copyedit"]['message'])
     else
-      logger.info {"This looks-up as a paper_copyedit, but isbn = test_isbn, so continuing as with an MSWord_Copyedit"}
+      logger.info {"This looks-up as a paper_copyedit, but isbn is listed in 'papercopyedit_exceptions.json', so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
     end
   end
