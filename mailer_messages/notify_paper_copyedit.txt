@@ -1,15 +1,13 @@
 Subject: PROJECT_NAME cannot create an egalley for "FILENAME_SPLIT" (paper-copyedit)
 
-None of the 'typeset from' values for this work in Biblio indicate copyedit with a Macmillan-styled Word file.
+PROJECT_NAME checked all editions in Biblio associated with your file, "FILENAME_SPLIT".
+None of the 'typeset from' values for this work indicate copyedit based on a Macmillan-styled Word file.
 
 Consequently PROJECT_NAME assumes this to be a traditional paper copyedit, and cannot create an egalley for "FILENAME_SPLIT".
 
 If your file IS styled with Macmillan Word Styles, and you would like an egalley created, please email us at workflows@macmillan.com.
-
 If this is a paper copyedit, and would still like to have an egalley created for this manuscript, please reach out to the ebooks team directly:
 ebook.production@macmillanusa.com
-
-
 
 The submitted original file can be found in the "PROJECT_NAME/OUT" Macmillan Dropbox folder.
 
