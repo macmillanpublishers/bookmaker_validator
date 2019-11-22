@@ -180,6 +180,10 @@ module Val
     def self.epub_outputdir_json
 			@@epub_outputdir_json
 		end
+    @@papercopyedit_exceptions_json = File.join(Paths.scripts_dir, "papercopyedit_exceptions.json")
+    def self.papercopyedit_exceptions_json
+			@@papercopyedit_exceptions_json
+		end
 	end
 	class Hashes
 		def self.readjson(inputfile)
@@ -222,15 +226,14 @@ module Val
     def self.epub_outputdir_hash
       readjson(Files.epub_outputdir_json)
     end
+    def self.papercopyedit_exceptions_hash
+      readjson(Files.papercopyedit_exceptions_json)
+    end
 	end
 	class Resources
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing
-		end
-		@@testisbn = '9781137280046'
-		def self.testisbn			#it's only called in validator_cleanup & posts_cleanup
-			@@testisbn
 		end
 		# @@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
 		# def self.pilot
