@@ -231,6 +231,31 @@ module Val
     end
 	end
 	class Resources
+    # capture args for _direct_ (non-dropbox) runs
+    unless ARGV[1].nil?
+      @@runtype = ARGV[1]
+    else
+      @@runtype = 'dropbox'
+    end
+    def self.runtype
+			@@runtype
+		end
+    unless ARGV[2].nil?
+      @@user_email = ARGV[2]
+    else
+      @@user_email = ''
+    end
+    def self.user_email
+			@@user_email
+		end
+    unless ARGV[3].nil?
+      @@user_name = ARGV[3]
+    else
+      @@user_name = 'dropbox'
+    end
+    def self.user_name
+			@@user_name
+		end
 		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
 		def self.testing			#it's only called in validator_cleanup & posts_cleanup
 			@@testing

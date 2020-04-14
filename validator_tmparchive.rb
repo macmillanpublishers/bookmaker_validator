@@ -30,7 +30,10 @@ status_hash['doctemplate_version'] = ''
 
 #---------------------  METHODS
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
-  if user_email == ''
+  if Val::Resources.user_email != ''
+    user_email = Val::Resources.user_email
+    user_name = Val::Resources.user_name
+  elsif user_email == ''
     status_hash['api_ok'] = false
     contacts_hash.merge!(submitter_name: 'Workflows')
     contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
