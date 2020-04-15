@@ -34,13 +34,19 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_tmparchive} \'#{Val::Doc.input_file}\'", output_hash, "validator_tmparchive", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_lookups} \'#{Val::Doc.input_file}\'", output_hash, "validator_lookups", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_py} \'#{Val::Doc.input_file}\'", output_hash, "validator_py", json_logfile)
-  Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_macro} \'#{Val::Doc.input_file}\'", output_hash, "validator_macro", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_checker} \'#{Val::Doc.input_file}\'", output_hash, "validator_checker", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_mailer} \'#{Val::Doc.input_file}\'", output_hash, "validator_mailer", json_logfile)
-	Vldtr::Tools.run_script("#{Val::Resources.ruby_exe} #{validator_cleanup} \'#{Val::Doc.input_file}\'", output_hash, "validator_cleanup", json_logfile)
+	# popen_params = [Val::Resources.ruby_exe, validator_tmparchive]# "\'#{Val::Doc.input_file}\'", "\'#{Val::Resources.runtype}\'"]
+	popen_params = []
+	for arg in ARGV
+		popen_params.push("\'#{arg}\'")
+	end
+	# Vldtr::Tools.run_script(popen_params, output_hash, "validator_tmparchive", json_logfile)
+	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_tmparchive] + popen_params, output_hash, "validator_tmparchive", json_logfile)
+	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_lookups] + popen_params, output_hash, "validator_lookups", json_logfile)
+	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_py] + popen_params, output_hash, "validator_py", json_logfile)
+  Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_macro] + popen_params, output_hash, "validator_macro", json_logfile)
+	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_checker] + popen_params, output_hash, "validator_checker", json_logfile)
+	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_mailer] + popen_params, output_hash, "validator_mailer", json_logfile)
+	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_cleanup] + popen_params, output_hash, "validator_cleanup", json_logfile)
 	# mark the process done for process watcher
 	output_hash['completed'] = true
 rescue Exception => e

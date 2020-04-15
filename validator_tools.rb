@@ -193,7 +193,7 @@ MESSAGE_END
     def self.run_script(command,hash,scriptname,jsonlog)
       log_time(hash,scriptname,'start time',jsonlog)
       alloutput = ''
-      Open3.popen2e(command) do |stdin, stdouterr, wait_thr|
+      Open3.popen2e(command.join(" ")) do |stdin, stdouterr, wait_thr|
       stdin.close
       stdouterr.each { |line|
         alloutput << line
