@@ -45,6 +45,22 @@ if Dir.exist?(done_isbn_dir)
 	}
 end
 
+# collect key items from statusfile, or create in its absence
+if File.file?(Val::Posts.status_file)
+	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
+	runtype = status_hash['runtype']
+	errors = status_hash['errors']
+else
+  if Val::Posts.logfolder.downcase.include? "dropbox"
+    runtype = 'dropbox'
+  else
+    runtype = 'direct'
+  end
+  errstring = 'status.json missing or unavailable'
+  errors = [errstring]
+  Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", errstring)
+end
+
 #create outfolder:
 Vldtr::Tools.setup_outfolder(outfolder) #replaces the next 8 lines (commenting them out for now)
 
@@ -79,9 +95,8 @@ end
 #update Val::Logs.permalog
 if File.file?(Val::Posts.permalog)
 	permalog_hash = Mcmlln::Tools.readjson(Val::Posts.permalog)
-	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
 	permalog_hash[Val::Posts.index]['epub_found'] = epub_found
-	if epub_found && status_hash['errors'].empty?
+	if epub_found && errors.empty?
 		permalog_hash[Val::Posts.index]['status'] = 'In-house egalley'
 	else
 		permalog_hash[Val::Posts.index]['status'] = 'bookmaker error'

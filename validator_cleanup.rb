@@ -72,6 +72,7 @@ if File.file?(Val::Files.status_file)
 	permalog_hash[index]['styled?'] = status_hash['document_styled']
 	permalog_hash[index]['validator_completed?'] = status_hash['validator_py_complete']
   permalog_hash[index]['doctemplatetype'] = status_hash['doctemplatetype']
+  permalog_hash[index]['runtype'] = status_hash['runtype']
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}

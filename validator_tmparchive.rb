@@ -30,15 +30,11 @@ status_hash['doctemplate_version'] = ''
 
 #---------------------  METHODS
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
-  if Val::Resources.user_email != ''
-    user_email = Val::Resources.user_email
-    user_name = Val::Resources.user_name
-    logger.info {"looks like this is a 'direct' run, got submitter via flask_api"}    
-  elsif user_email == ''
+  if user_email == '' or user_email == 'unavailable'
     status_hash['api_ok'] = false
     user_email = 'workflows@macmillan.com'
     user_name = 'Workflows'
-    logger.info {"dropbox api may have failed, not finding file metadata"}
+    logger.info {"#{Val::Resources.runtype} api may have failed, not finding submitter metadata"}
     # adding to alerts.json:
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"]["message"])
   else
@@ -141,8 +137,17 @@ logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Pa
 
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
+# capture runtype in status_json:
+status_hash['runtype'] = Val::Resources.runtype
+
 #try to get submitter info (Dropbox document 'modifier' via api)
-user_email, user_name = Vldtr::Tools.dropbox_api_call
+if Val::Resources.runtype == 'direct'
+  user_email = Val::Resources.user_email
+  user_name = Val::Resources.user_name
+  logger.info {"(looks like this is a 'direct' run, submitter received via flask_api)"}
+else
+  user_email, user_name = Vldtr::Tools.dropbox_api_call
+end
 
 # set_submitter_info in contacts_hash
 set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
