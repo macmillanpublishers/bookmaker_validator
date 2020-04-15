@@ -33,10 +33,11 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
   if Val::Resources.user_email != ''
     user_email = Val::Resources.user_email
     user_name = Val::Resources.user_name
+    logger.info {"looks like this is a 'direct' run, got submitter via flask_api"}    
   elsif user_email == ''
     status_hash['api_ok'] = false
-    contacts_hash.merge!(submitter_name: 'Workflows')
-    contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
+    user_email = 'workflows@macmillan.com'
+    user_name = 'Workflows'
     logger.info {"dropbox api may have failed, not finding file metadata"}
     # adding to alerts.json:
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"]["message"])
@@ -54,12 +55,12 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
         end
       end
     end
-    #writing user info from Dropbox API to json
-    contacts_hash.merge!(submitter_name: user_name)
-    contacts_hash.merge!(submitter_email: user_email)
-    Vldtr::Tools.write_json(contacts_hash,Val::Files.contacts_file)
-    logger.info {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
   end
+  #writing user info to contacts json
+  contacts_hash.merge!(submitter_name: user_name)
+  contacts_hash.merge!(submitter_email: user_email)
+  Vldtr::Tools.write_json(contacts_hash,Val::Files.contacts_file)
+  logger.info {"file submitter determined, display name: \"#{user_name}\", email: \"#{user_email}\", written to contacts.json"}
 end
 
 def nondoc(logger,status_hash)
