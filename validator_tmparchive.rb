@@ -142,8 +142,8 @@ status_hash['runtype'] = Val::Doc.runtype
 
 #try to get submitter info (Dropbox document 'modifier' via api)
 if Val::Doc.runtype == 'direct'
-  user_email = Val::Resources.user_email
-  user_name = Val::Resources.user_name
+  user_email = Val::Doc.user_email
+  user_name = Val::Doc.user_name
   logger.info {"(looks like this is a 'direct' run, submitter received via flask_api)"}
 else
   user_email, user_name = Vldtr::Tools.dropbox_api_call
