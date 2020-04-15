@@ -15,9 +15,9 @@ outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalize
 
 bookmaker_bot_IN = ''
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
-	bookmaker_bot_IN = File.join(Val::Paths.server_dropbox_path,'bookmaker_bot_stg','bookmaker_egalley','convert')
+	bookmaker_bot_IN = File.join(Val::Paths.server_dropfolder_path,'bookmaker_bot_stg','bookmaker_egalley','convert')
 else
-	bookmaker_bot_IN = File.join(Val::Paths.server_dropbox_path,'bookmaker_bot','bookmaker_egalley','convert')
+	bookmaker_bot_IN = File.join(Val::Paths.server_dropfolder_path,'bookmaker_bot','bookmaker_egalley','convert')
 end
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''

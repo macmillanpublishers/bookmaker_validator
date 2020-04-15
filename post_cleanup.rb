@@ -13,9 +13,9 @@ logger = Val::Logs.logger
 
 et_project_dir, coresource_dir  = '', ''		#'et' for egalleymaker :)
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
-	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalleymaker_stg')
+	et_project_dir = File.join(Val::Paths.server_dropfolder_path,'egalleymaker_stg')
 else
-	et_project_dir = File.join(Val::Paths.server_dropbox_path,'egalleymaker')
+	et_project_dir = File.join(Val::Paths.server_dropfolder_path,'egalleymaker')
 end
 ### COMMENTING: the copying to coresourcesend is all handled through bookmaker_connectors repo now.
 # if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true || Val::Resources.pilot == true
