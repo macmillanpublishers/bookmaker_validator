@@ -110,25 +110,29 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	unless File.file?(Val::Paths.testing_value_file)
-		if contacts_hash['ebooksDept_submitter'] == true
-			to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-			to_email = contacts_hash['submitter_email']
-		else
-			to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-			to_email = contacts_hash['production_manager_email']
-		end
-		body = Val::Resources.mailtext_gsubs(bot_success_txt, alerttxt_string, Val::Posts.bookinfo)
-		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
-		message = <<MESSAGE_END
+	if contacts_hash['ebooksDept_submitter'] == true
+		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+		to_email = contacts_hash['submitter_email']
+	else
+		to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+		to_email = contacts_hash['production_manager_email']
+	end
+	body = Val::Resources.mailtext_gsubs(bot_success_txt, alerttxt_string, Val::Posts.bookinfo)
+	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
+	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
-		Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
-		logger.info {"Sending epub success message to PM"}
-	end
+  if File.file?(Val::Paths.testing_value_file
+    message += "\n\nThis message sent from STAGING SERVER"
+    Vldtr::Tools.sendmail(message, Val::Resources.emailtest_recipient, '')
+    logger.info {"Sending epub success message slated for PM, to test-recipient (we're on Staging server)"}
+  else
+    Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
+    logger.info {"Sending epub success message to PM"}
+  end
 
 # # # # \/ temporarily disabling QA request send
 # # # #   leaving commented but intact in case it's useful again later
@@ -200,7 +204,11 @@ To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
-	unless File.file?(Val::Paths.testing_value_file)
+  if File.file?(Val::Paths.testing_value_file
+    message += "\n\nThis message sent from STAGING SERVER"
+    Vldtr::Tools.sendmail(message, Val::Resources.emailtest_recipient, '')
+    logger.info {"Sending epub error message slated for PM, to test-recipient (we're on Staging server)"}
+  else
 		Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
 		logger.info {"Sending epub error notification to PM"}
 	end

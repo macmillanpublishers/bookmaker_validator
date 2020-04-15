@@ -70,11 +70,15 @@ module Val
 		def self.scripts_dir
 			@@scripts_dir
 		end
-		@@server_dropbox_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
-		def self.server_dropbox_path
-			@@server_dropbox_path
+    if Resources.runtype == 'dropbox'
+		  @@server_dropfolder_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
+    elsif Resources.runtype == 'direct'
+      @@server_dropfolder_path = File.join('G:','My Drive','Workflow Tools')  #<< drive
+    end
+		def self.server_dropfolder_path
+			@@server_dropfolder_path
 		end
-		@@static_data_files = File.join(server_dropbox_path,'static_data_files')
+		@@static_data_files = File.join(server_dropfolder_path,'static_data_files')
 		def self.static_data_files
 			@@static_data_files
 		end
@@ -256,14 +260,18 @@ module Val
     def self.user_name
 			@@user_name
 		end
-		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
-		def self.testing			#it's only called in validator_cleanup & posts_cleanup
+    @@emailtest_recipient = 'workflows@macmillan.com'
+    def self.emailtest_recipient
+			@@emailtest_recipient
+		end
+    # MR-4-20\/ this legacy testing protoc0l involved setting this value to 'true' but renaming staging file.
+    # => so we get all mailers but retain staging directories. Not ideal. Using dummy recipient for staging instead^^
+    #this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
+    #it's only called in validator_cleanup & posts_cleanup
+    @@testing = false
+		def self.testing
 			@@testing
 		end
-		# @@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
-		# def self.pilot
-		# 	@@pilot
-		# end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript
@@ -303,10 +311,10 @@ module Val
 			@@logfilename
 		end
 		def self.setlogfolders(projectname)
-			@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', projectname)
-			@logfolder = File.join(@dropbox_logfolder, 'logs')
-			@permalog = File.join(@dropbox_logfolder,'validator_history_report.json')
-			@deploy_logfolder = File.join(@dropbox_logfolder, 'std_out-err_logs')
+			@dropfolder_logdir = File.join(Paths.server_dropfolder_path, 'bookmaker_logs', projectname)
+			@logfolder = File.join(@dropfolder_logdir, 'logs')
+			@permalog = File.join(@dropfolder_logdir,'validator_history_report.json')
+			@deploy_logfolder = File.join(@dropfolder_logdir, 'std_out-err_logs')
 			# if !File.directory?(@deploy_logfolder)	then FileUtils.mkdir_p(@deploy_logfolder) end
 			@json_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 			@human_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")

@@ -21,11 +21,16 @@ if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 elsif status_hash["doctemplatetype"] != "sectionstart"
   logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}
 else
-	unless File.file?(Val::Paths.testing_value_file)		#send a mail to PM that we're starting
 		user_name, user_email = Vldtr::Tools.ebooks_mail_check()
 		body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
 		message = Vldtr::Mailtexts.generic(user_name,user_email,"#{body}")
+  if File.file?(Val::Paths.testing_value_file)
+    message += "\n\nThis message sent from STAGING SERVER"
+    Vldtr::Tools.sendmail("#{message}", Val::Resources.emailtest_recipient, '')
+    logger.info {"Sending 'underway' message slated for PM, to test-recipient (we're on Staging server)"}
+  else
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
+    logger.info {"Sent 'underway' message to PM"}
 	end
 	if Val::Hashes.status_hash['msword_copyedit'] == false
 		logger.info {"skipping script: #{py_script_name}, paper-copyedit"}
