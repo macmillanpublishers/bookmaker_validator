@@ -125,7 +125,7 @@ To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
-  if File.file?(Val::Paths.testing_value_file
+  if File.file?(Val::Paths.testing_value_file)
     message += "\n\nThis message sent from STAGING SERVER"
     Vldtr::Tools.sendmail(message, Val::Resources.emailtest_recipient, '')
     logger.info {"Sending epub success message slated for PM, to test-recipient (we're on Staging server)"}
