@@ -95,11 +95,11 @@ module Val
 		def self.scripts_dir
 			@@scripts_dir
 		end
-    if Doc.runtype == 'dropbox'
+    # if Doc.runtype == 'dropbox'
 		  @@server_dropfolder_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
-    elsif Doc.runtype == 'direct'
-      @@server_dropfolder_path = File.join('G:','My Drive','Workflow Tools')  #<< drive
-    end
+    # elsif Doc.runtype == 'direct'
+      # @@server_dropfolder_path = File.join('G:','My Drive','Workflow Tools')  #<< drive
+    # end
 		def self.server_dropfolder_path
 			@@server_dropfolder_path
 		end
