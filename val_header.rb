@@ -51,6 +51,31 @@ module Val
 		def self.converted_docx_filename
 			@@converted_docx_filename
 		end
+    # capture args for _direct_ (non-dropbox) runs
+    unless ARGV[1].nil?
+      @@runtype = ARGV[1]
+    else
+      @@runtype = 'dropbox'
+    end
+    def self.runtype
+			@@runtype
+		end
+    unless ARGV[2].nil?
+      @@user_email = ARGV[2]
+    else
+      @@user_email = ''
+    end
+    def self.user_email
+			@@user_email
+		end
+    unless ARGV[3].nil?
+      @@user_name = ARGV[3]
+    else
+      @@user_name = 'dropbox'
+    end
+    def self.user_name
+			@@user_name
+		end
 	end
 	class Paths
 		@@testing_value_file = File.join("C:", "staging.txt")
@@ -70,9 +95,9 @@ module Val
 		def self.scripts_dir
 			@@scripts_dir
 		end
-    if Resources.runtype == 'dropbox'
+    if Doc.runtype == 'dropbox'
 		  @@server_dropfolder_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
-    elsif Resources.runtype == 'direct'
+    elsif Doc.runtype == 'direct'
       @@server_dropfolder_path = File.join('G:','My Drive','Workflow Tools')  #<< drive
     end
 		def self.server_dropfolder_path
@@ -235,31 +260,6 @@ module Val
     end
 	end
 	class Resources
-    # capture args for _direct_ (non-dropbox) runs
-    unless ARGV[1].nil?
-      @@runtype = ARGV[1]
-    else
-      @@runtype = 'dropbox'
-    end
-    def self.runtype
-			@@runtype
-		end
-    unless ARGV[2].nil?
-      @@user_email = ARGV[2]
-    else
-      @@user_email = ''
-    end
-    def self.user_email
-			@@user_email
-		end
-    unless ARGV[3].nil?
-      @@user_name = ARGV[3]
-    else
-      @@user_name = 'dropbox'
-    end
-    def self.user_name
-			@@user_name
-		end
     @@emailtest_recipient = 'workflows@macmillan.com'
     def self.emailtest_recipient
 			@@emailtest_recipient

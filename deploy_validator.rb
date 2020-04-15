@@ -34,7 +34,7 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	# popen_params = [Val::Resources.ruby_exe, validator_tmparchive]# "\'#{Val::Doc.input_file}\'", "\'#{Val::Resources.runtype}\'"]
+	# popen_params = [Val::Resources.ruby_exe, validator_tmparchive]# "\'#{Val::Doc.input_file}\'", "\'#{Val::Doc.runtype}\'"]
 	popen_params = []
 	for arg in ARGV
 		popen_params.push("\'#{arg}\'")

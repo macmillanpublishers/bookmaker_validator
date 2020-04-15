@@ -34,7 +34,7 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
     status_hash['api_ok'] = false
     user_email = 'workflows@macmillan.com'
     user_name = 'Workflows'
-    logger.info {"#{Val::Resources.runtype} api may have failed, not finding submitter metadata"}
+    logger.info {"#{Val::Doc.runtype} api may have failed, not finding submitter metadata"}
     # adding to alerts.json:
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"]["message"])
   else
@@ -138,10 +138,10 @@ logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Pa
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
 # capture runtype in status_json:
-status_hash['runtype'] = Val::Resources.runtype
+status_hash['runtype'] = Val::Doc.runtype
 
 #try to get submitter info (Dropbox document 'modifier' via api)
-if Val::Resources.runtype == 'direct'
+if Val::Doc.runtype == 'direct'
   user_email = Val::Resources.user_email
   user_name = Val::Resources.user_name
   logger.info {"(looks like this is a 'direct' run, submitter received via flask_api)"}
