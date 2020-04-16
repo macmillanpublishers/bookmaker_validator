@@ -156,13 +156,11 @@ set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
 if status_hash['api_ok'] && user_email =~ /@/
   body = Val::Resources.mailtext_gsubs(file_recd_txt,'','')
-  message = Vldtr::Mailtexts.generic(user_name,user_email,body) #or "#{body}" ?
+  message = Vldtr::Mailtexts.generic(user_name,user_email,body)
   if File.file?(Val::Paths.testing_value_file)
     message += "\n\nThis message sent from STAGING SERVER"
-    Vldtr::Tools.sendmail("#{message}",Val::Resources.emailtest_recipient,'')
-  else
-    Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
   end
+  Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
 else
   Vldtr::Tools.sendmail(Vldtr::Mailtexts.apifail(user_email),'workflows@macmillan.com','')
 end
