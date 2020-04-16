@@ -18,7 +18,7 @@ status_hash['val_py_started'] = false
 #--------------------- RUN
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 	logger.info {"skipping script: #{py_script_name}, no bookinfo file or no status file"}
-elsif status_hash["doctemplatetype"] != "sectionstart"
+elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}
 else
 		user_name, user_email = Vldtr::Tools.ebooks_mail_check()
@@ -38,6 +38,8 @@ else
 		logger.info {"skipping script: #{py_script_name}, no EPUB format epub edition (fixed layout)"}
   elsif Val::Hashes.status_hash['status'] == 'isbn error'
 		logger.info {"skipping script: fatal isbn error"}
+  elsif status_hash["doctemplatetype"] == 'rsuite'
+    logger.info {"skipping script: rsuite styled docx"}
 	else
     # log that we're beginning the python validator!
 		status_hash['val_py_started'] = true

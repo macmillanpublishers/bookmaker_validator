@@ -128,7 +128,7 @@ Cc: Workflows <workflows@macmillan.com>
 MESSAGE_END
   if File.file?(Val::Paths.testing_value_file)
     message += "\n\nThis message sent from STAGING SERVER; typically to PM #{contacts_hash['production_manager_email']}, but in this case to submitter instead, for testing"
-    Vldtr::Tools.sendmail(message, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    Vldtr::Tools.sendmail(message, contacts_hash['submitter_email'], 'workflows@macmillan.com')
     logger.info {"Sending epub success message slated for PM, to submitter (we're on Staging server)"}
   else
     Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
