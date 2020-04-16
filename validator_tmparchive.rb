@@ -141,7 +141,7 @@ FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 status_hash['runtype'] = Val::Doc.runtype
 
 #try to get submitter info (Dropbox document 'modifier' via api)
-if Val::Doc.runtype == 'direct'
+if Val::Doc.runtype != 'dropbox'
   user_email = Val::Doc.user_email
   user_name = Val::Doc.user_name
   logger.info {"(looks like this is a 'direct' run, submitter received via flask_api)"}
