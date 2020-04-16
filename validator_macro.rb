@@ -25,7 +25,7 @@ else
 	body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
 	message = Vldtr::Mailtexts.generic(user_name,user_email,"#{body}")
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER: typically goes to PM; rerouted to submitter"
+    message += "\n\nThis message sent from STAGING SERVER: typically goes to PM #{Val::Hashes.contacts_hash['production_manager_email']}; rerouted to submitter for testing "
     Vldtr::Tools.sendmail("#{message}", Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
     logger.info {"Sending 'underway' message slated for PM, to submitter (we're on Staging server)"}
   else
