@@ -42,10 +42,8 @@ MESSAGE_END
 	#now sending
 	if File.file?(Val::Paths.testing_value_file)
     message += "\n\nThis message sent from STAGING SERVER"
-    Vldtr::Tools.sendmail(message,Val::Resources.emailtest_recipient,'')
-  else
-	  Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
   end
+  Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 end
 
 
@@ -85,8 +83,6 @@ MESSAGE_END
 	#now sending
 	if File.file?(Val::Paths.testing_value_file)
     message += "\n\nThis message sent from STAGING SERVER"
-    Vldtr::Tools.sendmail(message,Val::Resources.emailtest_recipient,'')    
-  else
-		Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
-	end
+  end
+	Vldtr::Tools.sendmail(message,'workflows@macmillan.com','')
 end

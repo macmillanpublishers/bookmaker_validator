@@ -61,12 +61,12 @@ if alerts_hash.has_key?("warning") then status_hash['warnings'] = alerts_hash['w
 
 #send error emails
 if alerts_hash.has_key?("error") && send_ok
-	# unless File.file?(Val::Paths.testing_value_file)
 	cc_address_err = cc_address
 	cc_mails_err = cc_mails
 	if status_hash['status'] == 'validator error'
   #send PM an error notification for validator errors
-		if contacts_hash['ebooksDept_submitter'] == true
+    # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+		if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 				to_email = contacts_hash['submitter_email']
 		else
@@ -83,7 +83,7 @@ if alerts_hash.has_key?("error") && send_ok
 		to_email = contacts_hash['submitter_email']
 		body = Val::Resources.mailtext_gsubs(error_text, alerttxt_string, Val::Posts.bookinfo)
 		#add the PE to the email for isbn errors
-		if status_hash['status'] == 'isbn error' && contacts_hash['ebooksDept_submitter'] != true
+		if status_hash['status'] == 'isbn error' && !(contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file))
 			cc_address_err = "#{cc_address}, #{pe_name} <#{pe_mail}>"
 			cc_mails_err << pe_mail
 		end
@@ -95,8 +95,8 @@ To: #{to_header}
 #{body}
 MESSAGE_END
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{to_email}, cc_mails: #{cc_mails_err}"
-    Vldtr::Tools.sendmail(message, Val::Resources.emailtest_recipient, '')
+    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}, cc_mails: #{pe_mail}"
+    Vldtr::Tools.sendmail(message, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
     logger.info {"Sending message slated for submitter re: fatal isbn/doctype/password_protected errors;; to test-recipient (we're on Staging server)"}
   else
     logger.info {"sending message to submitter re: fatal isbn/doctype/password_protected errors encountered"}
@@ -107,7 +107,8 @@ end
 #unstyled, no errors (not fixed layout or paper-copyedit), notification to PM for Westchester egalley.
 if !alerts_hash.has_key?("error") && status_hash['document_styled'] == false && send_ok && status_hash['epub_format'] == true && status_hash['epub_format'] == true
 	status_hash['status'] = 'Westchester egalley'
-	if contacts_hash['ebooksDept_submitter'] == true
+  # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+	if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 			to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 			to_email = contacts_hash['submitter_email']
 	else
@@ -122,19 +123,20 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_B
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{to_email}, cc_mails: #{cc_mails}"
-    Vldtr::Tools.sendmail(message_b, Val::Resources.emailtest_recipient, '')
-    logger.info {"Sending message slated for submitter cc pe/pm for notify/request for egalley to Westchester;; to test-recipient (we're on Staging server)"}
+    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
+    Vldtr::Tools.sendmail(message_b, Val::Hashes.contacts_hash['submitter_email'], '')
+    logger.info {"Sending message slated for pm for notify/request for egalley to Westchester;; to submitter (we're on Staging server)"}
   else
 		Vldtr::Tools.sendmail(message_b, to_email, cc_mails)
-		logger.info {"sent message to submitter cc pe/pm for notify/request for egalley to Westchester"}
+		logger.info {"sent message to pm for notify/request for egalley to Westchester"}
 	end
 end
 
 #paper_copyedit
 if status_hash['msword_copyedit'] == false && send_ok && status_hash['epub_format'] == true
 	status_hash['status'] = 'paper copyedit'
-	if contacts_hash['ebooksDept_submitter'] == true
+  # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+	if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 		to_email = contacts_hash['submitter_email']
 	else
@@ -149,9 +151,9 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_C
 	if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{to_email}"
-    Vldtr::Tools.sendmail(message_c, Val::Resources.emailtest_recipient, '')
-    logger.info {"Sending message slated for pm notifying them of paper_copyedit, to test-recipient (we're on Staging server)"}
+    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
+    Vldtr::Tools.sendmail(message_c, Val::Hashes.contacts_hash['submitter_email'], '')
+    logger.info {"Sending message slated for pm notifying them of paper_copyedit, to submitter instead (we're on Staging server)"}
   else
   	Vldtr::Tools.sendmail(message_c, to_email, 'workflows@macmillan.com')
   	logger.info {"sent message to pm notifying them of paper_copyedit (no egalley)"}
@@ -161,7 +163,8 @@ end
 #fixed layout
 if status_hash['epub_format'] == false && send_ok
 		status_hash['status'] = 'fixed layout'
-		if contacts_hash['ebooksDept_submitter'] == true
+    # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+		if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 				to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 				to_email = contacts_hash['submitter_email']
 		else
@@ -176,9 +179,9 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
 		if File.file?(Val::Paths.testing_value_file)
-        message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{to_email}"
-        Vldtr::Tools.sendmail(message_d, Val::Resources.emailtest_recipient, '')
-        logger.info {"Sending message slated for pm notifying them of fixed_layout, to test-recipient (we're on Staging server)"}
+        message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
+        Vldtr::Tools.sendmail(message_d, Val::Hashes.contacts_hash['submitter_email'], '')
+        logger.info {"Sending message slated for pm notifying them of fixed_layout, to submitter instead (we're on Staging server)"}
     else
 				Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
 				logger.info {"sent message to pm notifying them of fixed_layout (no egalley)"}

@@ -110,7 +110,8 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	if contacts_hash['ebooksDept_submitter'] == true
+  # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+	if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 		to_email = contacts_hash['submitter_email']
 	else
@@ -126,9 +127,9 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER"
-    Vldtr::Tools.sendmail(message, Val::Resources.emailtest_recipient, '')
-    logger.info {"Sending epub success message slated for PM, to test-recipient (we're on Staging server)"}
+    message += "\n\nThis message sent from STAGING SERVER; typically to PM #{contacts_hash['production_manager_email']}, but in this case to submitter instead, for testing"
+    Vldtr::Tools.sendmail(message, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    logger.info {"Sending epub success message slated for PM, to submitter (we're on Staging server)"}
   else
     Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
     logger.info {"Sending epub success message to PM"}
@@ -182,13 +183,15 @@ No notification email was sent to PE/PMs/submitter.
 #{errors}
 #{warnings}
 MESSAGE_END_B
-	unless File.file?(Val::Paths.testing_value_file)
+	if File.file?(Val::Paths.testing_value_file)
+    message += "\n\nThis message sent from STAGING SERVER"
+  end
 		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
 		logger.info {"send_ok is FALSE, something's wrong"}
-	end
 
 	#sending a failure notice to PM
-	if contacts_hash['ebooksDept_submitter'] == true
+  # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+	if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 		to_email = contacts_hash['submitter_email']
 	else
@@ -205,12 +208,11 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER"
-    Vldtr::Tools.sendmail(message, Val::Resources.emailtest_recipient, '')
-    logger.info {"Sending epub error message slated for PM, to test-recipient (we're on Staging server)"}
+    message += "\n\nThis message sent from STAGING SERVER, would typically go to PM (#{contacts_hash['production_manager_email']}), instead to submitter for testing."
+    Vldtr::Tools.sendmail(message, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    logger.info {"Sending epub error message slated for PM, to submitter (we're on Staging server)"}
   else
 		Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
 		logger.info {"Sending epub error notification to PM"}
 	end
-
 end

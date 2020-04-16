@@ -156,7 +156,7 @@ MESSAGE_END
       sendrescue_mail(to_email,cc_emails,message.lines[0..3])
     end
     def self.ebooks_mail_check()  #alternate will always be submitter, so far om is std_recipient in all cases
-      if Val::Hashes.contacts_hash['ebooksDept_submitter'] == true
+      if Val::Hashes.contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
         user_name = Val::Hashes.contacts_hash['submitter_name']
         user_email = Val::Hashes.contacts_hash['submitter_email']
       else
