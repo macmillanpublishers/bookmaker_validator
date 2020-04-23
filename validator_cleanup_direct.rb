@@ -134,6 +134,8 @@ if status_hash['bookmaker_ready']
   # setup args, launch our bookmaker_bat directly!
   bkmkr_bat_args = "#{Val::Files.working_file} #{bkmkr_bat_runtype} \"#{bkmkr_bat_arg3}\" \"#{bkmkr_bat_arg4}\""
   pid = spawnBookmaker(bookmaker_direct_bat, bkmkr_bat_args)
+  Process.detach(pid)
+  logger.info {"we were bookmaker ready, spawn bkmkr_automated_egalley process & detached: pid #{pid}"}
 
 else	#if not bookmaker_ready, clean up
 
@@ -142,14 +144,14 @@ else	#if not bookmaker_ready, clean up
 		if Dir.exists?(Val::Paths.tmp_dir) && status_hash['docfile'] == true
 			FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
 			FileUtils.cp_r "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder
-			logger.info {"errors found, writing err_notice, saving Val::Paths.tmp_dir to logfolder"}
+			logger.info {"errors found, saving Val::Paths.tmp_dir to logfolder"}
 		end
 	end
 
 	#write alert text file!
 	if !Val::Hashes.alerts_hash.empty?
 		alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, Val::Paths.tmp_dir)
-		logger.info {"warnings found, writing warn_notice"}
+		logger.info {"alerts found, writing warn_notice"}
 	end
 
   # send text errfile to camel/drive
