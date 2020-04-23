@@ -127,7 +127,7 @@ MESSAGE_END
         File.open(alertfile, "w") do |f|
             f.puts(alerttxt_string)
         end
-        return alerttxt_string, alerts_hash
+        return alertfile
     end
     def self.sendrescue_mail(orig_to,orig_ccs,orig_header)
     message = Mailtexts.rescuemail(orig_to,orig_ccs,orig_header)

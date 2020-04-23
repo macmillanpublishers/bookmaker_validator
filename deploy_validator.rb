@@ -24,6 +24,7 @@ validator_macro = File.join(Val::Paths.scripts_dir,'validator_macro.rb')
 validator_checker = File.join(Val::Paths.scripts_dir,'validator_checker.rb')
 validator_mailer = File.join(Val::Paths.scripts_dir,'validator_mailer.rb')
 validator_cleanup = File.join(Val::Paths.scripts_dir,'validator_cleanup.rb')
+validator_cleanup_direct = File.join(Val::Paths.scripts_dir,'validator_cleanup_direct.rb')
 processwatch_sleep_min = 30
 
 #--------------------- RUN
@@ -46,8 +47,12 @@ begin
   Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_macro] + popen_params, output_hash, "validator_macro", json_logfile)
 	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_checker] + popen_params, output_hash, "validator_checker", json_logfile)
 	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_mailer] + popen_params, output_hash, "validator_mailer", json_logfile)
-	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_cleanup] + popen_params, output_hash, "validator_cleanup", json_logfile)
-	# mark the process done for process watcher
+  if Val::Doc.runtype == 'direct'
+    Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_cleanup_direct] + popen_params, output_hash, "validator_cleanup_direct", json_logfile)
+  else
+    Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_cleanup] + popen_params, output_hash, "validator_cleanup", json_logfile)
+  end
+  # mark the process done for process watcher
 	output_hash['completed'] = true
 rescue Exception => e
 	p e   #puts e.inspect

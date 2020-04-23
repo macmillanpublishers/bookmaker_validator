@@ -11,6 +11,9 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 logfile = "#{Val::Logs.logfolder}/#{Val::Logs.logfilename}"
 
+bookmaker_direct_bat = File.join(Val::Paths.bookmaker_scripts_dir, 'bookmaker_deploy', 'automated_EGALLEY_direct.bat')
+bkmkr_bat_runtype = 'direct'
+
 outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalized)
 
 bookmaker_bot_IN = ''
@@ -145,7 +148,7 @@ else	#if not bookmaker_ready, clean up
 
 	#write alert text file!
 	if !Val::Hashes.alerts_hash.empty?
-		Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
+		alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		logger.info {"warnings found, writing warn_notice"}
 	end
 
