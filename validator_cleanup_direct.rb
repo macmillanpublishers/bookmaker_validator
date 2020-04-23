@@ -17,7 +17,7 @@ bkmkr_bat_arg3 = 'egalley'  # <-- placeholder arg
 bkmkr_bat_arg4 = 'placeholder'  # <-- placeholder arg
 post_urls_json = File.join(Val::Paths.scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
 api_POST_to_camel_py = File.join(Val::Paths.scripts_dir, "bookmaker_connectors", "api_POST_to_camel.py")
-
+timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
 
 #--------------------- LOCAL FUNCTIONS
