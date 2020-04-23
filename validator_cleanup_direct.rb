@@ -132,7 +132,7 @@ Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 #get ready for bookmaker to run on good docs!
 if status_hash['bookmaker_ready']
   # setup args, launch our bookmaker_bat directly!
-  bkmkr_bat_args = "#{Val::Files.working_file} #{bkmkr_bat_runtype} \"#{bkmkr_bat_arg3}\" \"#{bkmkr_bat_arg3}\""
+  bkmkr_bat_args = "#{Val::Files.working_file} #{bkmkr_bat_runtype} \"#{bkmkr_bat_arg3}\" \"#{bkmkr_bat_arg4}\""
   pid = spawnBookmaker(bookmaker_direct_bat, bkmkr_bat_args)
 
 else	#if not bookmaker_ready, clean up
