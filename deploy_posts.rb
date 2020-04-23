@@ -18,6 +18,7 @@ Vldtr::Tools.write_json(output_hash, json_logfile)   #create jsonlogfile
 process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
 post_mailer = File.join(Val::Paths.scripts_dir,'post_mailer.rb')
 post_cleanup = File.join(Val::Paths.scripts_dir,'post_cleanup.rb')
+post_cleanup_direct = File.join(Val::Paths.scripts_dir,'post_cleanup_direct.rb')
 processwatch_sleep_min = 5
 
 
@@ -34,8 +35,12 @@ begin
 		popen_params.push("\'#{arg}\'")
 	end
 	Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_mailer] + popen_params, output_hash, "post_mailer", json_logfile)
-	Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_cleanup] + popen_params, output_hash, "post_cleanup", json_logfile)
-	output_hash['completed'] = true		#mark the process done for process watcher
+  if Val::Doc.runtype == 'direct'
+    Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_cleanup_direct] + popen_params, output_hash, "post_cleanup_direct", json_logfile)
+  else
+    Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_cleanup] + popen_params, output_hash, "post_cleanup", json_logfile)
+  end
+  output_hash['completed'] = true		#mark the process done for process watcher
 rescue Exception => e
 	p e   #puts e.inspect
 	puts "Something in deploy.rb scripts crashed, running rescue, attempting alertmail & kill process watcher"

@@ -8,7 +8,21 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
+# Dropbox back n forth from bookmaker, b/c it jumped folders and infile paths, required
+# => recalculation of support files. For 'direct' runs products should share a temp folder so we should
+# => be able to refer to previous definitions 
+if Val::Doc.runtype == 'dropbox'
+  Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
+  contacts_file = Val::Posts.contacts_file
+  status_file = Val::Posts.status_file
+  alerts_json = Val::Posts.alerts_json
+else
+  Val::Logs.log_setup()
+  contacts_file = Val::Files.contacts_file
+  status_file = Val::Files.status_file
+  alerts_json = Val::Files.alerts_json
+end
+
 logger = Val::Logs.logger
 
 done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
@@ -67,8 +81,8 @@ end
 
 logger.info {"Reading in jsons from validator run"}
 #get info from contacts.json
-if File.file?(Val::Posts.contacts_file)
-	contacts_hash = Mcmlln::Tools.readjson(Val::Posts.contacts_file)
+if File.file?(contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
 	submitter_name = contacts_hash['submitter_name']
 	submitter_mail = contacts_hash['submitter_email']
 	pm_name = contacts_hash['production_manager_name']
@@ -77,12 +91,12 @@ if File.file?(Val::Posts.contacts_file)
 	pe_mail = contacts_hash['production_editor_email']
 else
 	send_ok = false
-	logger.info {"Val::Posts.contacts_file.json not present or unavailable, unable to send mails"}
+	logger.info {"contacts_file.json not present or unavailable, unable to send mails"}
 end
 
 #get info from status.json, define status/errors & status/warnings
-if File.file?(Val::Posts.status_file)
-	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
+if File.file?(status_file)
+	status_hash = Mcmlln::Tools.readjson(status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
   doctemplatetype = status_hash['doctemplatetype']
@@ -93,16 +107,16 @@ if File.file?(Val::Posts.status_file)
 		send_ok = false
 	end
   unless alertstring.empty?
-    Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
+    Vldtr::Tools.log_alert_to_json(alerts_json, "error", alertstring)
 		status_hash['errors'] = errors
-		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
+		Vldtr::Tools.write_json(status_hash, status_file)
   end
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
 end
 
-alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Posts.alerts_json)
+alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(alerts_json)
 
 #send a success notification email!
 if send_ok

@@ -89,7 +89,7 @@ Mcmlln::Tools.moveFile(Val::Posts.stylereport_txt, outfolder)
 #deal with errors & warnings!
 if !Val::Hashes.readjson(Val::Posts.alerts_json).empty?
 	logger.info {"alerts found, writing warn_notice"}
-	alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Posts.alerts_json, outfolder)
+	Vldtr::Tools.write_alerts_to_txtfile(Val::Posts.alerts_json, outfolder)
 end
 
 #update Val::Logs.permalog
