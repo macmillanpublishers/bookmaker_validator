@@ -83,6 +83,9 @@ module Val
 			@@testing_value_file
 		end
 		@@working_dir = File.join('S:', 'validator_tmp')
+		if Doc.runtype == 'direct'
+    	@@working_dir = File.join('S:', 'validator_tmp', 'validator_direct')  #<< drive
+    end
 		def self.working_dir
 			@@working_dir
 		end

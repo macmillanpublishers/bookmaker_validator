@@ -35,12 +35,12 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	# popen_params = [Val::Resources.ruby_exe, validator_tmparchive]# "\'#{Val::Doc.input_file}\'", "\'#{Val::Doc.runtype}\'"]
+	# collect args and prepare propogation of args to subscripts
 	popen_params = []
 	for arg in ARGV
 		popen_params.push("\'#{arg}\'")
 	end
-	# Vldtr::Tools.run_script(popen_params, output_hash, "validator_tmparchive", json_logfile)
+
 	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_tmparchive] + popen_params, output_hash, "validator_tmparchive", json_logfile)
 	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_lookups] + popen_params, output_hash, "validator_lookups", json_logfile)
 	Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_py] + popen_params, output_hash, "validator_py", json_logfile)
@@ -52,6 +52,7 @@ begin
   else
     Vldtr::Tools.run_script([Val::Resources.ruby_exe, validator_cleanup] + popen_params, output_hash, "validator_cleanup", json_logfile)
   end
+
   # mark the process done for process watcher
 	output_hash['completed'] = true
 rescue Exception => e

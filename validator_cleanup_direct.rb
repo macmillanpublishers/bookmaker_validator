@@ -23,8 +23,10 @@ isbn = ''
 #--------------------- LOCAL FUNCTIONS
 
 def spawnBookmaker(cmd, args)
+  Val::Logs.return_stdOutErr  #stop console log redirect to file
   pid = spawn("#{cmd} #{args}")
   Process.detach(pid)
+  Val::Logs.redirect_stdOutErr(Val::Logs.std_logfile)  #turn console log redirect back on
   return pid
 rescue => e
   p e
@@ -51,7 +53,7 @@ def sendFilesToDrive(files_to_send_list, api_POST_to_camel_py, post_url)
   for file in files_to_send_list
     argstring = "#{file} #{post_url}"
     api_result = Vlftr::Tools.runpython(api_POST_to_camel_py, argstring)
-    if api_result.downcase != 'success'
+    if api_result.downcase.strip != 'success'
       api_result_errs += "- api_err: \'#{api_result}\', file: \'#{file}\'\n"
     end
   end
@@ -133,9 +135,9 @@ Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 if status_hash['bookmaker_ready']
   # setup args, launch our bookmaker_bat directly!
   bkmkr_bat_args = "#{Val::Files.working_file} #{bkmkr_bat_runtype} \"#{bkmkr_bat_arg3}\" \"#{bkmkr_bat_arg4}\""
+  logger.info {"we're bookmaker ready, spawning bkmkr_automated_egalley process; args: #{bkmkr_bat_args}"}
   pid = spawnBookmaker(bookmaker_direct_bat, bkmkr_bat_args)
-  Process.detach(pid)
-  logger.info {"we were bookmaker ready, spawn bkmkr_automated_egalley process & detached: pid #{pid}"}
+  logger.info {"bkmkr_automated_egalley process started, & detached: pid #{pid}"}
 
 else	#if not bookmaker_ready, clean up
 

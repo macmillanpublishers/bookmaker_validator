@@ -10,22 +10,23 @@ require_relative './val_header.rb'
 # ---------------------- LOCAL DECLARATIONS
 # Dropbox back n forth from bookmaker, b/c it jumped folders and infile paths, required
 # => recalculation of support files. For 'direct' runs products should share a temp folder so we should
-# => be able to refer to previous definitions 
+# => be able to refer to previous definitions
 if Val::Doc.runtype == 'dropbox'
   Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
   contacts_file = Val::Posts.contacts_file
   status_file = Val::Posts.status_file
   alerts_json = Val::Posts.alerts_json
+  done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 else
   Val::Logs.log_setup()
   contacts_file = Val::Files.contacts_file
   status_file = Val::Files.status_file
   alerts_json = Val::Files.alerts_json
+  done_isbn_dir = File.join(Val::Paths.tmp_dir, 'done')
 end
 
 logger = Val::Logs.logger
 
-done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 epubQA_request = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
@@ -198,7 +199,7 @@ No notification email was sent to PE/PMs/submitter.
 #{warnings}
 MESSAGE_END_B
 	if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER"
+    message_b += "\n\nThis message sent from STAGING SERVER"
   end
 		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
 		logger.info {"send_ok is FALSE, something's wrong"}
@@ -222,8 +223,8 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER, would typically go to PM (#{contacts_hash['production_manager_email']}), instead to submitter for testing."
-    Vldtr::Tools.sendmail(message, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    message_d += "\n\nThis message sent from STAGING SERVER, would typically go to PM (#{contacts_hash['production_manager_email']}), instead to submitter for testing."
+    Vldtr::Tools.sendmail(message_d, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
     logger.info {"Sending epub error message slated for PM, to submitter (we're on Staging server)"}
   else
 		Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')

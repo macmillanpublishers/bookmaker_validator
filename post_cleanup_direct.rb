@@ -14,8 +14,8 @@ logger = Val::Logs.logger
 done_dir = File.join(Val::Paths.tmp_dir, 'done')
 epub_found = true
 epub, epub_firstpass = '', ''
-post_urls_json = File.join(Val::Paths.scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
-api_POST_to_camel_py = File.join(Val::Paths.scripts_dir, "bookmaker_connectors", "api_POST_to_camel.py")
+post_urls_json = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
+api_POST_to_camel_py = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_connectors", "api_POST_to_camel.py")
 
 
 #--------------------- LOCAL FUNCTIONS
@@ -39,8 +39,8 @@ def sendFilesToDrive(files_to_send_list, api_POST_to_camel_py, post_url)
   api_result_errs = ''
   for file in files_to_send_list
     argstring = "#{file} #{post_url}"
-    api_result = Vlftr::Tools.runpython(api_POST_to_camel_py, argstring)
-    if api_result.downcase != 'success'
+    api_result = Vldtr::Tools.runpython(api_POST_to_camel_py, argstring)
+    if api_result.downcase.strip != 'success'
       api_result_errs += "- api_err: \'#{api_result}\', file: \'#{file}\'\n"
     end
   end
@@ -83,23 +83,23 @@ end
 files_to_send_list = []
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
 if File.file?(epub_firstpass)
-  files_to_send_list.append(epub_firstpass)
+  files_to_send_list.push(epub_firstpass)
 else
   epub_found = false
   if File.file?(epub)
-    logger.info {"skipped copying epub to outfolder, b/c not named '_firstpass'. Related alertfile should be posted."}
+    logger.info {"skipped preparing epub send to outfolder, b/c not named '_firstpass'. Related alertfile should be posted."}
   else
-    logger.info {"no epub file found to copy to outfolder"}
+    logger.info {"no epub file found to prepare for send"}
   end
 end
 if File.file?(Val::Files.stylereport_txt)
-  files_to_send_list.append(Val::Files.stylereport_txt)
+  files_to_send_list.push(Val::Files.stylereport_txt)
 end
 #deal with errors & warnings!
 if !Val::Hashes.readjson(Val::Files.alerts_json).empty?
 	logger.info {"alerts found, writing warn_notice"}
-	alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
-  files_to_send_list.append(alertfile)
+	alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, done_dir)
+  files_to_send_list.push(alertfile)
 end
 
 # send files to Drive!
@@ -108,7 +108,7 @@ post_urls_hash = Mcmlln::Tools.readjson(post_urls_json)
 post_url = getPOSTurl(post_url_productstring, post_urls_hash, Val::Paths.testing_value_file, File.basename(Val::Paths.tmp_dir))
 api_POST_results = sendFilesToDrive(files_to_send_list, api_POST_to_camel_py, post_url)
 if api_POST_results == 'success'
-  logger.info {"api POST errfile to Drive successful"}
+  logger.info {"api POST alertfile to Drive successful"}
 else
   logger.error {"api_post error(s): #{api_POST_results}"}
   # and escalate:
@@ -116,8 +116,8 @@ else
 end
 
 #update Val::Logs.permalog
-if File.file?(Val::Files.permalog)
-	permalog_hash = Mcmlln::Tools.readjson(Val::Files.permalog)
+if File.file?(Val::Logs.permalog)
+	permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
 	permalog_hash[Val::Files.index]['epub_found'] = epub_found
 	if epub_found && errors.empty?
 		permalog_hash[Val::Files.index]['status'] = 'In-house egalley'
@@ -125,11 +125,11 @@ if File.file?(Val::Files.permalog)
 		permalog_hash[Val::Files.index]['status'] = 'bookmaker error'
 	end
 	#write to json Val::Logs.permalog!
-    Vldtr::Tools.write_json(permalog_hash,Val::Files.permalog)
+    Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 end
 
 
 #cleanup
-if Dir.exists?(Val::Files.tmp_dir)	then FileUtils.rm_rf Val::Files.tmp_dir end
-if File.file?(errFile) then FileUtils.rm errFile end
+if Dir.exists?(Val::Paths.tmp_dir)	then FileUtils.rm_rf Val::Paths.tmp_dir end
+if File.file?(alertfile) then FileUtils.rm alertfile end
 if File.file?(Val::Files.inprogress_file) then FileUtils.rm Val::Files.inprogress_file end

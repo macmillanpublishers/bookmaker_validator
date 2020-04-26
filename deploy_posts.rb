@@ -7,10 +7,20 @@ require_relative './validator_tools.rb'
 require_relative './val_header.rb'
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)			#Note:  different for Posts.deploy
+if Val::Doc.runtype == 'dropbox'
+  Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
+	json_logfile = Val::Posts.json_logfile
+	process_logfile = Val::Posts.process_logfile
+else
+  Val::Logs.log_setup()
+	json_logfile = Val::Logs.json_logfile
+	process_logfile = Val::Logs.process_logfile
+end
+# init logging
 logger = Val::Logs.logger
+
 log_suffix = "POSTS_#{Time.now.strftime('%Y-%m-%d_%H-%M-%S')}"		#Note:  different for Posts.deploy
-json_logfile = Val::Posts.json_logfile.gsub(/.json$/,"#{log_suffix}.json")
+json_logfile = json_logfile.gsub(/.json$/,"#{log_suffix}.json")
 output_hash = { 'completed' => false }
 Vldtr::Tools.write_json(output_hash, json_logfile)   #create jsonlogfile
 
@@ -25,7 +35,7 @@ processwatch_sleep_min = 5
 #--------------------- RUN
 #launch process-watcher
 Vldtr::Tools.log_time(output_hash,'process_watcher','start time',json_logfile)
-pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[Val::Posts.process_logfile, "w"])
+pid = spawn("#{Val::Resources.ruby_exe} #{process_watcher} #{log_suffix} #{processwatch_sleep_min}",[:out, :err]=>[process_logfile, "w"])
 Process.detach(pid)
 
 #the rest of the validator:
