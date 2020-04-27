@@ -119,6 +119,10 @@ module Val
 			@@project_name
 		end
 		@@tmp_dir=File.join(working_dir, Doc.basename_normalized)
+		if Doc.runtype == 'direct'
+			input_dirname = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-1].pop
+    	@@tmp_dir = File.join(working_dir, input_dirname)  #<< drive
+    end
 		def self.tmp_dir
 			@@tmp_dir
 		end
@@ -407,7 +411,7 @@ module Val
 			@@alerts_json
 		end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
-				if Resources.thisscript =~ /post_/
+				if Resources.thisscript =~ /post_/ && Doc.runtype != 'direct'
 					info_file = Posts.bookinfo_file
 				else
 					info_file = Files.bookinfo_file
