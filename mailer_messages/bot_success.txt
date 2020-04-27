@@ -2,8 +2,8 @@ Subject: Egalley created! "FILENAME_SPLIT" was successfully processed by egalley
 
 The manuscript "FILENAME_NORMALIZED" has been successfully processed by egalleymaker and an egalley has been uploaded to RSuite.
 
-You can also find the EPUB generated from your manuscript in the following folder:
-'Dropbox (Macmillan Publishers)\egalleymaker\OUT'
+You can also find the EPUB generated from your manuscript in the egalleymaker OUT folder.
+
 
 The book metadata from Biblio is below, as well as any problems we found with the manuscript as we were doing the conversion:
 
