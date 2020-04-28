@@ -118,9 +118,12 @@ module Val
 		def self.project_name
 			@@project_name
 		end
+		@@input_dirname = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-1].pop
+    def self.input_dirname
+			@@input_dirname
+		end
 		@@tmp_dir=File.join(working_dir, Doc.basename_normalized)
 		if Doc.runtype == 'direct'
-			input_dirname = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-1].pop
     	@@tmp_dir = File.join(working_dir, input_dirname)  #<< drive
     end
 		def self.tmp_dir
@@ -314,6 +317,9 @@ module Val
 	end
 	class Logs
 		@@logfilename = "#{Doc.basename_normalized}_log.txt"
+		if Doc.runtype == 'direct'
+			@@logfilename = "#{Paths.input_dirname}_log.txt"  # < unique logname from api_timestamp
+		end
 		def self.logfilename
 			@@logfilename
 		end
