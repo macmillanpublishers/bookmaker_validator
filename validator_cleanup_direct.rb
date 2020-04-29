@@ -109,6 +109,10 @@ if File.file?(Val::Files.bookinfo_file)
 end
 if File.file?(Val::Files.status_file)
 	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
+  # write index to status_hash for pickup in post.rb scripts
+  status_hash['val_report_index'] = index
+  Vldtr::Tools.write_json(status_hash,Val::Files.status_file)
+  # dump other key status-contents into permalog
 	permalog_hash[index]['errors'] = status_hash['errors']
 	permalog_hash[index]['warnings'] = status_hash['warnings']
 	permalog_hash[index]['bookmaker_ready'] = status_hash['bookmaker_ready']

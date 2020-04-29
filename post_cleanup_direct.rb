@@ -60,22 +60,24 @@ end
 #--------------------- RUN
 #find our epubs
 if Dir.exist?(done_dir)
-	Find.find(done_dir) { |file|
-		if file =~ /_EPUBfirstpass.epub$/
-			epub_firstpass = file
-		elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
-			epub = file
-		end
-	}
+  Find.find(done_dir) { |file|
+    if file =~ /_EPUBfirstpass.epub$/
+      epub_firstpass = file
+    elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
+      epub = file
+    end
+  }
 end
 
 # collect key items from statusfile, or create in its absence
 if File.file?(Val::Files.status_file)
-	status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
-	errors = status_hash['errors']
+  status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
+  errors = status_hash['errors']
+  index = status_hash['val_report_index']
 else
   errstring = 'status.json missing or unavailable'
   errors = [errstring]
+  index = ''
   Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", errstring)
 end
 
@@ -97,8 +99,8 @@ if File.file?(Val::Files.stylereport_txt)
 end
 #deal with errors & warnings!
 if !Val::Hashes.readjson(Val::Files.alerts_json).empty?
-	logger.info {"alerts found, writing warn_notice"}
-	alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, done_dir)
+  logger.info {"alerts found, writing warn_notice"}
+  alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, done_dir)
   files_to_send_list.push(alertfile)
 end
 
@@ -117,19 +119,22 @@ end
 
 #update Val::Logs.permalog
 if File.file?(Val::Logs.permalog)
-	permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
-	permalog_hash[Val::Files.index]['epub_found'] = epub_found
-	if epub_found && errors.empty?
-		permalog_hash[Val::Files.index]['status'] = 'In-house egalley'
-	else
-		permalog_hash[Val::Files.index]['status'] = 'bookmaker error'
-	end
-	#write to json Val::Logs.permalog!
+  permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
+  if index.empty?
+    index = permalog_hash.length
+  end
+  permalog_hash[Val::Files.index]['epub_found'] = epub_found
+  if epub_found && errors.empty?
+    permalog_hash[Val::Files.index]['status'] = 'In-house egalley'
+  else
+    permalog_hash[Val::Files.index]['status'] = 'bookmaker error'
+  end
+  #write to json Val::Logs.permalog!
     Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 end
 
 
 #cleanup
-if Dir.exists?(Val::Paths.tmp_dir)	then FileUtils.rm_rf Val::Paths.tmp_dir end
+if Dir.exists?(Val::Paths.tmp_dir)  then FileUtils.rm_rf Val::Paths.tmp_dir end
 if File.file?(alertfile) then FileUtils.rm alertfile end
 if File.file?(Val::Files.inprogress_file) then FileUtils.rm Val::Files.inprogress_file end
