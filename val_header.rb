@@ -84,10 +84,14 @@ module Val
 		end
 		@@working_dir = File.join('S:', 'validator_tmp')
 		if Doc.runtype == 'direct'
-    	@@working_dir = File.join('S:', 'validator_tmp', 'validator_direct')  #<< drive
-    end
+			@@working_dir = File.join('S:', 'validator_tmp', 'validator_direct')  #<< drive
+		end
 		def self.working_dir
 			@@working_dir
+		end
+		@@base_logdir = File.join('S:', 'validator_logs')
+		def self.base_logdir
+			@@base_logdir
 		end
 		@@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
 		def self.bookmaker_scripts_dir
@@ -328,6 +332,11 @@ module Val
 			@logfolder = File.join(@dropfolder_logdir, 'logs')
 			@permalog = File.join(@dropfolder_logdir,'validator_history_report.json')
 			@deploy_logfolder = File.join(@dropfolder_logdir, 'std_out-err_logs')
+			if Doc.runtype == 'direct'
+				@logfolder = File.join(Paths.base_logdir, 'logs')
+				@permalog = File.join(Paths.base_logdir,'validator_history_report.json')
+				@deploy_logfolder = File.join(Paths.base_logdir, 'std_out-err_logs')
+			end
 			# if !File.directory?(@deploy_logfolder)	then FileUtils.mkdir_p(@deploy_logfolder) end
 			@json_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 			@human_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
