@@ -73,14 +73,13 @@ end
 if File.file?(Val::Files.status_file)
   status_hash = Mcmlln::Tools.readjson(Val::Files.status_file)
   errors = status_hash['errors']
-  index = status_hash['val_report_index']
+  index = status_hash['val_report_index'].to_s
 else
   errstring = 'status.json missing or unavailable'
   errors = [errstring]
-  index = ''
+  index = nil
   Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", errstring)
 end
-
 # collect files to send
 files_to_send_list = []
 #presumes epub is named properly, moves a copy to coresource (if not on staging server)
@@ -120,14 +119,14 @@ end
 #update Val::Logs.permalog
 if File.file?(Val::Logs.permalog)
   permalog_hash = Mcmlln::Tools.readjson(Val::Logs.permalog)
-  if index.empty?
-    index = permalog_hash.length
+  if index.nil?
+    index = permalog_hash.length.to_s
   end
-  permalog_hash[Val::Files.index]['epub_found'] = epub_found
+  permalog_hash[index]['epub_found'] = epub_found
   if epub_found && errors.empty?
-    permalog_hash[Val::Files.index]['status'] = 'In-house egalley'
+    permalog_hash[index]['status'] = 'In-house egalley'
   else
-    permalog_hash[Val::Files.index]['status'] = 'bookmaker error'
+    permalog_hash[index]['status'] = 'bookmaker error'
   end
   #write to json Val::Logs.permalog!
     Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
@@ -136,5 +135,4 @@ end
 
 #cleanup
 if Dir.exists?(Val::Paths.tmp_dir)  then FileUtils.rm_rf Val::Paths.tmp_dir end
-if File.file?(alertfile) then FileUtils.rm alertfile end
 if File.file?(Val::Files.inprogress_file) then FileUtils.rm Val::Files.inprogress_file end
