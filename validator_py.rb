@@ -18,14 +18,19 @@ status_hash['val_py_started'] = false
 #--------------------- RUN
 if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 	logger.info {"skipping script: #{py_script_name}, no bookinfo file or no status file"}
-elsif status_hash["doctemplatetype"] != "sectionstart"
+elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   logger.info {"skipping script: #{py_script_name}, doctemplatetype is not \"sectionsstart\""}
 else
-	unless File.file?(Val::Paths.testing_value_file)		#send a mail to PM that we're starting
 		user_name, user_email = Vldtr::Tools.ebooks_mail_check()
 		body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
 		message = Vldtr::Mailtexts.generic(user_name,user_email,"#{body}")
+  if File.file?(Val::Paths.testing_value_file)
+    message += "\n\nThis message sent from STAGING SERVER: typically goes to PM #{Val::Hashes.contacts_hash['production_manager_email']}; rerouted to submitter for testing "
+    Vldtr::Tools.sendmail("#{message}", Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    logger.info {"Sending 'underway' message slated for PM, to submitter (we're on Staging server)"}
+  else
 		Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
+    logger.info {"Sent 'underway' message to PM"}
 	end
 	if Val::Hashes.status_hash['msword_copyedit'] == false
 		logger.info {"skipping script: #{py_script_name}, paper-copyedit"}
@@ -33,6 +38,8 @@ else
 		logger.info {"skipping script: #{py_script_name}, no EPUB format epub edition (fixed layout)"}
   elsif Val::Hashes.status_hash['status'] == 'isbn error'
 		logger.info {"skipping script: fatal isbn error"}
+  elsif status_hash["doctemplatetype"] == 'rsuite'
+    logger.info {"skipping script: rsuite styled docx"}
 	else
     # log that we're beginning the python validator!
 		status_hash['val_py_started'] = true

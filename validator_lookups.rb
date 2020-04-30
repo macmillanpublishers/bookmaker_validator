@@ -171,9 +171,10 @@ file: #{Val::Doc.filename_normalized}
 submitter email: #{submitter_mail}
 MESSAGE_END
     message = Vldtr::Mailtexts.generic('Workflows','workflows@macmillan.com',"#{body}")
-    unless File.file?(Val::Paths.testing_value_file)
-      Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
+    if File.file?(Val::Paths.testing_value_file)
+      message += "\n\nThis message sent from STAGING SERVER"
     end
+    Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
   end
   return mail, name, newstatus
 end
@@ -222,9 +223,10 @@ file: #{Val::Doc.filename_normalized}
 submitter email: #{submitter_mail}
 MESSAGE_END
       message = Vldtr::Mailtexts.generic('Workflows','workflows@macmillan.com',"#{body}")
-      unless File.file?(Val::Paths.testing_value_file)
-        Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
+      if File.file?(Val::Paths.testing_value_file)
+        message += "\n\nThis message sent from STAGING SERVER"
       end
+      Vldtr::Tools.sendmail("#{message}",'workflows@macmillan.com','workflows@macmillan.com')
     end
   end
   return mail, newname, status

@@ -51,6 +51,31 @@ module Val
 		def self.converted_docx_filename
 			@@converted_docx_filename
 		end
+    # capture args for _direct_ (non-dropbox) runs
+    unless ARGV[1].nil?
+      @@runtype = ARGV[1]
+    else
+      @@runtype = 'dropbox'
+    end
+    def self.runtype
+			@@runtype
+		end
+    unless ARGV[2].nil?
+      @@user_email = ARGV[2]
+    else
+      @@user_email = ''
+    end
+    def self.user_email
+			@@user_email
+		end
+    unless ARGV[3].nil?
+      @@user_name = ARGV[3]
+    else
+      @@user_name = 'dropbox'
+    end
+    def self.user_name
+			@@user_name
+		end
 	end
 	class Paths
 		@@testing_value_file = File.join("C:", "staging.txt")
@@ -58,8 +83,15 @@ module Val
 			@@testing_value_file
 		end
 		@@working_dir = File.join('S:', 'validator_tmp')
+		if Doc.runtype == 'direct'
+			@@working_dir = File.join('S:', 'validator_tmp', 'validator_direct')  #<< drive
+		end
 		def self.working_dir
 			@@working_dir
+		end
+		@@base_logdir = File.join('S:', 'validator_logs')
+		def self.base_logdir
+			@@base_logdir
 		end
 		@@bookmaker_scripts_dir = File.join('S:', 'resources', 'bookmaker_scripts')
 		def self.bookmaker_scripts_dir
@@ -70,11 +102,15 @@ module Val
 		def self.scripts_dir
 			@@scripts_dir
 		end
-		@@server_dropbox_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
-		def self.server_dropbox_path
-			@@server_dropbox_path
+    # if Doc.runtype == 'dropbox'
+		  @@server_dropfolder_path = File.join('C:','Users','padwoadmin','Dropbox (Macmillan Publishers)')
+    # elsif Doc.runtype == 'direct'
+      # @@server_dropfolder_path = File.join('G:','My Drive','Workflow Tools')  #<< drive
+    # end
+		def self.server_dropfolder_path
+			@@server_dropfolder_path
 		end
-		@@static_data_files = File.join(server_dropbox_path,'static_data_files')
+		@@static_data_files = File.join(server_dropfolder_path,'static_data_files')
 		def self.static_data_files
 			@@static_data_files
 		end
@@ -86,7 +122,14 @@ module Val
 		def self.project_name
 			@@project_name
 		end
+		@@input_dirname = Doc.input_file.split(Regexp.union(*[File::SEPARATOR, File::ALT_SEPARATOR].compact))[0...-1].pop
+    def self.input_dirname
+			@@input_dirname
+		end
 		@@tmp_dir=File.join(working_dir, Doc.basename_normalized)
+		if Doc.runtype == 'direct'
+    	@@tmp_dir = File.join(working_dir, input_dirname)  #<< drive
+    end
 		def self.tmp_dir
 			@@tmp_dir
 		end
@@ -231,14 +274,18 @@ module Val
     end
 	end
 	class Resources
-		@@testing = false			#this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
-		def self.testing			#it's only called in validator_cleanup & posts_cleanup
+    @@emailtest_recipient = 'workflows@macmillan.com'
+    def self.emailtest_recipient
+			@@emailtest_recipient
+		end
+    # MR-4-20\/ this legacy testing protoc0l involved setting this value to 'true' but renaming staging file.
+    # => so we get all mailers but retain staging directories. Not ideal. Using dummy recipient for staging instead^^
+    #this allows to test all mailers on staging but still utilize staging (Dropbox & Coresource) paths
+    #it's only called in validator_cleanup & posts_cleanup
+    @@testing = false
+		def self.testing
 			@@testing
 		end
-		# @@pilot = true			#this runs true prod environment, except mails Workflows instead of Westchester & sets pretend coresourceDir
-		# def self.pilot
-		# 	@@pilot
-		# end
 		@@thisscript = File.basename($0,'.rb')
 		def self.thisscript
 			@@thisscript
@@ -274,14 +321,22 @@ module Val
 	end
 	class Logs
 		@@logfilename = "#{Doc.basename_normalized}_log.txt"
+		if Doc.runtype == 'direct'
+			@@logfilename = "#{Paths.input_dirname}_log.txt"  # < unique logname from api_timestamp
+		end
 		def self.logfilename
 			@@logfilename
 		end
 		def self.setlogfolders(projectname)
-			@dropbox_logfolder = File.join(Paths.server_dropbox_path, 'bookmaker_logs', projectname)
-			@logfolder = File.join(@dropbox_logfolder, 'logs')
-			@permalog = File.join(@dropbox_logfolder,'validator_history_report.json')
-			@deploy_logfolder = File.join(@dropbox_logfolder, 'std_out-err_logs')
+			@dropfolder_logdir = File.join(Paths.server_dropfolder_path, 'bookmaker_logs', projectname)
+			@logfolder = File.join(@dropfolder_logdir, 'logs')
+			@permalog = File.join(@dropfolder_logdir,'validator_history_report.json')
+			@deploy_logfolder = File.join(@dropfolder_logdir, 'std_out-err_logs')
+			if Doc.runtype == 'direct'
+				@logfolder = File.join(Paths.base_logdir, 'logs')
+				@permalog = File.join(Paths.base_logdir,'validator_history_report.json')
+				@deploy_logfolder = File.join(Paths.base_logdir, 'std_out-err_logs')
+			end
 			# if !File.directory?(@deploy_logfolder)	then FileUtils.mkdir_p(@deploy_logfolder) end
 			@json_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.json")
 			@human_logfile = File.join(@deploy_logfolder,"#{Doc.filename_normalized}_out-err_validator.txt")
@@ -371,7 +426,7 @@ module Val
 			@@alerts_json
 		end
 		def self.bookinfo  #get info from bookinfo.json.  Putting this in Posts instead of resources so Posts.bookinfo is already defined
-				if Resources.thisscript =~ /post_/
+				if Resources.thisscript =~ /post_/ && Doc.runtype != 'direct'
 					info_file = Posts.bookinfo_file
 				else
 					info_file = Files.bookinfo_file

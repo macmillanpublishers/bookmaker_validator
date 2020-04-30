@@ -30,11 +30,11 @@ status_hash['doctemplate_version'] = ''
 
 #---------------------  METHODS
 def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
-  if user_email == ''
+  if user_email == '' or user_email == 'unavailable'
     status_hash['api_ok'] = false
-    contacts_hash.merge!(submitter_name: 'Workflows')
-    contacts_hash.merge!(submitter_email: 'workflows@macmillan.com')
-    logger.info {"dropbox api may have failed, not finding file metadata"}
+    user_email = 'workflows@macmillan.com'
+    user_name = 'Workflows'
+    logger.info {"#{Val::Doc.runtype} api may have failed, not finding submitter metadata"}
     # adding to alerts.json:
     Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", Val::Hashes.alertmessages_hash["warnings"]["api"]["message"])
   else
@@ -51,12 +51,12 @@ def set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
         end
       end
     end
-    #writing user info from Dropbox API to json
-    contacts_hash.merge!(submitter_name: user_name)
-    contacts_hash.merge!(submitter_email: user_email)
-    Vldtr::Tools.write_json(contacts_hash,Val::Files.contacts_file)
-    logger.info {"file submitter retrieved, display name: \"#{user_name}\", email: \"#{user_email}\", wrote to contacts.json"}
   end
+  #writing user info to contacts json
+  contacts_hash.merge!(submitter_name: user_name)
+  contacts_hash.merge!(submitter_email: user_email)
+  Vldtr::Tools.write_json(contacts_hash,Val::Files.contacts_file)
+  logger.info {"file submitter determined, display name: \"#{user_name}\", email: \"#{user_email}\", written to contacts.json"}
 end
 
 def nondoc(logger,status_hash)
@@ -137,23 +137,34 @@ logger.info {"file \"#{Val::Doc.filename_split}\" was dropped into the #{Val::Pa
 
 FileUtils.mkdir_p Val::Paths.tmp_dir  #make the tmpdir
 
+# capture runtype in status_json:
+status_hash['runtype'] = Val::Doc.runtype
+
 #try to get submitter info (Dropbox document 'modifier' via api)
-user_email, user_name = Vldtr::Tools.dropbox_api_call
+if Val::Doc.runtype != 'dropbox'
+  user_email = Val::Doc.user_email
+  user_name = Val::Doc.user_name
+  logger.info {"(looks like this is a 'direct' run, submitter received via flask_api)"}
+else
+  user_email, user_name = Vldtr::Tools.dropbox_api_call
+end
 
 # set_submitter_info in contacts_hash
 set_submitter_info(logger,user_email,user_name,contacts_hash,status_hash)
 
 # ATTN: need to add a generic mailtxt for standalone validator
 #send email upon file receipt, different mails depending on whether drpobox api succeeded:
-unless File.file?(Val::Paths.testing_value_file)
-  if status_hash['api_ok'] && user_email =~ /@/
-    body = Val::Resources.mailtext_gsubs(file_recd_txt,'','')
-    message = Vldtr::Mailtexts.generic(user_name,user_email,body) #or "#{body}" ?
-    Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
-  else
-    Vldtr::Tools.sendmail(Vldtr::Mailtexts.apifail(user_email),'workflows@macmillan.com','')
+if status_hash['api_ok'] && user_email =~ /@/
+  body = Val::Resources.mailtext_gsubs(file_recd_txt,'','')
+  message = Vldtr::Mailtexts.generic(user_name,user_email,body)
+  if File.file?(Val::Paths.testing_value_file)
+    message += "\n\nThis message sent from STAGING SERVER"
   end
+  Vldtr::Tools.sendmail("#{message}",user_email,'workflows@macmillan.com')
+else
+  Vldtr::Tools.sendmail(Vldtr::Mailtexts.apifail(user_email),'workflows@macmillan.com','')
 end
+
 
 #test fileext for =~ .doc(x)
 if Val::Doc.extension !~ /\.doc($|x$)/i

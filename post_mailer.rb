@@ -8,10 +8,25 @@ require_relative './val_header.rb'
 
 
 # ---------------------- LOCAL DECLARATIONS
-Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
+# Dropbox back n forth from bookmaker, b/c it jumped folders and infile paths, required
+# => recalculation of support files. For 'direct' runs products should share a temp folder so we should
+# => be able to refer to previous definitions
+if Val::Doc.runtype == 'dropbox'
+  Val::Logs.log_setup(Val::Posts.logfile_name,Val::Posts.logfolder)
+  contacts_file = Val::Posts.contacts_file
+  status_file = Val::Posts.status_file
+  alerts_json = Val::Posts.alerts_json
+  done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
+else
+  Val::Logs.log_setup()
+  contacts_file = Val::Files.contacts_file
+  status_file = Val::Files.status_file
+  alerts_json = Val::Files.alerts_json
+  done_isbn_dir = File.join(Val::Paths.tmp_dir, 'done')
+end
+
 logger = Val::Logs.logger
 
-done_isbn_dir = File.join(Val::Paths.project_dir, 'done', Metadata.pisbn)
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 epubQA_request = File.read(File.join(Val::Paths.mailer_dir,'epubQA_request.txt'))
@@ -67,8 +82,8 @@ end
 
 logger.info {"Reading in jsons from validator run"}
 #get info from contacts.json
-if File.file?(Val::Posts.contacts_file)
-	contacts_hash = Mcmlln::Tools.readjson(Val::Posts.contacts_file)
+if File.file?(contacts_file)
+	contacts_hash = Mcmlln::Tools.readjson(contacts_file)
 	submitter_name = contacts_hash['submitter_name']
 	submitter_mail = contacts_hash['submitter_email']
 	pm_name = contacts_hash['production_manager_name']
@@ -77,12 +92,12 @@ if File.file?(Val::Posts.contacts_file)
 	pe_mail = contacts_hash['production_editor_email']
 else
 	send_ok = false
-	logger.info {"Val::Posts.contacts_file.json not present or unavailable, unable to send mails"}
+	logger.info {"contacts_file.json not present or unavailable, unable to send mails"}
 end
 
 #get info from status.json, define status/errors & status/warnings
-if File.file?(Val::Posts.status_file)
-	status_hash = Mcmlln::Tools.readjson(Val::Posts.status_file)
+if File.file?(status_file)
+	status_hash = Mcmlln::Tools.readjson(status_file)
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
   doctemplatetype = status_hash['doctemplatetype']
@@ -93,16 +108,16 @@ if File.file?(Val::Posts.status_file)
 		send_ok = false
 	end
   unless alertstring.empty?
-    Vldtr::Tools.log_alert_to_json(Val::Posts.alerts_json, "error", alertstring)
+    Vldtr::Tools.log_alert_to_json(alerts_json, "error", alertstring)
 		status_hash['errors'] = errors
-		Vldtr::Tools.write_json(status_hash,Val::Posts.status_file)
+		Vldtr::Tools.write_json(status_hash, status_file)
   end
 else
 	send_ok = false
 	logger.info {"status.json not present or unavailable, unable to determine what to send"}
 end
 
-alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(Val::Posts.alerts_json)
+alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(alerts_json)
 
 #send a success notification email!
 if send_ok
@@ -110,25 +125,30 @@ if send_ok
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
 	end
-	unless File.file?(Val::Paths.testing_value_file)
-		if contacts_hash['ebooksDept_submitter'] == true
-			to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
-			to_email = contacts_hash['submitter_email']
-		else
-			to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
-			to_email = contacts_hash['production_manager_email']
-		end
-		body = Val::Resources.mailtext_gsubs(bot_success_txt, alerttxt_string, Val::Posts.bookinfo)
-		body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
-		message = <<MESSAGE_END
+  # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+	if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
+		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
+		to_email = contacts_hash['submitter_email']
+	else
+		to_header = "#{contacts_hash['production_manager_name']} <#{contacts_hash['production_manager_email']}>"
+		to_email = contacts_hash['production_manager_email']
+	end
+	body = Val::Resources.mailtext_gsubs(bot_success_txt, alerttxt_string, Val::Posts.bookinfo)
+	body = body.gsub(/(_DONE_[0-9]+)(.docx?)/,'\2')
+	message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END
-		Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
-		logger.info {"Sending epub success message to PM"}
-	end
+  if File.file?(Val::Paths.testing_value_file)
+    message += "\n\nThis message sent from STAGING SERVER; typically to PM #{contacts_hash['production_manager_email']}, but in this case to submitter instead, for testing"
+    Vldtr::Tools.sendmail(message, contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    logger.info {"Sending epub success message slated for PM, to submitter (we're on Staging server)"}
+  else
+    Vldtr::Tools.sendmail(message, to_email, 'workflows@macmillan.com')
+    logger.info {"Sending epub success message to PM"}
+  end
 
 # # # # \/ temporarily disabling QA request send
 # # # #   leaving commented but intact in case it's useful again later
@@ -178,13 +198,15 @@ No notification email was sent to PE/PMs/submitter.
 #{errors}
 #{warnings}
 MESSAGE_END_B
-	unless File.file?(Val::Paths.testing_value_file)
+	if File.file?(Val::Paths.testing_value_file)
+    message_b += "\n\nThis message sent from STAGING SERVER"
+  end
 		Vldtr::Tools.sendmail(message_b, 'workflows@macmillan.com', '')
 		logger.info {"send_ok is FALSE, something's wrong"}
-	end
 
 	#sending a failure notice to PM
-	if contacts_hash['ebooksDept_submitter'] == true
+  # prepare contacts_hash for submitter instead of PM, fo rebooks submitters &/or Staging server
+	if contacts_hash['ebooksDept_submitter'] == true || File.file?(Val::Paths.testing_value_file)
 		to_header = "#{contacts_hash['submitter_name']} <#{contacts_hash['submitter_email']}>"
 		to_email = contacts_hash['submitter_email']
 	else
@@ -200,9 +222,12 @@ To: #{to_header}
 Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
-	unless File.file?(Val::Paths.testing_value_file)
+  if File.file?(Val::Paths.testing_value_file)
+    message_d += "\n\nThis message sent from STAGING SERVER, would typically go to PM (#{contacts_hash['production_manager_email']}), instead to submitter for testing."
+    Vldtr::Tools.sendmail(message_d, Val::Hashes.contacts_hash['submitter_email'], 'workflows@macmillan.com')
+    logger.info {"Sending epub error message slated for PM, to submitter (we're on Staging server)"}
+  else
 		Vldtr::Tools.sendmail(message_d, to_email, 'workflows@macmillan.com')
 		logger.info {"Sending epub error notification to PM"}
 	end
-
 end

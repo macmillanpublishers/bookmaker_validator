@@ -11,13 +11,16 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 logfile = "#{Val::Logs.logfolder}/#{Val::Logs.logfilename}"
 
+bookmaker_direct_bat = File.join(Val::Paths.bookmaker_scripts_dir, 'bookmaker_deploy', 'automated_EGALLEY_direct.bat')
+bkmkr_bat_runtype = 'direct'
+
 outfolder = File.join(Val::Paths.project_dir, 'OUT', Val::Doc.basename_normalized)
 
 bookmaker_bot_IN = ''
 if File.file?(Val::Paths.testing_value_file) || Val::Resources.testing == true
-	bookmaker_bot_IN = File.join(Val::Paths.server_dropbox_path,'bookmaker_bot_stg','bookmaker_egalley','convert')
+	bookmaker_bot_IN = File.join(Val::Paths.server_dropfolder_path,'bookmaker_bot_stg','bookmaker_egalley','convert')
 else
-	bookmaker_bot_IN = File.join(Val::Paths.server_dropbox_path,'bookmaker_bot','bookmaker_egalley','convert')
+	bookmaker_bot_IN = File.join(Val::Paths.server_dropfolder_path,'bookmaker_bot','bookmaker_egalley','convert')
 end
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
@@ -72,6 +75,7 @@ if File.file?(Val::Files.status_file)
 	permalog_hash[index]['styled?'] = status_hash['document_styled']
 	permalog_hash[index]['validator_completed?'] = status_hash['validator_py_complete']
   permalog_hash[index]['doctemplatetype'] = status_hash['doctemplatetype']
+  permalog_hash[index]['runtype'] = status_hash['runtype']
 	#dump json to logfile
 	human_status = status_hash.map{|k,v| "#{k} = #{v}"}
 	logger.info {"------------------------------------"}
@@ -144,7 +148,7 @@ else	#if not bookmaker_ready, clean up
 
 	#write alert text file!
 	if !Val::Hashes.alerts_hash.empty?
-		Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
+		alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, outfolder)
 		logger.info {"warnings found, writing warn_notice"}
 	end
 
