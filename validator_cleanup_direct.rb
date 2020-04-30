@@ -15,8 +15,8 @@ bookmaker_direct_bat = File.join(Val::Paths.bookmaker_scripts_dir, 'bookmaker_de
 bkmkr_bat_runtype = 'direct'
 bkmkr_bat_arg3 = 'egalley'  # <-- placeholder arg
 bkmkr_bat_arg4 = 'placeholder'  # <-- placeholder arg
-post_urls_json = File.join(Val::Paths.scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
-api_POST_to_camel_py = File.join(Val::Paths.scripts_dir, "bookmaker_connectors", "api_POST_to_camel.py")
+post_urls_json = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
+api_POST_to_camel_py = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_connectors", "api_POST_to_camel.py")
 timestamp = Time.now.strftime('%Y-%m-%d_%H-%M-%S')
 isbn = ''
 
@@ -52,7 +52,7 @@ def sendFilesToDrive(files_to_send_list, api_POST_to_camel_py, post_url)
   api_result_errs = ''
   for file in files_to_send_list
     argstring = "#{file} #{post_url}"
-    api_result = Vlftr::Tools.runpython(api_POST_to_camel_py, argstring)
+    api_result = Vldtr::Tools.runpython(api_POST_to_camel_py, argstring)
     if api_result.downcase.strip != 'success'
       api_result_errs += "- api_err: \'#{api_result}\', file: \'#{file}\'\n"
     end
@@ -146,7 +146,7 @@ if status_hash['bookmaker_ready']
 else	#if not bookmaker_ready, clean up
 
 	#save the Val::Paths.tmp_dir for review if error occurred
-	if !status_hash['errors'].empty?
+	if status_hash.key?('errors') && !status_hash['errors'].empty?
 		if Dir.exists?(Val::Paths.tmp_dir) && status_hash['docfile'] == true
 			FileUtils.cp_r Val::Paths.tmp_dir, "#{Val::Paths.tmp_dir}__#{timestamp}"  #rename folder
 			FileUtils.cp_r "#{Val::Paths.tmp_dir}__#{timestamp}", Val::Logs.logfolder

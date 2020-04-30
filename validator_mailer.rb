@@ -123,7 +123,7 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_B
   if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
+    message_b += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
     Vldtr::Tools.sendmail(message_b, Val::Hashes.contacts_hash['submitter_email'], '')
     logger.info {"Sending message slated for pm for notify/request for egalley to Westchester;; to submitter (we're on Staging server)"}
   else
@@ -151,7 +151,7 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_C
 	if File.file?(Val::Paths.testing_value_file)
-    message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
+    message_c += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
     Vldtr::Tools.sendmail(message_c, Val::Hashes.contacts_hash['submitter_email'], '')
     logger.info {"Sending message slated for pm notifying them of paper_copyedit, to submitter instead (we're on Staging server)"}
   else
@@ -179,7 +179,7 @@ Cc: Workflows <workflows@macmillan.com>
 #{body}
 MESSAGE_END_D
 		if File.file?(Val::Paths.testing_value_file)
-        message += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
+        message_d += "\n\nThis message sent from STAGING SERVER\nOrig to_email: #{contacts_hash['production_manager_email']}"
         Vldtr::Tools.sendmail(message_d, Val::Hashes.contacts_hash['submitter_email'], '')
         logger.info {"Sending message slated for pm notifying them of fixed_layout, to submitter instead (we're on Staging server)"}
     else
