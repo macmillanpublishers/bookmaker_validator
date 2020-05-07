@@ -199,11 +199,11 @@ module Val
 		def self.typesetfrom_file
 			@@typesetfrom_file
 		end
-		@@imprint_defaultPMs = File.join(Paths.static_data_files,'staff_list','defaults.json')
+		@@imprint_defaultPMs = File.join(Paths.bookmaker_scripts_dir, 'bookmaker_authkeys', 'egalleymaker_staff_list','defaults.json')
 		def self.imprint_defaultPMs
 			@@imprint_defaultPMs
 		end
-		@@staff_emails = File.join(Paths.static_data_files,'staff_list','staff_email.json')
+		@@staff_emails = File.join(Paths.bookmaker_scripts_dir, 'bookmaker_authkeys', 'egalleymaker_staff_list','staff_email.json')
 		def self.staff_emails
 			@@staff_emails
 		end
