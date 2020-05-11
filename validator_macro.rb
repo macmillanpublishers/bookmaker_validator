@@ -20,6 +20,8 @@ if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 	logger.info {"skipping macro #{macro_name}, no bookinfo file or no status file"}
 elsif status_hash["doctemplatetype"] != "pre-sectionstart"
   logger.info {"skipping script: #{macro_name}, doctemplatetype is not \"pre-sectionsstart\""}
+elsif status_hash['bypass_validate'] == 'true'
+  logger.info {"skipping script: #{macro_name}, bypass_validate docprop is set to true"}  
 else
 	user_name, user_email = Vldtr::Tools.ebooks_mail_check()
 	body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
