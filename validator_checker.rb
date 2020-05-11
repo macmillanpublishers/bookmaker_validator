@@ -120,7 +120,7 @@ elsif status_hash["doctemplatetype"] == "pre-sectionstart"
   end
 
 # allow rsuite files to pass through
-elsif status_hash["doctemplatetype"] == "rsuite"
+elsif status_hash["doctemplatetype"] == "rsuite" || status_hash["bypass_validate"] == true
   # right now we are not running validation for rsuite-docs; fixed layout/paper_copyedit exceptions would otherwise be in validator_py or val_macro
   #   catching them here until we get rsuite_validate.py integrated into validate_py.
   if Val::Hashes.status_hash['msword_copyedit'] == false || Val::Hashes.status_hash['epub_format'] == false
