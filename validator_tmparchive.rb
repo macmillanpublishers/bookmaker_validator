@@ -14,8 +14,9 @@ macro_name = "Validator.IsbnSearch"
 file_recd_txt = File.read(File.join(Val::Paths.mailer_dir,'file_received.txt'))
 isbncheck_py = "validator_isbncheck.py"
 isbncheck_py_path = File.join(Val::Paths.bookmaker_scripts_dir, 'sectionstart_converter', 'xml_docx_stylechecks', isbncheck_py)
-docversion_py = "getTemplateVersion.py"
-docversion_py_path = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_addons", docversion_py)
+get_custom_doc_prop_py = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_addons", "getCustomDocProp.py")
+version_doc_property_name = 'Version'
+bypass_validate_doc_property_name = 'bypass_validate'
 sectionstart_template_version = '5.0'
 rsuite_template_version = '6.0'
 
@@ -173,9 +174,10 @@ else
   # move and rename IN/inputfile to tmp/working_file
   movedoc(logger)
 
-  # get & log the document version custom property value
-  doctemplate_version = Vldtr::Tools.runpython(docversion_py_path, Val::Files.working_file).strip
+  # get & log the document custom property values
+  doctemplate_version = Vldtr::Tools.runpython(get_custom_doc_prop_py, "#{Val::Files.working_file} #{version_doc_property_name}").strip
   status_hash['doctemplate_version'] = doctemplate_version
+  status_hash['bypass_validate'] = Vldtr::Tools.runpython(get_custom_doc_prop_py, "#{Val::Files.working_file} #{bypass_validate_doc_property_name}").to_s.strip
 
   # determine & log documenttemplatetype.
   #   Most of this (& versioncompare function) lifted directly from bookmaker_addons, with updated messaging
