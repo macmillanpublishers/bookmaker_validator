@@ -134,5 +134,6 @@ end
 
 
 #cleanup
-if Dir.exists?(Val::Paths.tmp_dir)  then FileUtils.rm_rf Val::Paths.tmp_dir end
+# \/ copmmenting out cleanup of tmpdir for tshooting purposes
+# if Dir.exists?(Val::Paths.tmp_dir)  then FileUtils.rm_rf Val::Paths.tmp_dir end
 if File.file?(Val::Files.inprogress_file) then FileUtils.rm Val::Files.inprogress_file end

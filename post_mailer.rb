@@ -69,7 +69,7 @@ if Dir.exist?(done_isbn_dir)
 	Find.find(done_isbn_dir) { |file|
 		if file =~ /ERROR.txt/
 			logger.info {"error found in done_isbn_dir: #{file}. Adding it as an error for mailer"}
-			file = file.match(/bookmaker_bot.*$/)[0]
+			file = File.basename(file)
 			errtxt_files << file
 			send_ok = false
 		end
