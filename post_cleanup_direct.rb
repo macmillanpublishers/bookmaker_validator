@@ -13,7 +13,7 @@ logger = Val::Logs.logger
 
 done_dir = File.join(Val::Paths.tmp_dir, 'done')
 epub_found = true
-epub, epub_firstpass = '', ''
+epub, epub_firstpass, epub_fp_misnamed = '', '', ''
 post_urls_json = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
 api_POST_to_camel_py = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_connectors", "api_POST_to_camel.py")
 
@@ -61,9 +61,11 @@ end
 #find our epubs
 if Dir.exist?(done_dir)
   Find.find(done_dir) { |file|
-    if file =~ /_EPUBfirstpass.epub$/
+    if file.match(/^97[8-9]\d{10}_EPUBfirstpass.epub$/)
       epub_firstpass = file
-    elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
+    elsif file =~ /_EPUBfirstpass.epub$/
+      epub_fp_misnamed = file
+    elsif file =~ /_EPUB.epub$/
       epub = file
     end
   }
@@ -87,7 +89,9 @@ if File.file?(epub_firstpass)
   files_to_send_list.push(epub_firstpass)
 else
   epub_found = false
-  if File.file?(epub)
+  if File.file?(epub_fp_misnamed)
+    logger.info {"skipped preparing epub send to outfolder, b/c no ISBN in epubfilename. Related alertfile should be posted."}
+  elsif File.file?(epub)
     logger.info {"skipped preparing epub send to outfolder, b/c not named '_firstpass'. Related alertfile should be posted."}
   else
     logger.info {"no epub file found to prepare for send"}

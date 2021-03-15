@@ -35,7 +35,7 @@ epubQA_request_rsuite = File.read(File.join(Val::Paths.mailer_dir,'epubQA_reques
 rsuiteQAaddress = File.read(File.join(Val::Resources.authkeys_repo,'rsuite-epub_QAaddress.txt')).strip
 rsuiteQAdisplayname = File.read(File.join(Val::Resources.authkeys_repo,'rsuite-epub_QAdisplayname.txt')).strip
 
-epub, epub_firstpass = '', ''
+epub, epub_firstpass, epub_fp_misnamed = '', '', ''
 send_ok = true
 errtxt_files = []
 to_address = 'To: '
@@ -48,19 +48,23 @@ alertstring = ''
 logger.info {"Verifying epub present..."}
 if Dir.exist?(done_isbn_dir)
 	Find.find(done_isbn_dir) { |file|
-		if file =~ /_EPUBfirstpass.epub$/
+		if file.match(/^97[8-9]\d{10}_EPUBfirstpass.epub$/)
 			epub_firstpass = file
-		elsif file !~ /_EPUBfirstpass.epub$/ && file =~ /_EPUB.epub$/
+		elsif file =~ /_EPUBfirstpass.epub$/
+			epub_fp_misnamed = file
+		elsif file =~ /_EPUB.epub$/
 			epub = file
 		end
 	}
   if epub_firstpass.empty?  # << we used to accept final epubs here, but really that means a rename didn't go right in bookmaker_bot,
                             #   and now a non firstpass_epub will get screened at upload regardless. So we need to send an alert mailer here
     send_ok = false
-  	if epub.empty?
-      thiserrstring = "no epub found in bookmaker output."
-    else
+    if File.file?(epub_fp_misnamed)
+      thiserrstring = "_EPUBfirstpass.epub file created but no ISBN present in epub filename: workflows-team review needed."
+    elsif File.file?(epub)
       thiserrstring = "epub created but not named '_firstpass', workflows-team review needed."
+    else
+      thiserrstring = "no epub found in bookmaker output."
   	end
     alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{thiserrstring}"
     logger.warn {"#{thiserrstring}"}
