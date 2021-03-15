@@ -61,7 +61,7 @@ end
 #find our epubs
 if Dir.exist?(done_dir)
   Find.find(done_dir) { |file|
-    if file.match(/^97[8-9]\d{10}_EPUBfirstpass.epub$/)
+    if file.match(/[\/\\]97[8-9]\d{10}_EPUBfirstpass.epub$/)
       epub_firstpass = file
     elsif file =~ /_EPUBfirstpass.epub$/
       epub_fp_misnamed = file
