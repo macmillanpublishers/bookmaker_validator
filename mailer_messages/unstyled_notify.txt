@@ -9,4 +9,4 @@ The book metadata from Biblio is below, as well as any warnings detected in the 
 BOOKINFO
 ALERTS
 
-Please contact the Ebooks team at ebook.production@macmillanusa.com with any questions.
+Please contact the workflows team at workflows@macmillan.com with any questions.
