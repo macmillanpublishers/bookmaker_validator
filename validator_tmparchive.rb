@@ -1,5 +1,4 @@
 require 'fileutils'
-require 'dropbox_sdk'
 require 'open3'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
