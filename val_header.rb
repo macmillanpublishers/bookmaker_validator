@@ -298,7 +298,10 @@ module Val
 		def self.powershell_exe
 			@@powershell_exe
 		end
-		@@ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
+		# # \/ use installed ruby from PATH
+		@@ruby_exe = 'ruby'
+		# # \/ use ruby version at specific path
+		# @@ruby_exe = File.join('C:','Ruby200','bin','ruby.exe')
 		def self.ruby_exe
 			@@ruby_exe
 		end
