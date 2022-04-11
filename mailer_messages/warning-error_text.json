@@ -39,7 +39,7 @@
     },
     "dw_sql_err": {
       "message": "A problem occurred looking up product metadata via the data warehouse:",
-      "description": "Egalleymaker looks up info from the data warehouse for notifications etc. This indicates failure to connect or a timeout receiving data."
+      "description": "Egalleymaker looks up info from the data warehouse for notifications etc. This error indicates failure to connect or a timeout receiving data."
     },
     "isbn_match_fail": {
       "message": "No usable ISBN in filename, and any styled ISBNs in the manuscript were for different works:",
