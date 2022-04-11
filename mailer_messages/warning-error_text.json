@@ -37,6 +37,10 @@
       "message": "One or more problems prevented Egalleymaker from completing successfully:",
       "description": "This is just a generic header telling you that Egalleymaker found some problems that prevented an EPUB from being created. The errors will be listed below."
     },
+    "dw_sql_err": {
+      "message": "A problem occurred attempting to lookup up product metadata via the data warehouse:",
+      "description": "Egalleymaker looks up info from the data warehouse for notifications etc. This indicates failure to connect or a timeout receiving data."
+    },
     "isbn_match_fail": {
       "message": "No usable ISBN in filename, and any styled ISBNs in the manuscript were for different works:",
       "description": "Egalleymaker requires a valid ISBN to be included either in the manuscript text or in the manuscript filename. No ISBN was included in the filename, so Egalleymaker looked in the manuscript text, and found ISBNs for multiple books. It didn't know which ISBN was correct, and so it wasn't able to run. To resolve, add the correct book ISBN to the filename for this manuscript, and resubmit it to Egalleymaker."
