@@ -38,7 +38,7 @@
       "description": "This is just a generic header telling you that Egalleymaker found some problems that prevented an EPUB from being created. The errors will be listed below."
     },
     "dw_sql_err": {
-      "message": "A problem occurred attempting to lookup up product metadata via the data warehouse:",
+      "message": "A problem occurred looking up product metadata via the data warehouse:",
       "description": "Egalleymaker looks up info from the data warehouse for notifications etc. This indicates failure to connect or a timeout receiving data."
     },
     "isbn_match_fail": {

@@ -101,8 +101,8 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
 
     #now do lookups for PM & PE
     if status_hash['dw_sql_err'] == ''
-  		thissql_C = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Manager")
-  		myhash_C, querystatus = runPeopleQuery(thissql_C)
+      thissql_C = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Manager")
+      myhash_C, querystatus = runPeopleQuery(thissql_C)
       if querystatus != 'success'
         status_hash['dw_sql_err'] = querystatus
         logger.warn {"runPeopleQuery dw_lookup encountered error: #{querystatus}"}
@@ -119,7 +119,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
 		end
 
     if status_hash['dw_sql_err'] == ''
-   		thissql_D = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Editor")
+      thissql_D = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Editor")
       myhash_D, querystatus = runPeopleQuery(thissql_D)
       if querystatus != 'success'
         status_hash['dw_sql_err'] = querystatus
