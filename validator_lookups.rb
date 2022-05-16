@@ -16,10 +16,14 @@ alt_isbn_array = []
 #this function quick verifies an isbn: checkdigit, ean lookup.
 def testisbn(isbn, whichisbn, status_hash)
     lookup, loginfo = false, ''
-    if Vldtr::Tools.checkisbn(isbn)
+    if Vldtr::Tools.checkisbn(isbn) and status_hash['dw_sql_err'] == ''
         if whichisbn == 'filename_isbn' then status_hash['filename_isbn']['checkdigit'] = true end
         thissql_A = exactSearchSingleKey(isbn, "EDITION_EAN")
-        myhash_A = runQuery(thissql_A)
+        myhash_A, querystatus = runQuery(thissql_A)
+        if querystatus != 'success'
+          status_hash['dw_sql_err'] = querystatus
+          logger.warn {"exactSearchSingleKey dw_lookup encountered error: #{querystatus}"}
+        end
         if myhash_A.nil? or myhash_A.empty? or !myhash_A or myhash_A['book'].nil? or myhash_A['book'].empty? or !myhash_A['book']
             loginfo = "data warehouse lookup on #{whichisbn} \"#{isbn}\" failed, setting status to false"
             if whichisbn == 'filename_isbn'
@@ -60,9 +64,12 @@ end
 #this function takes our good isbn, gathers info and writes it to file.
 def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, logger, styled_isbns = [])
     # get typeset_from & lead_edition known good lookup_isbn (print_isbn is a fallback for lead_edition)
-    alt_isbn_array, lead_edition, print_isbns, typeset_from, epub_format = getLeadEdition_TypesetFrom(lookup_isbn)
+    alt_isbn_array, lead_edition, print_isbns, typeset_from, epub_format, querystatus = getLeadEdition_TypesetFrom(lookup_isbn)
     logger.info {"alt_isbn_array: #{alt_isbn_array}, lead_edition: #{lead_edition}, print_isbns: #{print_isbns}, typeset_from: #{typeset_from}, epub_format: #{epub_format}, styled_isbns: #{styled_isbns}"}
-
+    if querystatus != 'success'
+      status_hash['dw_sql_err'] = querystatus
+      logger.warn {"getLeadEdition_TypesetFrom dw_lookup encountered error: #{querystatus}"}
+    end
     # determine what isbn to use for lookup_edition:
     lookup_edition = ''
     if status_hash['filename_isbn_lookup_ok'] == true # <--indicates this is a filename isbn
@@ -93,16 +100,36 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
     end
 
     #now do lookups for PM & PE
-		thissql_C = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Manager")
-		myhash_C = runPeopleQuery(thissql_C)
+    if status_hash['dw_sql_err'] == ''
+      thissql_C = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Manager")
+      myhash_C, querystatus = runPeopleQuery(thissql_C)
+      if querystatus != 'success'
+        status_hash['dw_sql_err'] = querystatus
+        logger.warn {"runPeopleQuery dw_lookup encountered error: #{querystatus}"}
+      end
+    else
+      myhash_C = {}
+      logger.warn {"skipping pm lookup due to prev dw lookup err"}
+    end
 		if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book']
   			pm_name = 'not found'
   			logger.info {"no pm found for this EDITION_EAN"}
 		else
   			pm_name = myhash_C['book']['PERSON_REALNAME'][0]
 		end
- 		thissql_D = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Editor")
-    myhash_D = runPeopleQuery(thissql_D)
+
+    if status_hash['dw_sql_err'] == ''
+      thissql_D = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Editor")
+      myhash_D, querystatus = runPeopleQuery(thissql_D)
+      if querystatus != 'success'
+        status_hash['dw_sql_err'] = querystatus
+        logger.warn {"runPeopleQuery dw_lookup encountered error: #{querystatus}"}
+      end
+    else
+      myhash_D = {}
+      logger.warn {"skipping pe lookup due to prev dw lookup err"}
+    end
+
     if myhash_D.nil? or myhash_D.empty? or !myhash_D or myhash_D['book'].nil? or myhash_D['book'].empty? or !myhash_D['book']
   			pe_name = 'not found'
   			logger.info {"no pe found for this EDITION_EAN"}
@@ -111,8 +138,17 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
 		end
 
     # do lookup on lookup_edition for metainfo
-    thissql_F = exactSearchSingleKey(lookup_edition, "EDITION_EAN")
-    myhash_F = runQuery(thissql_F)
+    if status_hash['dw_sql_err'] == ''
+      thissql_F = exactSearchSingleKey(lookup_edition, "EDITION_EAN")
+      myhash_F, querystatus = runQuery(thissql_F)
+      if querystatus != 'success'
+        status_hash['dw_sql_err'] = querystatus
+        logger.warn {"runQuery dw_lookup encountered error: #{querystatus}"}
+      end
+    else
+      myhash_F = {}
+      logger.warn {"skipping lookup_edition lookup due to prev dw lookup err"}
+    end
 
     #write to hash
     book_hash = {}
@@ -309,6 +345,7 @@ status_hash['docisbn_match_fail'] = []
 status_hash['isbn_match_ok'] = true
 status_hash['pe_lookup'] = ''
 status_hash['pm_lookup'] = ''
+status_hash['dw_sql_err'] = ''
 
 #read in out contacts.json so we can update it with pe/pm:
 if File.file?(Val::Files.contacts_file)
@@ -410,6 +447,12 @@ if status_hash['docisbns'].empty? && !status_hash['filename_isbn_lookup_ok'] && 
   # log to alerts.json as error
   Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", Val::Hashes.alertmessages_hash['errors']['no_good_isbn']['message'])
 	status_hash['status'] = 'isbn error'
+end
+if status_hash['dw_sql_err'] != ''
+  # log to alerts.json as error
+  alertstring = "#{Val::Hashes.alertmessages_hash['errors']['dw_sql_err']['message']} #{status_hash['dw_sql_err']}"
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
+	status_hash['status'] = 'data-warehouse lookup error'
 end
 
 Vldtr::Tools.write_json(status_hash, Val::Files.status_file)

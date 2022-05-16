@@ -21,7 +21,7 @@ if !File.file?(Val::Files.status_file) || !File.file?(Val::Files.bookinfo_file)
 elsif status_hash["doctemplatetype"] != "pre-sectionstart"
   logger.info {"skipping script: #{macro_name}, doctemplatetype is not \"pre-sectionsstart\""}
 elsif status_hash['bypass_validate'] == 'true'
-  logger.info {"skipping script: #{macro_name}, bypass_validate docprop is set to true"}  
+  logger.info {"skipping script: #{macro_name}, bypass_validate docprop is set to true"}
 else
 	user_name, user_email = Vldtr::Tools.ebooks_mail_check()
 	body = Val::Resources.mailtext_gsubs(notify_egalleymaker_begun,'',Val::Posts.bookinfo).gsub(/SUBMITTER/,Val::Hashes.contacts_hash['submitter_name'])
@@ -38,6 +38,8 @@ else
 		logger.info {"skipping macro #{macro_name}, paper-copyedit"}
 	elsif Val::Hashes.status_hash['epub_format'] == false
 		logger.info {"skipping macro #{macro_name}, no EPUB format epub edition (fixed layout)"}
+	elsif Val::Hashes.status_hash['status'] == 'data-warehouse lookup error'
+		logger.info {"skipping script: data-warehouse lookup error"}
 	else
     begin
   		status_hash['val_macro_started'] = true

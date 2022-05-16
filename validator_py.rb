@@ -40,6 +40,8 @@ else
 		logger.info {"skipping script: #{py_script_name}, no EPUB format epub edition (fixed layout)"}
   elsif Val::Hashes.status_hash['status'] == 'isbn error'
 		logger.info {"skipping script: fatal isbn error"}
+  elsif Val::Hashes.status_hash['status'] == 'data-warehouse lookup error'
+    logger.info {"skipping script: data-warehouse lookup error"}		
   elsif status_hash["doctemplatetype"] == 'rsuite'
     logger.info {"skipping script: rsuite styled docx"}
 	else
