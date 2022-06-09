@@ -25,7 +25,7 @@ isbn = ''
 def passFilenameIsbn(status_hash, bookinfo_hash)
   if status_hash.has_key?("filename_isbn") && status_hash["filename_isbn"].has_key?("isbn") && bookinfo_hash.has_key?("print_isbns")
     if bookinfo_hash["print_isbns"].include? status_hash["filename_isbn"]["isbn"]
-      sf_folder = File.join(Val::Paths.tmpdir, "submitted_files")
+      sf_folder = File.join(Val::Paths.tmp_dir, "submitted_files")
       FileUtils.mkdir_p sf_folder
       Vldtr::Tools.write_json({"printid"=>status_hash["filename_isbn"]["isbn"]}, File.join(sf_folder, 'config.json'))
     end
