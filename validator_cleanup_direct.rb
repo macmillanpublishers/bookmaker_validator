@@ -22,6 +22,18 @@ isbn = ''
 
 #--------------------- LOCAL FUNCTIONS
 
+def passFilenameIsbn(status_hash, bookinfo_hash)
+  if status_hash.has_key?("filename_isbn") && status_hash["filename_isbn"].has_key?("isbn") && bookinfo_hash.has_key?("print_isbns")
+    if bookinfo_hash["print_isbns"].include? status_hash["filename_isbn"]["isbn"]
+      sf_folder = File.join(Val::Paths.tmp_dir, "submitted_files")
+      FileUtils.mkdir_p sf_folder
+      Vldtr::Tools.write_json({"printid"=>status_hash["filename_isbn"]["isbn"]}, File.join(sf_folder, 'config.json'))
+    end
+  end
+rescue => e
+  p e
+end
+
 def spawnBookmaker(cmd, args)
   Val::Logs.return_stdOutErr  #stop console log redirect to file
   pid = spawn("#{cmd} #{args}")
@@ -137,6 +149,8 @@ Vldtr::Tools.write_json(permalog_hash,Val::Logs.permalog)
 
 #get ready for bookmaker to run on good docs!
 if status_hash['bookmaker_ready']
+  # pass along filename isbn if its a print edition:
+  passFilenameIsbn(status_hash, bookinfo_hash)
   # setup args, launch our bookmaker_bat directly!
   bkmkr_bat_args = "#{Val::Files.working_file} #{bkmkr_bat_runtype} \"#{bkmkr_bat_arg3}\" \"#{bkmkr_bat_arg4}\""
   logger.info {"we're bookmaker ready, spawning bkmkr_automated_egalley process; args: #{bkmkr_bat_args}"}

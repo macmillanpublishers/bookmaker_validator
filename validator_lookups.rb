@@ -161,6 +161,7 @@ def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, log
     book_hash.merge!(product_type: myhash_F['book']['PRODUCTTYPE_DESC'])
     book_hash.merge!(imprint: myhash_F['book']['IMPRINT_DISPLAY'])
     book_hash.merge!(alt_isbns: alt_isbn_array)
+    book_hash.merge!(print_isbns: print_isbns)
     book_hash.merge!(lead_edition: lead_edition)
     book_hash.merge!(lookup_edition: lookup_edition)
 
