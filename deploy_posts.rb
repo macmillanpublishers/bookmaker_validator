@@ -26,6 +26,8 @@ Vldtr::Tools.write_json(output_hash, json_logfile)   #create jsonlogfile
 
 # ---------------------- Settings for this Deploy file
 process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
+post_status_check = File.join(Val::Paths.scripts_dir,'post_status_check.rb')
+post_ftp_upload = File.join(Val::Paths.scripts_dir,'post_ftp_upload.rb')
 post_mailer = File.join(Val::Paths.scripts_dir,'post_mailer.rb')
 post_cleanup = File.join(Val::Paths.scripts_dir,'post_cleanup.rb')
 post_cleanup_direct = File.join(Val::Paths.scripts_dir,'post_cleanup_direct.rb')
