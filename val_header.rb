@@ -313,6 +313,10 @@ module Val
 		def self.smtp_address
 			@@smtp_address
 		end
+		@@rs_ftp_creds_json = File.read(File.join(authkeys_repo,'rs_ftp_creds.json'))
+		def self.rs_ftp_creds_json
+			@@rs_ftp_creds_json
+		end
 		@@generated_access_token_file = File.join(authkeys_repo,'access_token.txt')
 		def self.generated_access_token_file
 			@@generated_access_token_file
