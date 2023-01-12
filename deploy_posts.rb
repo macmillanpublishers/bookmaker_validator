@@ -40,13 +40,13 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	popen_params = []
-	for arg in ARGV
-		popen_params.push("\'#{arg}\'")
-	end
+  popen_params = []
+  for arg in ARGV
+    popen_params.push("\'#{arg}\'")
+  end
   Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_status_check] + popen_params, output_hash, "post_status_check", json_logfile)
   Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_ftp_upload] + popen_params, output_hash, "post_ftp_upload", json_logfile)
-	Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_mailer] + popen_params, output_hash, "post_mailer", json_logfile)
+  Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_mailer] + popen_params, output_hash, "post_mailer", json_logfile)
   if Val::Doc.runtype == 'direct'
     Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_cleanup_direct] + popen_params, output_hash, "post_cleanup_direct", json_logfile)
   else

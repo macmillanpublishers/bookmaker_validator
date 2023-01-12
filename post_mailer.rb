@@ -42,7 +42,7 @@ end
 #get info from status.json, define status/errors & status/warnings
 if File.file?(status_file)
 	status_hash = Mcmlln::Tools.readjson(status_file)
-  upload_ok = status_hash['upload_ok']
+	upload_ok = status_hash['upload_ok']
 	warnings = status_hash['warnings']
 	errors = status_hash['errors']
   doctemplatetype = status_hash['doctemplatetype']
