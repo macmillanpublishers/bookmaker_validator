@@ -15,7 +15,7 @@ status_file = Val::Files.status_file
 alerts_json = Val::Files.alerts_json
 done_isbn_dir = File.join(Val::Paths.tmp_dir, 'done')
 
-bkmkr_ok = true
+bkmkr_ok = ''
 epub_firstpass = ''
 status_hash = {}
 alertstring = ''
@@ -47,7 +47,7 @@ def checkForEgalley(done_isbn_dir, alertstring, bkmkr_ok)
     alertstring = "#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{thiserrstring}"
     @logger.warn {"#{thiserrstring}"}
   end
-  return epub_firstpass, alertstring
+  return epub_firstpass, alertstring, bkmkr_ok
 rescue => e
   p e
   @logger.error {"error during 'checkForEgalley': #{e}"}
@@ -71,7 +71,7 @@ rescue => e
   return [], false
 end
 
-def consolidateBkmkrErrs(errtxt_files, alertstring)
+def consolidateBkmkrErrs(errtxt_files, alertstring, bkmkr_ok)
   @logger.info {"logging any bookmaker errors..."}
   if !errtxt_files.empty?
     # log bookmaker errors to alerts.json
@@ -92,7 +92,7 @@ end
 if Dir.exist?(done_isbn_dir)
   epub_firstpass, alertstring, bkmkr_ok = checkForEgalley(done_isbn_dir, alertstring, bkmkr_ok)
   errtxt_files, bkmkr_ok = checkForBookmakerErrs(done_isbn_dir, bkmkr_ok)
-  bkmkr_ok = consolidateBkmkrErrs(errtxt_files, alertstring)
+  bkmkr_ok = consolidateBkmkrErrs(errtxt_files, alertstring, bkmkr_ok)
 else
   bkmkr_ok = false
   @logger.warning {"no done/isbn_dir exists! bookmaker must have an ISBN tied to a different workid! :("}

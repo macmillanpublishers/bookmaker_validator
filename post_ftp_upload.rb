@@ -95,10 +95,13 @@ MESSAGE_END
     @logger.error(transfer_msg)
     upload_ok = false
   end
-  # send message
+
   sendMessage(message, 'workflows@macmillan.com')
-else
-  @logger.warn("ftp credentials not available")
+
+elsif rsfile.empty?
+  @logger.warn("no egalley file, skipping ftp upload")
+elsif status_hash['bkmkr_ok'] !== true
+  @logger.warn("bookmaker or status-check error encountered, skipping ftp upload")
 end
 
 status_hash['upload_ok'] = upload_ok
