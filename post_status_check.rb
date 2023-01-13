@@ -15,7 +15,7 @@ status_file = Val::Files.status_file
 alerts_json = Val::Files.alerts_json
 done_isbn_dir = File.join(Val::Paths.tmp_dir, 'done')
 
-bkmkr_ok = ''
+bkmkr_ok = true
 epub_firstpass = ''
 status_hash = {}
 alertstring = ''
