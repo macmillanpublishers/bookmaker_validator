@@ -26,9 +26,10 @@ def upload(file, user, pass, host)
   end
   status = true
   return status
-rescue Errno::ECONNREFUSED => e
+rescue => e
     p e.message
     p e.backtrace
+    logger.error("ftp upload failed: #{e}")
     return status
 end
 
