@@ -50,7 +50,7 @@ status_hash = Mcmlln::Tools.readjson(status_file)
 rsfile = status_hash['egalley_file']
 filename = File.basename(rsfile)
 
-if !rsfile.empty? && status_hash['bkmkr_ok'] === true
+if !rsfile.empty? && status_hash['bkmkr_ok'] == true
   # get creds
   rs_ftp_creds_hash = Mcmlln::Tools.readjson(Val::Resources.rs_ftp_creds_json)
   rsuser = rs_ftp_creds_hash['rsuser']
@@ -70,7 +70,7 @@ if !rsfile.empty? && status_hash['bkmkr_ok'] === true
   end
 
   # log success or failure, set email msg
-  if status === true
+  if status == true
     transfer_msg = "Uploaded #{filename} to #{server_shortname} (egalley dir)"
     message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
@@ -100,7 +100,7 @@ MESSAGE_END
 
 elsif rsfile.empty?
   @logger.warn("no egalley file, skipping ftp upload")
-elsif status_hash['bkmkr_ok'] !== true
+elsif status_hash['bkmkr_ok'] != true
   @logger.warn("bookmaker or status-check error encountered, skipping ftp upload")
 end
 

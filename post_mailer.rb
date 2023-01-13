@@ -54,7 +54,7 @@ end
 alerttxt_string, alerts_hash = Vldtr::Tools.get_alert_string(alerts_json)
 
 #send a success notification email!
-if send_ok === true && upload_ok === true
+if send_ok == true && upload_ok == true
 	logger.info {"everything checks out, sending email if we're not on staging :)"}
 	if !warnings.empty?
 		logger.info {"warnings were found; will be attached to the mailer at end of bookmaker run"}
