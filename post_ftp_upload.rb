@@ -20,7 +20,8 @@ upload_ok = ''
 def upload(file, user, pass, host)
   @logger.info("uploading file #{File.basename(file)}to #{host}")
   status = false
-  Net::SFTP.start(host, user, {:password => pass, :port => 22, :verbose => :debug}) do |sftp|
+  # add option ":verbose => :debug" to print ftp conn details
+  Net::SFTP.start(host, user, {:password => pass, :port => 22}) do |sftp|
     sftp.upload!("#{file}")
   end
   status = true

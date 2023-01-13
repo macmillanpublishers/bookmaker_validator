@@ -15,7 +15,7 @@ status_file = Val::Files.status_file
 alerts_json = Val::Files.alerts_json
 done_isbn_dir = File.join(Val::Paths.tmp_dir, 'done')
 
-bkmkr_ok = true
+bkmkr_ok = ''
 epub_firstpass = ''
 status_hash = {}
 alertstring = ''
@@ -105,6 +105,11 @@ else
 	bkmkr_ok = false
 	@logger.warning {"status.json not present or unavailable, unable to determine what to send"}
 end
+
+# if all above passed, set bkmkr_ok to true
+if !epub_firstpass.empty? && bkmkr_ok != false
+  bkmkr_ok = true
+end  
 
 status_hash['bkmkr_ok'] = bkmkr_ok
 status_hash['egalley_file'] = epub_firstpass

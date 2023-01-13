@@ -18,7 +18,7 @@ alerts_json = Val::Files.alerts_json
 bot_success_txt = File.read(File.join(Val::Paths.mailer_dir,'bot_success.txt'))
 error_notifyPM = File.read(File.join(Val::Paths.mailer_dir,'error_notifyPM.txt'))
 
-send_ok = ''
+send_ok = true
 to_address = 'To: '
 doctemplatetype = ''
 
