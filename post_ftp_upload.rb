@@ -50,11 +50,11 @@ filename = File.basename(rsfile)
 
 if !rsfile.empty? && status_hash['bkmkr_ok'] == true
   # get creds
-  rs_ftp_creds_hash = Mcmlln::Tools.readjson(Val::Resources.rs_ftp_creds_json)
-  rsuser = rs_ftp_creds_hash['rsuser']
-  rspass = rs_ftp_creds_hash['rspass']
-  rshost = rs_ftp_creds_hash['rshost']
-  rshost_stg = rs_ftp_creds_hash['rshost_stg']
+  ftp_creds = Val::Resources.rs_ftp_creds_hash
+  rsuser = ftp_creds['rsuser']
+  rspass = ftp_creds['rspass']
+  rshost = ftp_creds['rshost']
+  rshost_stg = ftp_creds['rshost_stg']
 
   # upload
   if File.file?(Val::Paths.testing_value_file)
