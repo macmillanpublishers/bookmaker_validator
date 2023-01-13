@@ -12,7 +12,6 @@ Val::Logs.log_setup()
 @logger = Val::Logs.logger
 
 status_file = Val::Files.status_file
-alerts_json = Val::Files.alerts_json
 done_isbn_dir = File.join(Val::Paths.tmp_dir, 'done')
 
 bkmkr_ok = ''
@@ -78,7 +77,7 @@ def consolidateBkmkrErrs(errtxt_files, alertstring, bkmkr_ok)
     alertstring = "#{alertstring}\n#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"
   end
   if !alertstring.empty?
-    Vldtr::Tools.log_alert_to_json(alerts_json, "error", alertstring)
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
     bkmkr_ok = false
   end
   return bkmkr_ok
@@ -109,7 +108,7 @@ end
 # if all above passed, set bkmkr_ok to true
 if !epub_firstpass.empty? && bkmkr_ok != false
   bkmkr_ok = true
-end  
+end
 
 status_hash['bkmkr_ok'] = bkmkr_ok
 status_hash['egalley_file'] = epub_firstpass
