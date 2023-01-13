@@ -22,6 +22,7 @@ alertstring = ''
 
 #--------------------- FUNCTIONS
 def checkForEgalley(done_isbn_dir, alertstring, bkmkr_ok)
+  @logger.info {"checking for egalley file..."}
   #  find epub file
   epub, epub_firstpass, epub_fp_misnamed = '', '', ''
   Find.find(done_isbn_dir) { |file|
@@ -71,6 +72,7 @@ rescue => e
 end
 
 def consolidateBkmkrErrs(errtxt_files, alertstring)
+  @logger.info {"logging any bookmaker errors..."}
   if !errtxt_files.empty?
     # log bookmaker errors to alerts.json
     alertstring = "#{alertstring}\n#{Val::Hashes.alertmessages_hash['errors']['bookmaker_error']['message'].gsub(/PROJECT/,Val::Paths.project_name)} #{errtxt_files}"

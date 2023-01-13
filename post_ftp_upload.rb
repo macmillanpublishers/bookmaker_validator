@@ -1,8 +1,6 @@
 require 'fileutils'
 require 'net/sftp'
 require 'net/smtp'
-require 'find'
-require 'logger'
 
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
@@ -11,7 +9,7 @@ require_relative './val_header.rb'
 
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
-logger = Val::Logs.logger
+@logger = Val::Logs.logger
 
 status_file = Val::Files.status_file
 upload_ok = ''
@@ -19,6 +17,7 @@ upload_ok = ''
 #--------------------- CLASSES
 class RSuite
   def self.upload(file, user, pass, host)
+    @logger.info("uploading file #{File.basename(file)}to #{host}")
     status = false
     Net::SFTP.start(host, user, {:password => pass, :port => 22, :verbose => :debug}) do |sftp|
       sftp.upload!("#{file}")
@@ -35,16 +34,21 @@ end
 # ------------- METHODS
 
 def sendMessage(message, email)
+  @logger.info("sending ftp status email")
   Net::SMTP.start(Val::Resources.smtp_address) do |smtp|
     smtp.send_message message, email,
                                email
   end
+rescue => e
+  p e
+  @logger.error("error sending email: #{e}")
 end
 
 # ------------- MAIN
 # get file and status
 status_hash = Mcmlln::Tools.readjson(status_file)
 rsfile = status_hash['egalley_file']
+filename = File.basename(rsfile)
 
 if !rsfile.empty? && status_hash['bkmkr_ok'] === true
   # get creds
@@ -65,37 +69,36 @@ if !rsfile.empty? && status_hash['bkmkr_ok'] === true
     email_disclaimer = ""
   end
 
-  # log success or failure
-  if status == true
-    transfer = "Uploaded #{filename} to #{server_shortname} (egalley dir)"
+  # log success or failure, set email msg
+  if status === true
+    transfer_msg = "Uploaded #{filename} to #{server_shortname} (egalley dir)"
     message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: SUCCESS: Loaded #{filename} to the #{server_shortname} (egalley dir)
+Subject: SUCCESS: #{transfer_msg}
 
 The upload was successful.
 #{email_disclaimer}
 MESSAGE_END
-    logger.info(transfer)
+    @logger.info(transfer_msg)
     upload_ok = true
   else
-    transfer = "Attempted to load #{filename} to #{server_shortname} (egalley dir), but was unable to."
+    transfer_msg = "Could not upload #{filename} to the #{server_shortname} (egalley dir)"
     message = <<MESSAGE_END
 From: Workflows <workflows@macmillan.com>
 To: Workflows <workflows@macmillan.com>
-Subject: FAIL: Could not upload #{filename} to the #{server_shortname} (egalley dir)
+Subject: FAIL: #{transfer_msg}
 
 The upload attempt failed.
 #{email_disclaimer}
 MESSAGE_END
-    logger.error(transfer)
+    @logger.error(transfer_msg)
     upload_ok = false
   end
-
+  # send message
   sendMessage(message, 'workflows@macmillan.com')
-  logger.info("sent transfer notification to workflows")
 else
-  logger.warn("")
+  @logger.warn("ftp credentials not available")
 end
 
 status_hash['upload_ok'] = upload_ok
