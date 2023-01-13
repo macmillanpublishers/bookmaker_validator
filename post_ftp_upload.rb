@@ -59,7 +59,7 @@ if !rsfile.empty? && status_hash['bkmkr_ok'] == true
   rshost_stg = rs_ftp_creds_hash['rshost_stg']
 
   # upload
-  if File.file?(testing_value_file)
+  if File.file?(Val::Paths.testing_value_file)
     server_shortname = "RSuite-Staging sFTP"
     status = RSuite.upload(rsfile, rsuser, rspass, rshost_stg)
     email_disclaimer = "\nNOTE: this message sent from Bkmkr-STAGING server\n"
