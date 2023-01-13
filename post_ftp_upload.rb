@@ -14,24 +14,22 @@ Val::Logs.log_setup()
 status_file = Val::Files.status_file
 upload_ok = ''
 
-#--------------------- CLASSES
-class RSuite
-  def self.upload(file, user, pass, host)
-    @logger.info("uploading file #{File.basename(file)}to #{host}")
-    status = false
-    Net::SFTP.start(host, user, {:password => pass, :port => 22, :verbose => :debug}) do |sftp|
-      sftp.upload!("#{file}")
-    end
-    status = true
-    return status
-  rescue Errno::ECONNREFUSED => e
-      p e.message
-      p e.backtrace
-      return status
-  end
-end
 
 # ------------- METHODS
+
+def upload(file, user, pass, host)
+  @logger.info("uploading file #{File.basename(file)}to #{host}")
+  status = false
+  Net::SFTP.start(host, user, {:password => pass, :port => 22, :verbose => :debug}) do |sftp|
+    sftp.upload!("#{file}")
+  end
+  status = true
+  return status
+rescue Errno::ECONNREFUSED => e
+    p e.message
+    p e.backtrace
+    return status
+end
 
 def sendMessage(message, email)
   @logger.info("sending ftp status email")
@@ -61,11 +59,11 @@ if !rsfile.empty? && status_hash['bkmkr_ok'] == true
   # upload
   if File.file?(Val::Paths.testing_value_file)
     server_shortname = "RSuite-Staging sFTP"
-    status = RSuite.upload(rsfile, rsuser, rspass, rshost_stg)
+    status = upload(rsfile, rsuser, rspass, rshost_stg)
     email_disclaimer = "\nNOTE: this message sent from Bkmkr-STAGING server\n"
   else
     server_shortname = "RSuite-PROD sFTP"
-    status = RSuite.upload(rsfile, rsuser, rspass, rshost)
+    status = upload(rsfile, rsuser, rspass, rshost)
     email_disclaimer = ""
   end
 
