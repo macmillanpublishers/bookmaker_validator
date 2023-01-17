@@ -12,6 +12,7 @@ Val::Logs.log_setup()
 logger = Val::Logs.logger
 
 done_dir = File.join(Val::Paths.tmp_dir, 'done')
+epubcheck_err_txt = File.join(done_dir, "EPUBCHECK_ERROR.txt")
 epub_found = true
 epub, epub_firstpass, epub_fp_misnamed = '', '', ''
 post_urls_json = File.join(Val::Paths.bookmaker_scripts_dir, "bookmaker_authkeys", "camelPOST_urls.json")
@@ -105,6 +106,9 @@ if !Val::Hashes.readjson(Val::Files.alerts_json).empty?
   logger.info {"alerts found, writing warn_notice"}
   alertfile = Vldtr::Tools.write_alerts_to_txtfile(Val::Files.alerts_json, done_dir)
   files_to_send_list.push(alertfile)
+  if File.file?(epubcheck_err_txt)
+    files_to_send_list.push(epubcheck_err_txt)
+  end
 end
 
 # send files to Drive!
