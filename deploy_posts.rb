@@ -26,6 +26,8 @@ Vldtr::Tools.write_json(output_hash, json_logfile)   #create jsonlogfile
 
 # ---------------------- Settings for this Deploy file
 process_watcher = File.join(Val::Paths.scripts_dir,'process_watcher.rb')
+post_status_check = File.join(Val::Paths.scripts_dir,'post_status_check.rb')
+post_ftp_upload = File.join(Val::Paths.scripts_dir,'post_ftp_upload.rb')
 post_mailer = File.join(Val::Paths.scripts_dir,'post_mailer.rb')
 post_cleanup = File.join(Val::Paths.scripts_dir,'post_cleanup.rb')
 post_cleanup_direct = File.join(Val::Paths.scripts_dir,'post_cleanup_direct.rb')
@@ -40,11 +42,13 @@ Process.detach(pid)
 
 #the rest of the validator:
 begin
-	popen_params = []
-	for arg in ARGV
-		popen_params.push("\'#{arg}\'")
-	end
-	Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_mailer] + popen_params, output_hash, "post_mailer", json_logfile)
+  popen_params = []
+  for arg in ARGV
+    popen_params.push("\'#{arg}\'")
+  end
+  Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_status_check] + popen_params, output_hash, "post_status_check", json_logfile)
+  Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_ftp_upload] + popen_params, output_hash, "post_ftp_upload", json_logfile)
+  Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_mailer] + popen_params, output_hash, "post_mailer", json_logfile)
   if Val::Doc.runtype == 'direct'
     Vldtr::Tools.run_script([Val::Resources.ruby_exe, post_cleanup_direct] + popen_params, output_hash, "post_cleanup_direct", json_logfile)
   else
