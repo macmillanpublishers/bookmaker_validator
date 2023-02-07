@@ -359,7 +359,10 @@ else
 end
 
 #try lookup on filename isbn
-if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'].empty? && Val::Hashes.isbn_hash['completed'] == true
+if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ &&
+  Val::Doc.extension =~ /.doc($|x$)/ &&
+  (status_hash['password_protected'].empty? || doctemplatetype == "rsuite") &&
+  Val::Hashes.isbn_hash['completed'] == true
     filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
     status_hash['filename_isbn']["isbn"] = filename_isbn
     testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
@@ -376,7 +379,7 @@ elsif Val::Doc.filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{
 end
 
 #get isbns from json, verify checkdigit, create array of good isbns
-if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].empty?
+if Val::Hashes.isbn_hash['completed'] == true && (status_hash['password_protected'].empty? || doctemplatetype == "rsuite")
   	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
   	unstyled_isbns = isbn_hash['programatically_styled_isbns']
     styled_isbns = isbn_hash['styled_isbns']
