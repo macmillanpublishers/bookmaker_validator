@@ -386,7 +386,7 @@ if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected
       alt_isbn_array, status_hash = get_good_isbns(unstyled_isbns, alt_isbn_array, status_hash, styled_isbns, logger)
     end
 else
-  	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
+  	logger.warning {"isbn_check.json not present or unavailable, or isbn_check failed to complete"}
 end
 
 if !status_hash['isbn_match_ok']          #fatal mismatch, delete bookinfo file!
