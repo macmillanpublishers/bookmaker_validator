@@ -429,6 +429,7 @@ else
     else
       logger.info {"This looks-up as a paper_copyedit, but isbn is listed in 'papercopyedit_exceptions.json', so continuing as with an MSWord_Copyedit"}
       status_hash['test_isbn'] = true
+      status_hash['epub_format'] = true
     end
   end
   #log re: fixed layout:
