@@ -259,7 +259,7 @@ MESSAGE_END
       Val::Logs.return_stdOutErr
       # select python path and run script
       if Bkmkr::Tools.os == "mac" or Bkmkr::Tools.os == "unix"
-        `python #{py_script} #{args}`
+        py_output = `python #{py_script} #{args}`
       elsif Bkmkr::Tools.os == "windows"
         pythonpath = File.join(Bkmkr::Paths.resource_dir, "Python27", "python.exe")
         py_output = `#{pythonpath} #{py_script} #{args}`
