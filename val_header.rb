@@ -440,7 +440,7 @@ module Val
 				end
 				if File.file?(info_file)
 					bookinfo_hash = Mcmlln::Tools.readjson(info_file)
-					work_id = bookinfo_hash['work_id']
+					# work_id = bookinfo_hash['work_id']
 					author = bookinfo_hash['author']
 					title = bookinfo_hash['title']
 					imprint = bookinfo_hash['imprint']

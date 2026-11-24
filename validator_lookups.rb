@@ -1,177 +1,46 @@
 require 'fileutils'
-# require 'nokogiri'
+require 'open3'
+require 'json'
 
-require_relative '../utilities/oraclequery.rb'
-require_relative '../utilities/isbn_finder.rb'
 require_relative '../bookmaker/core/utilities/mcmlln-tools.rb'
 require_relative './validator_tools.rb'
 require_relative './val_header.rb'
+
 
 # ---------------------- LOCAL DECLARATIONS
 Val::Logs.log_setup()
 logger = Val::Logs.logger
 alt_isbn_array = []
+styled_isbns = []
+unstyled_isbns = []
+
+venv_dir = File.join(Bkmkr::Paths.scripts_dir, "biblio_api_consumer", ".venv")
+BIBLIO_API_PYENV = [
+  File.join(venv_dir, "Scripts", "python.exe"),
+  File.join(venv_dir, "bin", "python.exe"),
+  File.join(venv_dir, "bin", "python")
+].find { |p| File.exist?(p) } || File.join(venv_dir, "bin", "python")
 
 #---------------------  FUNCTIONS
-#this function quick verifies an isbn: checkdigit, ean lookup.
-def testisbn(isbn, whichisbn, status_hash)
-    lookup, loginfo = false, ''
-    if Vldtr::Tools.checkisbn(isbn) and status_hash['dw_sql_err'] == ''
-        if whichisbn == 'filename_isbn' then status_hash['filename_isbn']['checkdigit'] = true end
-        thissql_A = exactSearchSingleKey(isbn, "EDITION_EAN")
-        myhash_A, querystatus = runQuery(thissql_A)
-        if querystatus != 'success'
-          status_hash['dw_sql_err'] = querystatus
-          logger.warn {"exactSearchSingleKey dw_lookup encountered error: #{querystatus}"}
-        end
-        if myhash_A.nil? or myhash_A.empty? or !myhash_A or myhash_A['book'].nil? or myhash_A['book'].empty? or !myhash_A['book']
-            loginfo = "data warehouse lookup on #{whichisbn} \"#{isbn}\" failed, setting status to false"
-            if whichisbn == 'filename_isbn'
-              status_hash['filename_isbn_lookup_ok'] = false
-              # log to alert json as warning
-              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['filename_isbn_lookup_fail']['message']} #{status_hash['filename_isbn']['isbn']}"
-              Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-            end
-            if whichisbn == 'docisbn'
-              status_hash['docisbn_lookup_fail'] << isbn
-              # log to alert json as warning
-              alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_lookup_fail']['message']} #{status_hash['docisbn_lookup_fail'].uniq}"
-              Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-            end
-        else  #isbn checks out
-            lookup = true
-        end
-    else  #checkdigit failed
-        if whichisbn == 'filename_isbn'
-            status_hash['filename_isbn']['checkdigit'] = false
-            # log to alerts json
-            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['filename_isbn_checkdigit_fail']['message']} #{status_hash['filename_isbn']['isbn']}"
-            Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-            # still set larger category status as false in case we still have dependencies
-            status_hash['filename_isbn_lookup_ok'] = false
-        end
-        if whichisbn == 'docisbn'
-            status_hash['docisbn_checkdigit_fail'] << isbn
-            # log to alerts json
-            alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_checkdigit_fail']['message']} '#{isbn}'"
-            Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-        end
-        loginfo = "checkdigit failed for #{whichisbn} \"#{isbn}\""
-    end
-    return loginfo, lookup
+
+def biblio_call(env, func, *args)
+  out, err, status = Open3.capture3(BIBLIO_API_PYENV, '-m', 'biblio_api_consumer.biblio_api_lib', env, func, *args.map(&:to_s))
+  return { 'status' => "python exited #{status.exitstatus}: #{err.lines.last.to_s.strip}", 'result' => {} } unless status.success?
+  JSON.parse(out)
+rescue JSON::ParserError => e
+  { 'status' => "bad JSON from biblio_api_consumer: #{e.message}", 'result' => {} }
 end
 
-#this function takes our good isbn, gathers info and writes it to file.
-def getbookinfo(lookup_isbn, hash_lookup_string, status_hash, bookinfo_file, logger, styled_isbns = [])
-    # get typeset_from & lead_edition known good lookup_isbn (print_isbn is a fallback for lead_edition)
-    alt_isbn_array, lead_edition, print_isbns, typeset_from, epub_format, querystatus = getLeadEdition_TypesetFrom(lookup_isbn)
-    logger.info {"alt_isbn_array: #{alt_isbn_array}, lead_edition: #{lead_edition}, print_isbns: #{print_isbns}, typeset_from: #{typeset_from}, epub_format: #{epub_format}, styled_isbns: #{styled_isbns}"}
-    if querystatus != 'success'
-      status_hash['dw_sql_err'] = querystatus
-      logger.warn {"getLeadEdition_TypesetFrom dw_lookup encountered error: #{querystatus}"}
-    end
-    # determine what isbn to use for lookup_edition:
-    lookup_edition = ''
-    if status_hash['filename_isbn_lookup_ok'] == true # <--indicates this is a filename isbn
-      lookup_edition = lookup_isbn
-      logger.info {"filename isbn is avail., using that as lookup_edition: #{lookup_edition}."}
-    # next prefer a styled_isbn that is a print_isbn
-    elsif !styled_isbns.empty? and !print_isbns.empty?
-      for styled_isbn in styled_isbns
-        if print_isbns.include?(styled_isbn)
-          lookup_edition = styled_isbn
-          logger.info {"no (good) filename isbn, using styled print_isbn as lookup_edition: #{lookup_edition}."}
-          break
-        end
-      end
-    end
-    # if the above two tests didn't turn up a lookup_edition, go on down the list
-    if lookup_edition == ''
-      if !lead_edition.empty?
-        lookup_edition = lead_edition
-        logger.info {"no (good) filename isbn, no styled print_isbns, using lead_edition as lookup_edition: #{lookup_edition}."}
-      elsif !print_isbns.empty?
-        lookup_edition = print_isbns[0]
-        logger.info {"no (good) filename isbn, no styled print_isbns, & no value for lead_edition, using a print_isbn as lookup_edition: #{lookup_edition}."}
-      else
-        lookup_edition = lookup_isbn
-        logger.info {"no (good) filename isbn, no styled print_isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition: #{lookup_edition}."}
-      end
-    end
+def lookup_ok?(r)
+  !r.nil? && r['status'] == 'success' && !r['result'].to_h.empty?
+end
 
-    #now do lookups for PM & PE
-    if status_hash['dw_sql_err'] == ''
-      thissql_C = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Manager")
-      myhash_C, querystatus = runPeopleQuery(thissql_C)
-      if querystatus != 'success'
-        status_hash['dw_sql_err'] = querystatus
-        logger.warn {"runPeopleQuery dw_lookup encountered error: #{querystatus}"}
-      end
-    else
-      myhash_C = {}
-      logger.warn {"skipping pm lookup due to prev dw lookup err"}
-    end
-		if myhash_C.nil? or myhash_C.empty? or !myhash_C or myhash_C['book'].nil? or myhash_C['book'].empty? or !myhash_C['book']
-  			pm_name = 'not found'
-  			logger.info {"no pm found for this EDITION_EAN"}
-		else
-  			pm_name = myhash_C['book']['PERSON_REALNAME'][0]
-		end
-
-    if status_hash['dw_sql_err'] == ''
-      thissql_D = personSearchSingleKey(lookup_edition, "EDITION_EAN", "Production Editor")
-      myhash_D, querystatus = runPeopleQuery(thissql_D)
-      if querystatus != 'success'
-        status_hash['dw_sql_err'] = querystatus
-        logger.warn {"runPeopleQuery dw_lookup encountered error: #{querystatus}"}
-      end
-    else
-      myhash_D = {}
-      logger.warn {"skipping pe lookup due to prev dw lookup err"}
-    end
-
-    if myhash_D.nil? or myhash_D.empty? or !myhash_D or myhash_D['book'].nil? or myhash_D['book'].empty? or !myhash_D['book']
-  			pe_name = 'not found'
-  			logger.info {"no pe found for this EDITION_EAN"}
-		else
-  			pe_name = myhash_D['book']['PERSON_REALNAME'][0]
-		end
-
-    # do lookup on lookup_edition for metainfo
-    if status_hash['dw_sql_err'] == ''
-      thissql_F = exactSearchSingleKey(lookup_edition, "EDITION_EAN")
-      myhash_F, querystatus = runQuery(thissql_F)
-      if querystatus != 'success'
-        status_hash['dw_sql_err'] = querystatus
-        logger.warn {"runQuery dw_lookup encountered error: #{querystatus}"}
-      end
-    else
-      myhash_F = {}
-      logger.warn {"skipping lookup_edition lookup due to prev dw lookup err"}
-    end
-
-    #write to hash
-    book_hash = {}
-    book_hash.merge!(production_editor: pe_name)
-    book_hash.merge!(production_manager: pm_name)
-    book_hash.merge!(work_id: myhash_F['book']['WORK_ID'])
-    book_hash.merge!(isbn: lookup_isbn)
-    book_hash.merge!(title: myhash_F['book']['WORK_COVERTITLE'])
-    book_hash.merge!(author: myhash_F['book']['WORK_COVERAUTHOR'])
-    book_hash.merge!(product_type: myhash_F['book']['PRODUCTTYPE_DESC'])
-    book_hash.merge!(imprint: myhash_F['book']['IMPRINT_DISPLAY'])
-    book_hash.merge!(alt_isbns: alt_isbn_array)
-    book_hash.merge!(print_isbns: print_isbns)
-    book_hash.merge!(lead_edition: lead_edition)
-    book_hash.merge!(lookup_edition: lookup_edition)
-
-    #write json:
-    Vldtr::Tools.write_json(book_hash, bookinfo_file)
-
-    status_hash[hash_lookup_string] = true
-		logger.info {"bookinfo from #{lookup_isbn} OK- title: \"#{book_hash[:title]}\", author: \"#{book_hash[:author]}\", imprint: \"#{book_hash[:imprint]}\", product_type: \"#{book_hash[:product_type]}\""}
-
-	  return alt_isbn_array, epub_format, typeset_from
+# "not found" is a normal answer; anything else that isn't success is an api/system error
+def record_api_error(status_hash, response, logger)
+  s = response['status'].to_s
+  return if s == 'success' || s.start_with?('ISBN not found')
+  status_hash['dw_sql_err'] = s
+  logger.warn {"biblio api error: #{s}"}
 end
 
 def lookup_backup_contact(pm_or_pe, staff_hash, submitter_mail, staff_defaults_hash, status)   #no name associated in biblio, lookup backup PM/PE via submitter division
@@ -269,63 +138,134 @@ MESSAGE_END
   return mail, newname, status
 end
 
-def get_good_isbns(isbns_from_file, alt_isbn_array, status_hash, styled_isbns, logger)
-  if isbns_from_file.length < 10 && !isbns_from_file.empty?
-      isbns_from_file.each { |i|
-          i.gsub!(/-/,'')
-          if i =~ /97(8|9)[0-9]{10}/
-              if alt_isbn_array.include?(i)   #if it matches a filename isbn / previously detected isbn already
-                  status_hash['docisbns'] << i
-              else
-                  testlog_b, testlookup_b = testisbn(i, "docisbn", status_hash)      #quick check the isbn
-                  if !testlog_b.empty? then logger.info {testlog_b} end
-                  if testlookup_b == true
-                      if alt_isbn_array.empty?            #if no isbn array exists yet, this one will be thr primary lookup for bookinfo
-                          logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, proceeding with getting book info"}
-                          alt_isbn_array, status_hash['epub_format'], status_hash['typeset_from'] = getbookinfo(i,'doc_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file,logger,styled_isbns)
-                          # if !lookuplog_b.empty? then logger.info {lookuplog_b} end
-                          status_hash['docisbns'] << i
-                      else            #since an isbn array exists that we don't match, we have a mismatch;
-                          logger.info {"lookup successful for \"#{i}\", but this indicates a docisbn mismatch, since it doesn't match existing isbn array"}
-                          if !status_hash['docisbn_match_fail'].include?(i) # to avoid re-processing for the same isbn repeatedly
-                              status_hash['docisbn_match_fail'] << i
-                              alldocisbns = status_hash['docisbn_match_fail'] + status_hash['docisbns']
-                              if !status_hash['filename_isbn_lookup_ok']  #in this context this is a showstopping error if we don't have a filename_isbn
-                                  status_hash['isbn_match_ok'] = false
-                                  # log to alerts.json as error
-                                  alertstring = "#{Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']} #{alldocisbns.uniq}"
-                                  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", alertstring)
-                                  # this helps determine recipients of err mail:
-                                  status_hash['status'] = 'isbn error'
-                              else
-                                  # if we have a good filename isbn we prefer that anyways, just log to alerts.json as warning
-                                  alertstring = "#{Val::Hashes.alertmessages_hash['warnings']['docisbn_match_fail']['message']} #{alldocisbns.uniq}"
-                                  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", alertstring)
-                              end
-                          end
-                      end
-                  end
-              end
-          end
-      }
-  else
-      logger.info {"either 0 (or >10) good isbns found in status_hash['docisbn_string'] :( "}
-  end
-  return alt_isbn_array, status_hash
+
+def normalize_isbns(list)
+  Array(list).map { |i| i.to_s.gsub(/[^0-9X]/i, '') }.select { |i| i =~ /^97[89]\d{10}$/ }.uniq
 end
 
-# def typeset_from_check(typesetfrom_file, isbn_array)
-#   file_xml = File.open(typesetfrom_file) { |f| Nokogiri::XML(f)}
-#   msword_copyedit = false
-#   isbn_array.each { |isbn|
-#   	next if isbn.empty?
-#     check = file_xml.xpath("//record[edition_eanisbn13=#{isbn}]/impression_typeset_from").to_s
-#     if check =~ /Copyedited Word File/m || check =~ /Word Styles File/m
-#       msword_copyedit = true
-#     end
-#   }
-#   return msword_copyedit
-# end
+def log_docisbn_lookup_fail(isbn, status_hash, logger)
+  status_hash['docisbn_lookup_fail'] << isbn
+  message = Val::Hashes.alertmessages_hash['warnings']['docisbn_lookup_fail']['message']
+  Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", "#{message} #{status_hash['docisbn_lookup_fail'].uniq}")
+  logger.info {"biblio lookup on docisbn \"#{isbn}\" failed"}
+end
+
+def checkdigit_ok?(isbn, whichisbn, status_hash, logger)
+  return true if Vldtr::Tools.checkisbn(isbn)
+  message = Val::Hashes.alertmessages_hash['warnings']["#{whichisbn}_checkdigit_fail"]['message']
+  if whichisbn == 'filename_isbn'
+    status_hash['filename_isbn']['checkdigit'] = false
+    status_hash['filename_isbn_lookup_ok'] = false
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", "#{message} #{isbn}")
+  else
+    status_hash['docisbn_checkdigit_fail'] << isbn
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", "#{message} '#{isbn}'")
+  end
+  logger.warn {"checkdigit failed for #{whichisbn} \"#{isbn}\""}
+  false
+end
+
+def report_docisbn_mismatch(isbn, status_hash, logger)
+  return if status_hash['docisbn_match_fail'].include?(isbn)
+  status_hash['docisbn_match_fail'] << isbn
+  alldocisbns = (status_hash['docisbn_match_fail'] + status_hash['docisbns']).uniq
+  logger.info {"\"#{isbn}\" is a valid isbn, but not an edition of this work: docisbn mismatch"}
+  if status_hash['filename_isbn_lookup_ok']
+    # good filename isbn wins anyway, just warn
+    message = Val::Hashes.alertmessages_hash['warnings']['docisbn_match_fail']['message']
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", "#{message} #{alldocisbns}")
+  else
+    # no filename isbn: showstopper
+    status_hash['isbn_match_ok'] = false
+    status_hash['status'] = 'isbn error'
+    message = Val::Hashes.alertmessages_hash['errors']['isbn_match_fail']['message']
+    Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "error", "#{message} #{alldocisbns}")
+  end
+end
+
+# same logic as old get_good_isbns: match against the work's editions, or (if no work yet) use as primary lookup,
+# or (if work known) look it up to see if it's a true mismatch vs. a bad isbn
+def process_doc_isbns(isbns, response, lookup_isbn, status_hash, logger)
+  if isbns.empty? || isbns.length >= 10
+    logger.info {"either 0 (or >10) good isbns found in doc isbn list :( "}
+    return response, lookup_isbn
+  end
+  isbns.each do |i|
+    editions = lookup_ok?(response) ? Array(response['result']['alt_edition_isbns']) : []
+    if editions.include?(i)
+      status_hash['docisbns'] << i unless status_hash['docisbns'].include?(i)
+      next
+    end
+    next unless checkdigit_ok?(i, 'docisbn', status_hash, logger)
+
+    if editions.empty?
+      # no work found yet: this isbn becomes the primary lookup
+      r = biblio_call('prod', 'egalleymakerCall', i)
+      record_api_error(status_hash, r, logger)
+      if lookup_ok?(r)
+        logger.info {"docisbn \"#{i}\" checked out, no existing primary lookup isbn, using it for book info"}
+        response, lookup_isbn = r, i
+        status_hash['doc_isbn_lookup_ok'] = true
+        status_hash['docisbns'] << i
+      else
+        log_docisbn_lookup_fail(i, status_hash, logger)
+      end
+    else
+      # work already known & this isn't one of its editions: real isbn for another book, or junk?
+      r = biblio_call('prod', 'isbnLookup', i)
+      record_api_error(status_hash, r, logger)
+      if lookup_ok?(r)
+        report_docisbn_mismatch(i, status_hash, logger)
+      else
+        log_docisbn_lookup_fail(i, status_hash, logger)
+      end
+    end
+  end
+  return response, lookup_isbn
+end
+
+# same priority as old getbookinfo
+def preferred_lookup_edition(lookup_isbn, filename_ok, styled_isbns, result, logger)
+  pisbns = Array(result['print_isbns'])
+  lead   = result['lead_edition'].to_s
+  if filename_ok
+    logger.info {"filename isbn is avail., using that as lookup_edition: #{lookup_isbn}."}
+    lookup_isbn
+  elsif (styled_print = styled_isbns.find { |i| pisbns.include?(i) })
+    logger.info {"no (good) filename isbn, using styled print_isbn as lookup_edition: #{styled_print}."}
+    styled_print
+  elsif !lead.empty?
+    logger.info {"no (good) filename isbn, no styled print_isbns, using lead_edition as lookup_edition: #{lead}."}
+    lead
+  elsif !pisbns.empty?
+    logger.info {"no (good) filename isbn, no styled print_isbns, & no value for lead_edition, using a print_isbn as lookup_edition: #{pisbns[0]}."}
+    pisbns[0]
+  else
+    logger.info {"no (good) filename isbn, no styled print_isbn, & no values for lead_edition or alt print_isbn, using 1st doc_isbn as lookup_edition: #{lookup_isbn}."}
+    lookup_isbn
+  end
+end
+
+def consolidateBiblioApiVars(result, lookup_isbn, lookup_edition, logger)
+  not_found = ->(v) { v.to_s.strip.empty? ? 'not found' : v }
+  book_hash = {
+    production_editor:  not_found.(result['production_editor']),
+    production_manager: not_found.(result['production_manager']),
+    work_id:            result['work_id'],
+    isbn:               lookup_isbn,
+    title:              result['title'],
+    author:             result['coverAuthor'],
+    product_type:       result['product_type'],
+    imprint:            result['imprint'],
+    alt_isbns:          result['alt_edition_isbns'] || [],
+    print_isbns:        result['print_isbns'] || [],
+    lead_edition:       result['lead_edition'].to_s,
+    lookup_edition:     lookup_edition
+  }
+  Vldtr::Tools.write_json(book_hash, Val::Files.bookinfo_file)
+  logger.info {"bookinfo from #{lookup_isbn} OK- title: \"#{book_hash[:title]}\", author: \"#{book_hash[:author]}\", imprint: \"#{book_hash[:imprint]}\", product_type: \"#{book_hash[:product_type]}\""}
+  return book_hash[:alt_isbns], book_hash[:print_isbns], book_hash[:lead_edition], result['epub_format'], (result['typeset_from'] || {'paper_copyedit' => ''})
+end
 
 #--------------------- RUN
 #load key jsons, create some local vars
@@ -358,35 +298,63 @@ else
 	logger.info {"contacts json not found?"}
 end
 
-#try lookup on filename isbn
-if Val::Doc.filename_normalized =~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/ && Val::Doc.extension =~ /.doc($|x$)/ &&	status_hash['password_protected'].empty? && Val::Hashes.isbn_hash['completed'] == true
-    filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
-    status_hash['filename_isbn']["isbn"] = filename_isbn
-    testlog, testlookup = testisbn(filename_isbn, "filename_isbn", status_hash)
-    if !testlog.empty? then logger.info {"#{testlog}"} end
-    if testlookup == true
-        logger.info {"isbn \"#{filename_isbn}\" checked out, proceeding with getting book info"}
-        alt_isbn_array, status_hash['epub_format'], status_hash['typeset_from'] = getbookinfo(filename_isbn,'filename_isbn_lookup_ok',status_hash,Val::Files.bookinfo_file, logger)
-		    # if !lookuplog.empty? then logger.info {"#{lookuplog}"} end
+biblio_api_response, lookup_isbn = nil, nil
+styled_isbns, unstyled_isbns = [], []
+
+# 1. filename isbn
+isbn_pattern = /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
+if Val::Doc.filename_normalized =~ isbn_pattern && Val::Doc.extension =~ /.doc($|x$)/
+  filename_isbn = Val::Doc.filename_normalized.match(/9(78|-78|7-8|78-|-7-8)[0-9-]{10,14}/).to_s.tr('-','').slice(0..12)
+  status_hash['filename_isbn']['isbn'] = filename_isbn
+  if checkdigit_ok?(filename_isbn, 'filename_isbn', status_hash, logger)
+    status_hash['filename_isbn']['checkdigit'] = true
+    response = biblio_call('prod', 'egalleymakerCall', filename_isbn)
+    record_api_error(status_hash, response, logger)
+    logger.info {"biblio lookup on filename isbn #{filename_isbn}: #{response['status']}"}
+    if lookup_ok?(response)
+      lookup_isbn, biblio_api_response = filename_isbn, response
+    else
+      status_hash['filename_isbn_lookup_ok'] = false
+      message = Val::Hashes.alertmessages_hash['warnings']['filename_isbn_lookup_fail']['message']
+      Vldtr::Tools.log_alert_to_json(Val::Files.alerts_json, "warning", "#{message} #{filename_isbn}")
     end
-elsif Val::Doc.filename_normalized !~ /9(7(8|9)|-7(8|9)|7-(8|9)|-7-(8|9))[0-9-]{10,14}/
-    logger.info {"no isbn in filename"}
-    # this value is important b/c it helps us determine 'nogoodisbn' in mailer for isbnerror
-    status_hash['filename_isbn_lookup_ok'] = false
+  end
+elsif Val::Doc.filename_normalized !~ isbn_pattern
+  logger.info {"no isbn in filename"}
+  status_hash['filename_isbn_lookup_ok'] = false
 end
 
-#get isbns from json, verify checkdigit, create array of good isbns
-if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].empty?
-  	isbn_hash = Mcmlln::Tools.readjson(Val::Files.isbn_file)
-  	unstyled_isbns = isbn_hash['programatically_styled_isbns']
-    styled_isbns = isbn_hash['styled_isbns']
-    alt_isbn_array, status_hash = get_good_isbns(styled_isbns, alt_isbn_array, status_hash, styled_isbns, logger)
-    if status_hash['docisbns'].empty? && !unstyled_isbns.empty? && status_hash['filename_isbn_lookup_ok'] == false
-      logger.info {"no styled isbns from isbncheck.py, now trying out unstyled isbns"}
-      alt_isbn_array, status_hash = get_good_isbns(unstyled_isbns, alt_isbn_array, status_hash, styled_isbns, logger)
-    end
+# 2. doc isbns: styled first; unstyled only if no styled ones were usable and no filename isbn
+if Val::Hashes.isbn_hash['completed'] == true && status_hash['password_protected'].to_s.empty?
+  isbn_hash      = Mcmlln::Tools.readjson(Val::Files.isbn_file)
+  styled_isbns   = normalize_isbns(isbn_hash['styled_isbns'])
+  unstyled_isbns = normalize_isbns(isbn_hash['programatically_styled_isbns']) - styled_isbns
+  biblio_api_response, lookup_isbn = process_doc_isbns(styled_isbns, biblio_api_response, lookup_isbn, status_hash, logger)
+  if status_hash['docisbns'].empty? && !unstyled_isbns.empty? && status_hash['filename_isbn_lookup_ok'] == false
+    logger.info {"no styled isbns from isbncheck.py, now trying out unstyled isbns"}
+    biblio_api_response, lookup_isbn = process_doc_isbns(unstyled_isbns, biblio_api_response, lookup_isbn, status_hash, logger)
+  end
 else
-  	logger.info {"isbn_check.json not present or unavailable, isbn_check "}
+  logger.info {"isbn_check.json not present or unavailable"}
+end
+
+# 3. pick lookup_edition (PM/PE + edition metadata come from it), re-call biblio if it differs
+if lookup_ok?(biblio_api_response)
+  result = biblio_api_response['result']
+  lookup_edition = preferred_lookup_edition(lookup_isbn, status_hash['filename_isbn_lookup_ok'], styled_isbns, result, logger)
+  if lookup_edition != lookup_isbn
+    r = biblio_call('prod', 'egalleymakerCall', lookup_edition)
+    record_api_error(status_hash, r, logger)
+    if lookup_ok?(r)
+      result = r['result']
+    else
+      logger.warn {"lookup on lookup_edition #{lookup_edition} failed (#{r['status']}), keeping data from #{lookup_isbn}"}
+      lookup_edition = lookup_isbn
+    end
+  end
+  alt_isbn_array, print_isbns, lead_edition, status_hash['epub_format'], status_hash['typeset_from'] = consolidateBiblioApiVars(result, lookup_isbn, lookup_edition, logger)
+else
+  logger.info {"no successful lookups for any isbn"}
 end
 
 if !status_hash['isbn_match_ok']          #fatal mismatch, delete bookinfo file!
